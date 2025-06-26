@@ -331,7 +331,7 @@ export class EmailService {
     return { score, reasons, confidence };
   }
 
-  private extractDomain(email: string): string {
+  public extractDomain(email: string): string {
     const match = email.match(/@([^>]+)/);
     return match ? match[1].toLowerCase() : '';
   }

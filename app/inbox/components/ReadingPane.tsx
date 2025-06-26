@@ -9,8 +9,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Star,
-  Archive,
+  Star, 
+  Archive, 
   Maximize,
   Minimize,
   Eye,
@@ -481,7 +481,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
               <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
               <span className="text-foreground font-medium">Distraction-Free Mode</span>
               <span className="text-muted-foreground">Press R to exit</span>
-            </div>
+      </div>
           </div>
         </div>
       )}
@@ -507,8 +507,8 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex-1 min-w-0 pr-6">
                     <h1 className="text-2xl font-bold text-foreground leading-tight tracking-tight">
-                      {newsletter.subject}
-                    </h1>
+                  {newsletter.subject}
+                </h1>
                   </div>
                   
                   {/* Primary Actions - Right Side */}
@@ -566,7 +566,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                           {newsletter.senderEmail}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4 text-primary" />
                         <span className="text-xs text-muted-foreground">
                           {formatDate(newsletter.receivedAt)}
@@ -650,8 +650,8 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                                         <span className="text-xs text-muted-foreground block">
                                           System Category
                                         </span>
-                                      )}
-                                    </div>
+                  )}
+                </div>
                                     {newsletter.categoryId === category.id && (
                                       <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
                                     )}
@@ -659,25 +659,25 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                                 ))}
                               </div>
                             )}
-                          </div>
+              </div>
                           {newsletter.categoryId && (
                             <>
                               <DropdownMenu.Separator className="my-1 h-px bg-border" />
                               <DropdownMenu.Item
                                 onSelect={() => handleCategoryChange(null)}
-                                className={cn(
+                      className={cn(
                                   "flex items-center space-x-2 p-2 text-error hover:bg-error/10 hover:text-error",
                                   "transition-colors rounded-md cursor-pointer",
                                   isCategoryLoading && "opacity-50 pointer-events-none"
-                                )}
-                              >
-                                {isCategoryLoading ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
+                      )}
+                    >
+                      {isCategoryLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                                 <span className="text-sm font-medium">
-                                  Remove Category
+                      Remove Category
                                 </span>
                               </DropdownMenu.Item>
                             </>
@@ -706,8 +706,8 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                       </span>
                     )}
                   </div>
-                </div>
-              </div>
+                          </div>
+                        </div>
             </div>
           </div>
         </div>

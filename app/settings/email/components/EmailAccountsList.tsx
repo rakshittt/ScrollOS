@@ -5,12 +5,14 @@ import { Card } from '@/components/ui/Card';
 import { Switch } from '@/components/ui/Switch';
 import { EmailAccount } from '@/lib/schema';
 import { NewsletterSyncModal } from './NewsletterSyncModal';
+import { Trash2 } from 'lucide-react';
 
 interface EmailAccountsListProps {
   accounts: EmailAccount[];
 }
 
-export function EmailAccountsList({ accounts }: EmailAccountsListProps) {
+export function EmailAccountsList({ accounts: initialAccounts }: EmailAccountsListProps) {
+  const [accounts, setAccounts] = useState(initialAccounts);
   const [syncing, setSyncing] = useState<Record<number, boolean>>({});
   const [selectedAccount, setSelectedAccount] = useState<number | null>(null);
 
@@ -27,8 +29,23 @@ export function EmailAccountsList({ accounts }: EmailAccountsListProps) {
         },
         body: JSON.stringify({ syncEnabled: enabled }),
       });
+      setAccounts(prev => prev.map(acc => acc.id === accountId ? { ...acc, syncEnabled: enabled } : acc));
     } catch (error) {
       console.error('Error updating sync settings:', error);
+    }
+  };
+
+  const handleRemoveAccount = async (accountId: number) => {
+    if (!confirm('Are you sure you want to remove this email account? This action cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/email/accounts/${accountId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setAccounts(prev => prev.filter(acc => acc.id !== accountId));
+      }
+    } catch (error) {
+      console.error('Error removing account:', error);
     }
   };
 
@@ -67,6 +84,15 @@ export function EmailAccountsList({ accounts }: EmailAccountsListProps) {
                 disabled={syncing[account.id]}
               >
                 {syncing[account.id] ? 'Syncing...' : 'Sync Now'}
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="text-red-600 hover:text-red-800"
+                onClick={() => handleRemoveAccount(account.id)}
+                title="Remove Account"
+              >
+                <Trash2 className="h-5 w-5" />
               </Button>
             </div>
           </div>

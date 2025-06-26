@@ -203,7 +203,7 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
           <Button variant="ghost" size="sm" onClick={toggleDarkMode} title="Toggle dark mode">
             {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-
+          
           {/* Avatar with Radix DropdownMenu */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
@@ -253,8 +253,8 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
           {/* Settings Button */}
           {/* <Link href="/settings">
             <Button variant="ghost" size="sm" title="Settings">
-              <Settings className="h-4 w-4" />
-            </Button>
+            <Settings className="h-4 w-4" />
+          </Button>
           </Link> */}
         </div>
       </div>

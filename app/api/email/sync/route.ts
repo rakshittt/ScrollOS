@@ -3,9 +3,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { EmailService } from '@/lib/services/email-service';
 import { db } from '@/lib/db';
-import { emailAccounts, newsletters } from '@/lib/schema';
+import { emailAccounts, newsletters, userNewsletterDomainWhitelist } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 import { syncNewsletters } from '@/lib/jobs/sync-newsletters';
+import { importNewsletters } from '@/lib/jobs/import-newsletters';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +30,6 @@ export async function POST(request: NextRequest) {
       for (const account of accounts) {
         try {
           const result = await emailService.syncNewsletters(account.id);
-          // Optionally, result could return added/skipped counts
           syncedCount++;
         } catch (error) {
           console.error(`Error syncing account ${account.email}:`, error);
@@ -42,103 +42,48 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Existing per-account sync logic
-    const { accountId, selectedNewsletters } = body;
-    if (!accountId || !selectedNewsletters || !Array.isArray(selectedNewsletters)) {
-      console.error('❌ Invalid request data:', { accountId, selectedNewsletters });
+    // Accept domains and store in whitelist
+    const { accountId, acceptedDomains } = body;
+    if (!accountId || !acceptedDomains || !Array.isArray(acceptedDomains)) {
       return NextResponse.json(
-        { error: 'Account ID and selected newsletters are required' },
+        { error: 'Account ID and accepted domains are required' },
         { status: 400 }
       );
     }
 
-    console.log(`🔍 Looking up account ${accountId}`);
+    // Validate account ownership
     const account = await db.query.emailAccounts.findFirst({
       where: eq(emailAccounts.id, accountId),
     });
-
     if (!account || account.userId !== session.user.id) {
-      console.error('❌ Account not found:', accountId);
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    console.log(`📦 Processing ${selectedNewsletters.length} newsletters for account ${account.email}`);
-    let addedCount = 0;
-    let skippedCount = 0;
-
-    // Initialize email service
-    const emailService = EmailService.getInstance();
-
-    // Store selected newsletters in the database
-    for (const newsletter of selectedNewsletters) {
-      console.log(`🔍 Checking if newsletter exists: ${newsletter.id}`);
-      const existing = await db.query.newsletters.findFirst({
-        where: eq(newsletters.messageId, newsletter.id),
+    // Insert accepted domains into whitelist (ignore duplicates)
+    for (const domain of acceptedDomains) {
+      const exists = await db.query.userNewsletterDomainWhitelist.findFirst({
+        where: eq(userNewsletterDomainWhitelist.domain, domain),
       });
-
-      if (!existing) {
-        console.log(`➕ Adding new newsletter: ${newsletter.subject}`);
-        // Fetch full content based on provider
-        let content = '';
-        let htmlContent = '';
-        try {
-          if (account.provider === 'gmail') {
-            const gmail = await emailService.getGmailClient(account);
-            const message = await gmail.users.messages.get({
-              userId: 'me',
-              id: newsletter.id,
-              format: 'full',
-            });
-            const emailData = emailService.extractGmailData(message.data);
-            if (emailData) {
-              content = emailData.text || '';
-              htmlContent = emailData.html || '';
-            }
-          } else if (account.provider === 'outlook') {
-            const outlook = await emailService.getOutlookClient(account);
-            const message = await outlook
-              .api(`/me/messages/${newsletter.id}`)
-              .get();
-            content = message.body.content || '';
-            htmlContent = message.body.content || '';
-          }
-        } catch (error) {
-          console.error(`⚠️ Failed to fetch full content for newsletter ${newsletter.id}:`, error);
-        }
-        await db.insert(newsletters).values({
-          userId: account.userId,
-          emailAccountId: account.id,
-          messageId: newsletter.id,
-          title: newsletter.subject,
-          sender: newsletter.from.text,
-          senderEmail: newsletter.from.value[0].address,
-          subject: newsletter.subject,
-          content: content,
-          htmlContent: htmlContent,
-          receivedAt: new Date(newsletter.date)
+      if (!exists) {
+        await db.insert(userNewsletterDomainWhitelist).values({
+          userId: session.user.id,
+          domain,
         });
-        addedCount++;
-      } else {
-        console.log(`⏭️ Skipping existing newsletter: ${newsletter.subject}`);
-        skippedCount++;
       }
     }
 
-    console.log(`🔄 Updating last synced timestamp for account ${account.email}`);
-    await db
-      .update(emailAccounts)
-      .set({ lastSyncedAt: new Date() })
-      .where(eq(emailAccounts.id, accountId));
-
-    console.log(`✅ Successfully processed newsletters: ${addedCount} added, ${skippedCount} skipped`);
-    return NextResponse.json({ 
-      success: true, 
-      message: `Successfully added ${addedCount} newsletters to inbox (${skippedCount} already existed)` 
+    // Import newsletters synchronously (no background job)
+    await importNewsletters({
+      userId: session.user.id,
+      accountId: account.id,
+      acceptedDomains,
     });
+
+    return NextResponse.json({ success: true, message: 'Domains whitelisted. Newsletters have been imported.' });
   } catch (error) {
-    console.error('❌ Error adding newsletters:', error);
+    console.error('❌ Error whitelisting domains:', error);
     return NextResponse.json(
-      { error: 'Failed to add newsletters' },
+      { error: 'Failed to whitelist domains' },
       { status: 500 }
     );
   }

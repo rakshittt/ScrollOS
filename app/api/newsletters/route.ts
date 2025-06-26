@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { newsletters, newsletterRules, categories } from '@/lib/schema';
-import { NewsletterCache } from '@/lib/redis';
+import { newsletters, newsletterRules, categories, userNewsletterDomainWhitelist } from '@/lib/schema';
 import { eq, desc, like, and, or, sql } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
 
@@ -87,13 +86,11 @@ export async function GET(request: NextRequest) {
     
     console.log(`🔍 Filtering newsletters by folder: ${folder}`);
 
-    // Check cache first
-    const cacheKey = `newsletters:${userId}:${folder}:${query || 'all'}:${page}:${limit}:${categoryId || 'all'}:${emailAccountId || 'all'}`;
-    const cached = await NewsletterCache.get(cacheKey);
-    
-    if (cached) {
-      return NextResponse.json(cached);
-    }
+    // Get whitelisted domains for the user
+    const whitelistedDomains = await db.query.userNewsletterDomainWhitelist.findMany({
+      where: eq(userNewsletterDomainWhitelist.userId, userId),
+    });
+    const domainSet = new Set(whitelistedDomains.map(d => d.domain));
 
     // Build query conditions
     const conditions = [eq(newsletters.userId, userId)];
@@ -139,10 +136,14 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .offset((page - 1) * limit);
 
-    // Cache the results
-    await NewsletterCache.set(cacheKey, result, 300); // 5 minutes cache
+    // Filter newsletters by whitelisted domains
+    const filtered = result.filter((n: any) => {
+      const senderEmail = n.senderEmail || '';
+      const domain = senderEmail.split('@')[1]?.toLowerCase();
+      return domain && domainSet.has(domain);
+    });
 
-    return NextResponse.json(result);
+    return NextResponse.json(filtered);
   } catch (error) {
     console.error('❌ Error fetching newsletters:', error);
     if (error instanceof Error && error.message === 'Authentication required') {
@@ -181,12 +182,9 @@ export async function POST(request: NextRequest) {
     // Apply rules to the new newsletter
     await applyRules(result[0], userId);
 
-    // Invalidate cache
-    await NewsletterCache.invalidatePattern(`newsletters:${userId}:*`);
-
     return NextResponse.json(result[0], { status: 201 });
   } catch (error) {
-    console.error('Error creating newsletter:', error);
+    console.error('❌ Error creating newsletter:', error);
     return NextResponse.json(
       { error: 'Failed to create newsletter' },
       { status: 500 }
@@ -223,9 +221,6 @@ export async function PUT(request: NextRequest) {
         { status: 404 }
       );
     }
-
-    // Invalidate cache
-    await NewsletterCache.invalidatePattern(`newsletters:${userId}:*`);
 
     return NextResponse.json(result[0]);
   } catch (error) {

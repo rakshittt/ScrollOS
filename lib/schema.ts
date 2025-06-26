@@ -202,6 +202,14 @@ export const passwordResets = pgTable('password_resets', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const userNewsletterDomainWhitelist = pgTable('user_newsletter_domain_whitelist', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  domain: text('domain').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 export type Newsletter = typeof newsletters.$inferSelect;
 export type NewNewsletter = typeof newsletters.$inferInsert;
 export type Folder = typeof folders.$inferSelect;
@@ -210,3 +218,5 @@ export type EmailAccount = typeof emailAccounts.$inferSelect;
 export type NewEmailAccount = typeof emailAccounts.$inferInsert;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type NewUserPreferences = typeof userPreferences.$inferInsert;
+export type NewUserNewsletterDomainWhitelist = typeof userNewsletterDomainWhitelist.$inferInsert;
+export type UserNewsletterDomainWhitelist = typeof userNewsletterDomainWhitelist.$inferSelect;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { db } from '@/lib/db';
-import { emailAccounts } from '@/lib/schema';
+import { emailAccounts, newsletters } from '@/lib/schema';
 import { eq, and } from 'drizzle-orm';
 
 export async function PATCH(
@@ -92,6 +92,9 @@ export async function DELETE(
         { status: 404 }
       );
     }
+
+    // Delete all newsletters for this account first
+    await db.delete(newsletters).where(eq(newsletters.emailAccountId, accountId));
 
     // Delete account
     await db

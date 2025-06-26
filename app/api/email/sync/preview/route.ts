@@ -30,11 +30,32 @@ export async function GET(request: Request) {
     const emailService = EmailService.getInstance();
     const newsletters = await emailService.previewNewsletters(account);
 
-    return NextResponse.json({ newsletters });
+    // Extract unique domains with a sample newsletter for each
+    const domainMap = new Map();
+    for (const n of newsletters) {
+      const senderEmail = n.from?.value?.[0]?.address || '';
+      const domain = emailService.extractDomain(senderEmail);
+      if (domain && !domainMap.has(domain)) {
+        domainMap.set(domain, {
+          domain,
+          sample: {
+            subject: n.subject,
+            from: n.from?.text,
+            senderEmail,
+            date: n.date,
+            confidence: n.confidence,
+            score: n.score,
+          },
+        });
+      }
+    }
+    const domains = Array.from(domainMap.values());
+
+    return NextResponse.json({ domains });
   } catch (error) {
-    console.error('Error previewing newsletters:', error);
+    console.error('Error previewing newsletter domains:', error);
     return NextResponse.json(
-      { error: 'Failed to preview newsletters' },
+      { error: 'Failed to preview newsletter domains' },
       { status: 500 }
     );
   }
