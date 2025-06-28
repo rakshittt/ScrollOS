@@ -36,6 +36,48 @@
       "when": 1749935735196,
       "tag": "0004_numerous_alex_power",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1750976064298,
+      "tag": "0005_steady_charles_xavier",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1750976064299,
+      "tag": "0006_newsletter_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1750976064300,
+      "tag": "0007_password_resets",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1750976064301,
+      "tag": "0008_user_newsletter_domain_whitelist",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1750976064302,
+      "tag": "0009_add_newsletter_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1751099115705,
+      "tag": "0010_early_jimmy_woo",
+      "breakpoints": true
     }
   ]
 }

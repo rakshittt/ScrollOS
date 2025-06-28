@@ -4,35 +4,111 @@ import { useState, useCallback, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { NewsletterList } from '@/app/inbox/components/NewsletterList';
 import { ReadingPane } from '@/app/inbox/components/ReadingPane';
+import { SyncNotificationBanner } from '@/app/inbox/components/SyncNotificationBanner';
 import { useSession } from 'next-auth/react';
+import { useToast } from '@/hooks/use-toast';
+
+interface Category {
+  id: number;
+  name: string;
+  color: string;
+  icon?: string;
+  isSystem: boolean;
+}
 
 export default function InboxPage() {
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [selectedFolder, setSelectedFolder] = useState('inbox');
+  const { data: session } = useSession();
   const [selectedNewsletterId, setSelectedNewsletterId] = useState<number | null>(null);
   const [newsletterIds, setNewsletterIds] = useState<number[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState('inbox');
   const [searchQuery, setSearchQuery] = useState('');
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [folderCounts, setFolderCounts] = useState<Record<string, number>>({
     inbox: 0,
     starred: 0,
     bin: 0
   });
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
-  const { data: session } = useSession();
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [syncMessage, setSyncMessage] = useState<string>('');
+  const [newNewsletterCount, setNewNewsletterCount] = useState<number>(0);
+  const { toast } = useToast();
 
+  // Fetch accounts on mount
   useEffect(() => {
-    // Fetch email accounts for the user
     const fetchAccounts = async () => {
-      if (!session?.user?.id) return;
-      const res = await fetch('/api/email/accounts');
-      if (res.ok) {
-        const data = await res.json();
+      try {
+        const response = await fetch('/api/email/accounts');
+        if (response.ok) {
+          const data = await response.json();
         setAccounts(data);
+        }
+      } catch (error) {
+        console.error('Error fetching accounts:', error);
       }
     };
+
+    if (session) {
     fetchAccounts();
+    }
   }, [session]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    if (session) {
+      fetchCategories();
+    }
+  }, [session]);
+
+  // Listen for sync events from header
+  useEffect(() => {
+    const handleSyncEvent = (event: CustomEvent) => {
+      const { status, message, count } = event.detail;
+      setSyncStatus(status);
+      setSyncMessage(message || '');
+      setNewNewsletterCount(count || 0);
+      
+      if (status === 'success' && message) {
+        toast.success(message);
+      } else if (status === 'error' && message) {
+        toast.error(message);
+      }
+    };
+
+    window.addEventListener('sync-status-update', handleSyncEvent as EventListener);
+    return () => {
+      window.removeEventListener('sync-status-update', handleSyncEvent as EventListener);
+    };
+  }, [toast]);
+
+  const handleSyncDismiss = () => {
+    setSyncStatus('idle');
+    setSyncMessage('');
+    setNewNewsletterCount(0);
+  };
+
+  const handleSyncRetry = () => {
+    // Trigger a new sync
+    window.dispatchEvent(new CustomEvent('trigger-sync'));
+  };
+
+  const handleViewSettings = () => {
+    window.location.href = '/settings/email';
+  };
 
   const handleFolderCountsUpdate = (counts: Record<string, number>) => {
     setFolderCounts(counts);
@@ -124,6 +200,16 @@ export default function InboxPage() {
       selectedAccountId={selectedAccountId}
       onAccountChange={setSelectedAccountId}
     >
+      {/* Sync Notification Banner */}
+      <SyncNotificationBanner
+        status={syncStatus}
+        message={syncMessage}
+        newNewsletterCount={newNewsletterCount}
+        onDismiss={handleSyncDismiss}
+        onRetry={handleSyncRetry}
+        onViewSettings={handleViewSettings}
+      />
+      
       <div className="flex flex-1">
         <NewsletterList
           selectedId={selectedNewsletterId}
@@ -134,6 +220,7 @@ export default function InboxPage() {
           searchQuery={searchQuery}
           onNewsletterAction={handleNewsletterAction as (action: 'star' | 'unstar' | 'bin' | 'restore') => void}
           emailAccountId={selectedAccountId}
+          categories={categories}
         />
         <ReadingPane
           selectedId={selectedNewsletterId}

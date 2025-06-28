@@ -1,25 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  ArrowLeft,
-  Save,
-  Eye,
-  EyeOff,
-  Camera,
-  Trash2,
-  Download,
-  AlertTriangle
-} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/hooks/use-toast';
+import {
+    ArrowLeft,
+    Camera,
+    Download,
+    Eye,
+    EyeOff,
+    Lock,
+    Save,
+    Trash2,
+    User
+} from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface UserProfile {
   name: string;
@@ -268,7 +266,7 @@ export default function AccountPage() {
               <User className="h-6 w-6 text-indigo-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Account Settings</h1>
+              <h1 className="text-3xl font-semibold text-foreground">Account Settings</h1>
               <p className="text-muted-foreground">Manage your profile and account preferences</p>
             </div>
           </div>

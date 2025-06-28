@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 import { EmailAccountsList } from '@/app/settings/email/components/EmailAccountsList';
 import { ConnectEmailButton } from '@/app/settings/email/components/ConnectEmailButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Mail, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowLeft, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
@@ -35,7 +35,7 @@ export default async function EmailSettingsPage() {
               <Mail className="h-6 w-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Email Accounts</h1>
+              <h1 className="text-3xl font-semibold text-foreground">Email Accounts</h1>
               <p className="text-muted-foreground">Connect and manage your email accounts for newsletter syncing</p>
             </div>
           </div>
@@ -69,6 +69,35 @@ export default async function EmailSettingsPage() {
           </CardHeader>
           <CardContent>
         <EmailAccountsList accounts={accounts} />
+          </CardContent>
+        </Card>
+
+        {/* Whitelist Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <ShieldCheck className="h-5 w-5" />
+              <span>Email Whitelist</span>
+            </CardTitle>
+            <CardDescription>
+              Manage which email addresses can send newsletters to your inbox
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Control which email addresses are allowed to import newsletters during sync. 
+                  The inbox will show all newsletters, but only whitelisted emails can import new ones.
+                </p>
+              </div>
+              <Link href="/settings/whitelist">
+                <Button variant="outline">
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                  Manage Whitelist
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>

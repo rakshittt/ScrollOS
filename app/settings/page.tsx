@@ -1,21 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  Mail, 
-  BookOpen, 
-  Tag, 
-  Settings, 
-  User, 
-  Bell, 
-  Palette,
-  Zap,
-  Shield,
-  HelpCircle,
-  ChevronRight
-} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import {
+  ChevronRight,
+  HelpCircle,
+  Mail,
+  Palette,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Tag,
+  User
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -36,6 +33,14 @@ const settingsSections: SettingsSection[] = [
     icon: Mail,
     href: '/settings/email',
     color: 'text-blue-600'
+  },
+  {
+    id: 'whitelist',
+    title: 'Email Whitelist',
+    description: 'Manage which email addresses can send newsletters to your inbox',
+    icon: ShieldCheck,
+    href: '/settings/whitelist',
+    color: 'text-green-600'
   },
 //   {
 //     id: 'reading',
@@ -103,6 +108,9 @@ export default function SettingsPage() {
     //   case 'connect-email':
     //     router.push('/settings/email');
     //     break;
+      case 'manage-whitelist':
+        router.push('/settings/whitelist');
+        break;
       case 'create-category':
         router.push('/settings/categories');
         break;
@@ -125,7 +133,7 @@ export default function SettingsPage() {
             <Settings className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+            <h1 className="text-3xl font-semibold text-foreground">Settings</h1>
             <p className="text-muted-foreground">Manage your newsletter reading experience</p>
           </div>
         </div>
@@ -159,7 +167,7 @@ export default function SettingsPage() {
 
       {/* Quick Actions */}
       <div className="mt-12">
-        <h2 className="text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
+        <h2 className="text-xl font-medium text-foreground mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* <Button 
             variant="outline" 
@@ -169,6 +177,14 @@ export default function SettingsPage() {
             <Mail className="h-5 w-5" />
             <span className="text-sm font-medium">Connect Email</span>
           </Button> */}
+          <Button 
+            variant="outline" 
+            className="h-auto p-4 flex flex-col items-center space-y-2"
+            onClick={() => handleQuickAction('manage-whitelist')}
+          >
+            <ShieldCheck className="h-5 w-5" />
+            <span className="text-sm font-medium">Manage Whitelist</span>
+          </Button>
           <Button 
             variant="outline" 
             className="h-auto p-4 flex flex-col items-center space-y-2"

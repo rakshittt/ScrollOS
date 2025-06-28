@@ -1,14 +1,13 @@
-import { sql } from 'drizzle-orm';
-import { 
-  integer, 
-  pgTable, 
-  serial, 
-  text, 
-  timestamp, 
-  boolean,
-  json,
-  varchar,
-  primaryKey
+import {
+    boolean,
+    integer,
+    json,
+    pgTable,
+    primaryKey,
+    serial,
+    text,
+    timestamp,
+    varchar
 } from 'drizzle-orm/pg-core';
 
 export const newsletters = pgTable('newsletters', {
@@ -34,6 +33,7 @@ export const newsletters = pgTable('newsletters', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
   deletedAt: timestamp('deleted_at'),
+  importedAt: timestamp('imported_at'),
 });
 
 export const users = pgTable('users', {
@@ -210,6 +210,16 @@ export const userNewsletterDomainWhitelist = pgTable('user_newsletter_domain_whi
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
+export const userNewsletterEmailWhitelist = pgTable('user_newsletter_email_whitelist', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  email: text('email').notNull(),
+  name: text('name'),
+  domain: text('domain'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 export type Newsletter = typeof newsletters.$inferSelect;
 export type NewNewsletter = typeof newsletters.$inferInsert;
 export type Folder = typeof folders.$inferSelect;
@@ -220,3 +230,5 @@ export type UserPreferences = typeof userPreferences.$inferSelect;
 export type NewUserPreferences = typeof userPreferences.$inferInsert;
 export type NewUserNewsletterDomainWhitelist = typeof userNewsletterDomainWhitelist.$inferInsert;
 export type UserNewsletterDomainWhitelist = typeof userNewsletterDomainWhitelist.$inferSelect;
+export type NewUserNewsletterEmailWhitelist = typeof userNewsletterEmailWhitelist.$inferInsert;
+export type UserNewsletterEmailWhitelist = typeof userNewsletterEmailWhitelist.$inferSelect;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { newsletters, newsletterRules, categories, userNewsletterDomainWhitelist } from '@/lib/schema';
-import { eq, desc, like, and, or, sql } from 'drizzle-orm';
+import { newsletters, newsletterRules, categories, userNewsletterEmailWhitelist } from '@/lib/schema';
+import { eq, desc, like, and, or, sql, inArray } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
 
 type RuleCondition = {
@@ -72,28 +72,29 @@ async function applyRules(newsletter: any, userId: number) {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('📥 Fetching newsletters list');
     const userId = await requireAuth();
+
     const { searchParams } = new URL(request.url);
     const folder = searchParams.get('folder') || 'inbox';
-    const query = searchParams.get('query');
-    const isRead = searchParams.get('isRead');
-    const isStarred = searchParams.get('isStarred');
     const categoryId = searchParams.get('categoryId');
+    const query = searchParams.get('query');
     const emailAccountId = searchParams.get('emailAccountId');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    
-    console.log(`🔍 Filtering newsletters by folder: ${folder}`);
+    const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Get whitelisted domains for the user
-    const whitelistedDomains = await db.query.userNewsletterDomainWhitelist.findMany({
-      where: eq(userNewsletterDomainWhitelist.userId, userId),
-    });
-    const domainSet = new Set(whitelistedDomains.map(d => d.domain));
+    // New filter parameters
+    const search = searchParams.get('search');
+    const readStatus = searchParams.get('readStatus');
+    const starredStatus = searchParams.get('starredStatus');
+    const dateRange = searchParams.get('dateRange');
+    const categories = searchParams.get('categories');
+    const sortBy = searchParams.get('sortBy') || 'date';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
 
-    // Build query conditions
-    const conditions = [eq(newsletters.userId, userId)];
+    // Build query conditions - show all newsletters for the user
+    const conditions = [
+      eq(newsletters.userId, userId)
+    ];
     
     // Only allow one filter: if folder is not 'inbox', ignore categoryId
     // If folder is 'inbox', allow categoryId
@@ -113,37 +114,135 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(newsletters.emailAccountId, parseInt(emailAccountId)));
     }
     
-    if (query) {
+    // Apply search filter (from query parameter or search parameter)
+    const searchQuery = search || query;
+    if (searchQuery) {
       conditions.push(
-        sql`(${newsletters.subject} ILIKE ${`%${query}%`} OR ${newsletters.content} ILIKE ${`%${query}%`} OR ${newsletters.sender} ILIKE ${`%${query}%`})`
+        sql`(${newsletters.subject} ILIKE ${`%${searchQuery}%`} OR ${newsletters.content} ILIKE ${`%${searchQuery}%`} OR ${newsletters.sender} ILIKE ${`%${searchQuery}%`})`
       );
     }
-    
-    if (isRead !== null) {
-      conditions.push(eq(newsletters.isRead, isRead === 'true'));
-    }
-    
-    if (isStarred !== null) {
-      conditions.push(eq(newsletters.isStarred, isStarred === 'true'));
+
+    // Apply read status filter
+    if (readStatus && readStatus !== 'all') {
+      if (readStatus === 'read') {
+        conditions.push(eq(newsletters.isRead, true));
+      } else if (readStatus === 'unread') {
+        conditions.push(eq(newsletters.isRead, false));
+      }
     }
 
-    // Execute query
+    // Apply starred status filter
+    if (starredStatus && starredStatus !== 'all') {
+      if (starredStatus === 'starred') {
+        conditions.push(eq(newsletters.isStarred, true));
+      } else if (starredStatus === 'unstarred') {
+        conditions.push(eq(newsletters.isStarred, false));
+      }
+    }
+
+    // Apply date range filter
+    if (dateRange && dateRange !== 'all') {
+      const now = new Date();
+      let startDate: Date;
+      
+      switch (dateRange) {
+        case 'today':
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        default:
+          startDate = new Date(0); // Beginning of time
+      }
+      
+      conditions.push(sql`${newsletters.receivedAt} >= ${startDate}`);
+    }
+
+    // Apply categories filter
+    if (categories) {
+      const categoryIds = categories.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+      if (categoryIds.length > 0) {
+        conditions.push(inArray(newsletters.categoryId, categoryIds));
+      }
+    }
+    
+    // Get total count for pagination
+    const totalCountResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(newsletters)
+      .where(and(...conditions));
+
+    const totalCount = totalCountResult[0]?.count || 0;
+
+    // Build order by clause
+    let orderByClause;
+    if (sortBy === 'sender') {
+      orderByClause = sortOrder === 'asc' 
+        ? [newsletters.sender, desc(newsletters.receivedAt)]
+        : [desc(newsletters.sender), desc(newsletters.receivedAt)];
+    } else if (sortBy === 'subject') {
+      orderByClause = sortOrder === 'asc'
+        ? [newsletters.subject, desc(newsletters.receivedAt)]
+        : [desc(newsletters.subject), desc(newsletters.receivedAt)];
+    } else {
+      // Default: sort by date
+      orderByClause = sortOrder === 'asc'
+        ? [newsletters.receivedAt, desc(newsletters.priority)]
+        : [desc(newsletters.receivedAt), desc(newsletters.priority)];
+    }
+
+    // Execute query with pagination - select only fields needed for list view
     const result = await db
-      .select()
+      .select({
+        id: newsletters.id,
+        userId: newsletters.userId,
+        emailAccountId: newsletters.emailAccountId,
+        messageId: newsletters.messageId,
+        title: newsletters.title,
+        sender: newsletters.sender,
+        senderEmail: newsletters.senderEmail,
+        subject: newsletters.subject,
+        content: newsletters.content, // Keep for preview, but could be truncated
+        isRead: newsletters.isRead,
+        isStarred: newsletters.isStarred,
+        isArchived: newsletters.isArchived,
+        categoryId: newsletters.categoryId,
+        priority: newsletters.priority,
+        folder: newsletters.folder,
+        receivedAt: newsletters.receivedAt,
+        createdAt: newsletters.createdAt,
+        updatedAt: newsletters.updatedAt,
+        importedAt: newsletters.importedAt // Include importedAt for new badge
+        // Exclude htmlContent, tags, category, deletedAt for list view
+      })
       .from(newsletters)
       .where(and(...conditions))
-      .orderBy(desc(newsletters.priority), desc(newsletters.receivedAt))
+      .orderBy(...orderByClause)
       .limit(limit)
       .offset((page - 1) * limit);
 
-    // Filter newsletters by whitelisted domains
-    const filtered = result.filter((n: any) => {
-      const senderEmail = n.senderEmail || '';
-      const domain = senderEmail.split('@')[1]?.toLowerCase();
-      return domain && domainSet.has(domain);
-    });
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNext = page < totalPages;
+    const hasPrevious = page > 1;
 
-    return NextResponse.json(filtered);
+    const response = {
+      newsletters: result,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+        hasNext,
+        hasPrevious,
+        limit
+      }
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('❌ Error fetching newsletters:', error);
     if (error instanceof Error && error.message === 'Authentication required') {

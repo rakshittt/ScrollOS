@@ -1,22 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  Tag, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  ArrowLeft,
-  Palette,
-  Save,
-  X,
-  Check
-} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/hooks/use-toast';
+import {
+    ArrowLeft,
+    Check,
+    Edit,
+    Plus,
+    Save,
+    Tag,
+    Trash2,
+    X
+} from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface Category {
   id: number;
@@ -180,7 +179,7 @@ export default function CategoriesPage() {
               <Tag className="h-6 w-6 text-purple-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Categories</h1>
+              <h1 className="text-3xl font-semibold text-foreground">Categories</h1>
               <p className="text-muted-foreground">Organize newsletters with custom categories</p>
             </div>
           </div>

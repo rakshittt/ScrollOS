@@ -1,10 +1,10 @@
-import { EmailService } from '@/lib/services/email-service';
 import { db } from '@/lib/db';
-import { newsletters, emailAccounts } from '@/lib/schema';
+import { emailAccounts, newsletters } from '@/lib/schema';
+import { EmailService } from '@/lib/services/email-service';
 import { eq } from 'drizzle-orm';
 
 // Synchronous import function (no background job)
-export async function importNewsletters({ userId, accountId, acceptedDomains }: { userId: number, accountId: number, acceptedDomains: string[] }) {
+export async function importNewsletters({ userId, accountId, acceptedEmails }: { userId: number, accountId: number, acceptedEmails: string[] }) {
   const emailService = EmailService.getInstance();
   // Fetch account
   const account = await db.query.emailAccounts.findFirst({
@@ -23,8 +23,7 @@ export async function importNewsletters({ userId, accountId, acceptedDomains }: 
   const toInsert = [];
   for (const n of accountNewsletters) {
     const senderEmail = n.from?.value?.[0]?.address || '';
-    const domain = emailService.extractDomain(senderEmail);
-    if (acceptedDomains.includes(domain) && !existingIds.has(n.id)) {
+    if (acceptedEmails.includes(senderEmail) && !existingIds.has(n.id)) {
       let content = '';
       let htmlContent = '';
       // Fetch full message for content
@@ -55,6 +54,7 @@ export async function importNewsletters({ userId, accountId, acceptedDomains }: 
         content,
         htmlContent,
         receivedAt: n.date || new Date(),
+        importedAt: new Date(),
       });
     }
   }
@@ -63,3 +63,4 @@ export async function importNewsletters({ userId, accountId, acceptedDomains }: 
   }
   return { inserted: toInsert.length };
 }
+ 

@@ -15,6 +15,7 @@ export interface Newsletter {
     createdAt: Date;
     updatedAt: Date;
     categoryId?: number;
+    importedAt?: Date;
   }
   
   export interface Folder {

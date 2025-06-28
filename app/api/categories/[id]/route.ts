@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { categories } from '@/lib/schema';
-import { eq, and } from 'drizzle-orm';
+import { categories, newsletters } from '@/lib/schema';
+import { and, eq } from 'drizzle-orm';
+import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
 
 // PATCH /api/categories/[id] - Update a category
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +16,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const categoryId = parseInt(params.id);
+    const { id } = await params;
+    const categoryId = parseInt(id);
     if (isNaN(categoryId)) {
       return NextResponse.json(
         { error: 'Invalid category ID' },
@@ -95,7 +96,7 @@ export async function PATCH(
 // DELETE /api/categories/[id] - Delete a category
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -103,7 +104,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const categoryId = parseInt(params.id);
+    const { id } = await params;
+    const categoryId = parseInt(id);
     if (isNaN(categoryId)) {
       return NextResponse.json(
         { error: 'Invalid category ID' },
@@ -133,7 +135,18 @@ export async function DELETE(
       );
     }
 
-    // Delete the category
+    // First, remove category references from all newsletters that use this category
+    await db
+      .update(newsletters)
+      .set({ categoryId: null, updatedAt: new Date() })
+      .where(
+        and(
+          eq(newsletters.categoryId, categoryId),
+          eq(newsletters.userId, session.user.id)
+        )
+      );
+
+    // Then delete the category
     await db.delete(categories).where(
       and(
         eq(categories.id, categoryId),

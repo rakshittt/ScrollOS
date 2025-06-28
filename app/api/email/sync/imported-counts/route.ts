@@ -5,13 +5,6 @@ import { db } from '@/lib/db';
 import { emailAccounts, newsletters } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
-function extractDomain(email: string): string {
-  if (!email) return '';
-  const atIdx = email.lastIndexOf('@');
-  if (atIdx === -1) return '';
-  return email.slice(atIdx + 1).toLowerCase();
-}
-
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -34,13 +27,13 @@ export async function GET(request: NextRequest) {
     where: eq(newsletters.emailAccountId, account.id),
     columns: { senderEmail: true },
   });
-  // Count by domain
-  const domainCounts: Record<string, number> = {};
+  // Count by email address
+  const emailCounts: Record<string, number> = {};
   for (const n of allNewsletters) {
-    const domain = extractDomain(n.senderEmail);
-    if (!domain) continue;
-    domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+    const email = n.senderEmail;
+    if (!email) continue;
+    emailCounts[email] = (emailCounts[email] || 0) + 1;
   }
-  const counts = Object.entries(domainCounts).map(([domain, count]) => ({ domain, count }));
+  const counts = Object.entries(emailCounts).map(([email, count]) => ({ email, count }));
   return NextResponse.json({ counts });
 } 
