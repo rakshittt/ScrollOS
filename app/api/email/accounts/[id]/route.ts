@@ -1,113 +1,134 @@
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { emailAccounts, newsletters } from '@/lib/schema';
 import { and, eq } from 'drizzle-orm';
-import { getServerSession } from 'next-auth';
-import { NextRequest, NextResponse } from 'next/server';
 
-export async function PATCH(
-  req: NextRequest,
+export async function GET(
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await params;
     const accountId = parseInt(id);
     if (isNaN(accountId)) {
-      return NextResponse.json(
-        { error: 'Invalid account ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid account ID' }, { status: 400 });
     }
 
-    const { syncEnabled, syncFrequency } = await req.json();
-
-    // Verify account ownership
     const account = await db.query.emailAccounts.findFirst({
-      where: and(
-        eq(emailAccounts.id, accountId),
-        eq(emailAccounts.userId, session.user.id)
-      ),
+      where: eq(emailAccounts.id, accountId),
     });
 
     if (!account) {
-      return NextResponse.json(
-        { error: 'Account not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    // Update account settings
-    await db
+    if (account.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    return NextResponse.json(account);
+  } catch (error) {
+    console.error('Error fetching email account:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch email account' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const accountId = parseInt(id);
+    if (isNaN(accountId)) {
+      return NextResponse.json({ error: 'Invalid account ID' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const { syncEnabled, syncFrequency } = body;
+
+    const account = await db.query.emailAccounts.findFirst({
+      where: eq(emailAccounts.id, accountId),
+    });
+
+    if (!account) {
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+    }
+
+    if (account.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const updatedAccount = await db
       .update(emailAccounts)
       .set({
-        syncEnabled: syncEnabled !== undefined ? syncEnabled : account.syncEnabled,
-        syncFrequency: syncFrequency !== undefined ? syncFrequency : account.syncFrequency,
+        syncEnabled,
+        syncFrequency,
         updatedAt: new Date(),
       })
-      .where(eq(emailAccounts.id, accountId));
+      .where(eq(emailAccounts.id, accountId))
+      .returning();
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(updatedAccount[0]);
   } catch (error) {
     console.error('Error updating email account:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to update email account' },
       { status: 500 }
     );
   }
 }
 
 export async function DELETE(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await params;
     const accountId = parseInt(id);
     if (isNaN(accountId)) {
-      return NextResponse.json(
-        { error: 'Invalid account ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid account ID' }, { status: 400 });
     }
 
-    // Verify account ownership
     const account = await db.query.emailAccounts.findFirst({
-      where: and(
-        eq(emailAccounts.id, accountId),
-        eq(emailAccounts.userId, session.user.id)
-      ),
+      where: eq(emailAccounts.id, accountId),
     });
 
     if (!account) {
-      return NextResponse.json(
-        { error: 'Account not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    // Delete all newsletters for this account first
-    await db.delete(newsletters).where(eq(newsletters.emailAccountId, accountId));
+    if (account.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // Delete account
-    await db
-      .delete(emailAccounts)
-      .where(eq(emailAccounts.id, accountId));
+    await db.delete(emailAccounts).where(eq(emailAccounts.id, accountId));
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ message: 'Account deleted successfully' });
   } catch (error) {
     console.error('Error deleting email account:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to delete email account' },
       { status: 500 }
     );
   }

@@ -20,19 +20,15 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build query conditions
-    let whereConditions: SQL<unknown>;
-    
-    if (search.trim()) {
-      whereConditions = and(
-        eq(userNewsletterEmailWhitelist.userId, session.user.id),
-        or(
-          ilike(userNewsletterEmailWhitelist.email, `%${search}%`),
-          ilike(userNewsletterEmailWhitelist.name || '', `%${search}%`)
+    const whereConditions = search.trim() 
+      ? and(
+          eq(userNewsletterEmailWhitelist.userId, session.user.id),
+          or(
+            ilike(userNewsletterEmailWhitelist.email, `%${search}%`),
+            ilike(userNewsletterEmailWhitelist.name || '', `%${search}%`)
+          )
         )
-      );
-    } else {
-      whereConditions = eq(userNewsletterEmailWhitelist.userId, session.user.id);
-    }
+      : eq(userNewsletterEmailWhitelist.userId, session.user.id);
 
     // Get total count
     const totalCount = await db

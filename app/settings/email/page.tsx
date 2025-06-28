@@ -1,5 +1,5 @@
+import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { db } from '@/lib/db';
 import { emailAccounts } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 
 export default async function EmailSettingsPage() {
   const session = await getServerSession(authOptions);
+  
   if (!session?.user) {
     return null;
   }

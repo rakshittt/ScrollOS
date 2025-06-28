@@ -1,7 +1,7 @@
 // src/app/auth/signin/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
-export default function SignIn() {
+function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -142,5 +142,13 @@ export default function SignIn() {
         </form>
       </Card>
     </AuthLayout>
+  );
+}
+
+export default function SignInWithSuspense() {
+  return (
+    <Suspense>
+      <SignIn />
+    </Suspense>
   );
 }
