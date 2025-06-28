@@ -6,10 +6,11 @@ import { requireAuth } from '@/lib/auth';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const userId = await requireAuth();
+    const { id } = await params;
     const body = await request.json();
     const { name, condition, action, isActive } = body;
 
@@ -24,7 +25,7 @@ export async function PATCH(
       .update(newsletterRules)
       .set(updateData)
       .where(and(
-        eq(newsletterRules.id, parseInt(params.id)),
+        eq(newsletterRules.id, parseInt(id)),
         eq(newsletterRules.userId, userId)
       ))
       .returning();
@@ -48,15 +49,16 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const userId = await requireAuth();
+    const { id } = await params;
 
     const result = await db
       .delete(newsletterRules)
       .where(and(
-        eq(newsletterRules.id, parseInt(params.id)),
+        eq(newsletterRules.id, parseInt(id)),
         eq(newsletterRules.userId, userId)
       ))
       .returning();

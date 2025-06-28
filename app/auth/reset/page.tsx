@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Label } from '@/components/ui/Label';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 
-export default function ResetPasswordPage() {
+function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -107,5 +107,13 @@ export default function ResetPasswordPage() {
         </form>
       </Card>
     </AuthLayout>
+  );
+}
+
+export default function ResetPasswordPageWithSuspense() {
+  return (
+    <Suspense>
+      <ResetPasswordPage />
+    </Suspense>
   );
 } 

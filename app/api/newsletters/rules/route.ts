@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { newsletterRules } from '@/lib/schema';
 import { eq, and } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
 // GET /api/newsletters/rules - List all rules

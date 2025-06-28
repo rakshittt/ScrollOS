@@ -8,7 +8,7 @@ import { eq, and } from 'drizzle-orm';
 // PATCH /api/categories/[id] - Update a category
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +16,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const categoryId = parseInt(params.id);
+    const { id } = await params;
+    const categoryId = parseInt(id);
     if (isNaN(categoryId)) {
       return NextResponse.json(
         { error: 'Invalid category ID' },
@@ -95,7 +96,7 @@ export async function PATCH(
 // DELETE /api/categories/[id] - Delete a category
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -103,7 +104,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const categoryId = parseInt(params.id);
+    const { id } = await params;
+    const categoryId = parseInt(id);
     if (isNaN(categoryId)) {
       return NextResponse.json(
         { error: 'Invalid category ID' },

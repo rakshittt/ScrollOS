@@ -3,7 +3,6 @@ import { db } from '@/lib/db';
 import { newsletters, newsletterRules, categories } from '@/lib/schema';
 import { eq, and } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
-import { NewsletterCache } from '@/lib/redis';
 
 type RuleCondition = {
   type: 'sender' | 'subject' | 'content';
@@ -94,9 +93,6 @@ export async function POST(request: NextRequest) {
 
     // Apply rules
     await applyRules(newsletter, userId);
-
-    // Invalidate cache
-    await NewsletterCache.invalidatePattern(`newsletters:${userId}:*`);
 
     return NextResponse.json({ success: true });
   } catch (error) {

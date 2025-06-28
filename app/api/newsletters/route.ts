@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { newsletters, newsletterRules, categories } from '@/lib/schema';
-import { NewsletterCache } from '@/lib/redis';
 import { eq, desc, like, and, or, sql } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
 
@@ -87,14 +86,6 @@ export async function GET(request: NextRequest) {
     
     console.log(`🔍 Filtering newsletters by folder: ${folder}`);
 
-    // Check cache first
-    const cacheKey = `newsletters:${userId}:${folder}:${query || 'all'}:${page}:${limit}:${categoryId || 'all'}:${emailAccountId || 'all'}`;
-    const cached = await NewsletterCache.get(cacheKey);
-    
-    if (cached) {
-      return NextResponse.json(cached);
-    }
-
     // Build query conditions
     const conditions = [eq(newsletters.userId, userId)];
     
@@ -139,9 +130,6 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .offset((page - 1) * limit);
 
-    // Cache the results
-    await NewsletterCache.set(cacheKey, result, 300); // 5 minutes cache
-
     return NextResponse.json(result);
   } catch (error) {
     console.error('❌ Error fetching newsletters:', error);
@@ -180,9 +168,6 @@ export async function POST(request: NextRequest) {
 
     // Apply rules to the new newsletter
     await applyRules(result[0], userId);
-
-    // Invalidate cache
-    await NewsletterCache.invalidatePattern(`newsletters:${userId}:*`);
 
     return NextResponse.json(result[0], { status: 201 });
   } catch (error) {
@@ -223,9 +208,6 @@ export async function PUT(request: NextRequest) {
         { status: 404 }
       );
     }
-
-    // Invalidate cache
-    await NewsletterCache.invalidatePattern(`newsletters:${userId}:*`);
 
     return NextResponse.json(result[0]);
   } catch (error) {
