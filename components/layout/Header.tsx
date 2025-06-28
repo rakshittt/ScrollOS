@@ -136,20 +136,15 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
         detail: { 
           status: 'success', 
           message: successMessage,
-          count: result.syncedCount || 0
+          count: result.syncedCount || 0,
+          results: result.syncResults || [],
+          totalEmails: result.totalEmailsProcessed || 0
         }
       }));
       
-      // Reset status after 3 seconds
-      setTimeout(() => {
-        setSyncStatus('idle');
-        window.dispatchEvent(new CustomEvent('sync-status-update', {
-          detail: { status: 'idle' }
-        }));
-      }, 3000);
+      // Note: Removed automatic timeout - banner will stay visible until user manually dismisses
       
-      // Refresh the page to show new newsletters
-      window.location.reload();
+      // Note: Removed automatic page reload - user can refresh manually via the banner's "View New" button
     } catch (error) {
       console.error('❌ Quick sync failed:', error);
       setSyncStatus('error');
@@ -158,16 +153,16 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
       
       // Dispatch sync error event
       window.dispatchEvent(new CustomEvent('sync-status-update', {
-        detail: { status: 'error', message: errorMessage }
+        detail: { 
+          status: 'error', 
+          message: errorMessage,
+          count: 0,
+          results: [],
+          totalEmails: 0
+        }
       }));
       
-      // Reset status after 3 seconds
-      setTimeout(() => {
-        setSyncStatus('idle');
-        window.dispatchEvent(new CustomEvent('sync-status-update', {
-          detail: { status: 'idle' }
-        }));
-      }, 3000);
+      // Note: Removed automatic timeout - banner will stay visible until user manually dismisses
     } finally {
       setIsSyncing(false);
     }
@@ -175,15 +170,15 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
 
   const handleDomainWhitelistSync = () => {
     // Navigate to email settings where the domain whitelist modal is available
-    window.location.href = '/settings/email';
+    window.location.href = '/settings/whitelist';
   };
 
   const getSyncButtonContent = () => {
     switch (syncStatus) {
       case 'syncing':
-        return <Loader2 className="h-4 w-4 animate-spin" />;
+        return <RefreshCw className="h-4 w-4 animate-spin" />;
       case 'success':
-        return <Sparkles className="h-4 w-4 text-green-500" />;
+        return <RefreshCw className="h-4 w-4 text-green-500" />;
       case 'error':
         return <RefreshCw className="h-4 w-4 text-red-500" />;
       default:
@@ -367,7 +362,7 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
               >
                 <ShieldCheck className="h-4 w-4" />
                 <div className="flex-1">
-                  <span className="text-sm font-normal">Domain Whitelist</span>
+                  <span className="text-sm font-normal">Email Whitelist</span>
                   <p className="text-xs text-muted-foreground">Manage newsletter domains</p>
                 </div>
               </DropdownMenu.Item>

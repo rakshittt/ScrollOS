@@ -56,6 +56,13 @@ export async function POST(request: NextRequest) {
       let totalSynced = 0;
       let syncedCount = 0;
       const emailService = EmailService.getInstance();
+      const syncResults: Array<{
+        email: string;
+        newslettersFound: number;
+        status: 'success' | 'error' | 'skipped';
+        error?: string;
+      }> = [];
+      let totalEmailsProcessed = 0;
       
       for (const account of accountsToSync) {
         try {
@@ -70,9 +77,23 @@ export async function POST(request: NextRequest) {
           totalSynced += result.syncedCount || 0;
           syncedCount++;
           
+          // Add results for each email processed
+          if (result.emailResults) {
+            syncResults.push(...result.emailResults);
+            totalEmailsProcessed += result.emailResults.length;
+          }
+          
           console.log(`✅ Synced ${result.syncedCount || 0} newsletters from ${account.email}`);
         } catch (error) {
           console.error(`❌ Error syncing account ${account.email}:`, error);
+          // Add error result for this account
+          syncResults.push({
+            email: account.email,
+            newslettersFound: 0,
+            status: 'error',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+          totalEmailsProcessed++;
         }
       }
       
@@ -84,6 +105,8 @@ export async function POST(request: NextRequest) {
         success: true,
         message: `Sync completed for ${accountName}. ${totalSynced} newsletters imported from whitelisted emails.`,
         syncedCount: totalSynced,
+        syncResults,
+        totalEmailsProcessed,
       });
     }
 

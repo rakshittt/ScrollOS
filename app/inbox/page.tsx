@@ -34,6 +34,13 @@ export default function InboxPage() {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [syncMessage, setSyncMessage] = useState<string>('');
   const [newNewsletterCount, setNewNewsletterCount] = useState<number>(0);
+  const [syncResults, setSyncResults] = useState<Array<{
+    email: string;
+    newslettersFound: number;
+    status: 'success' | 'error' | 'skipped';
+    error?: string;
+  }>>([]);
+  const [totalEmailsProcessed, setTotalEmailsProcessed] = useState<number>(0);
   const { toast } = useToast();
 
   // Fetch accounts on mount
@@ -77,10 +84,12 @@ export default function InboxPage() {
   // Listen for sync events from header
   useEffect(() => {
     const handleSyncEvent = (event: CustomEvent) => {
-      const { status, message, count } = event.detail;
+      const { status, message, count, results, totalEmails } = event.detail;
       setSyncStatus(status);
       setSyncMessage(message || '');
       setNewNewsletterCount(count || 0);
+      setSyncResults(results || []);
+      setTotalEmailsProcessed(totalEmails || 0);
       
       if (status === 'success' && message) {
         toast.success(message);
@@ -99,6 +108,8 @@ export default function InboxPage() {
     setSyncStatus('idle');
     setSyncMessage('');
     setNewNewsletterCount(0);
+    setSyncResults([]);
+    setTotalEmailsProcessed(0);
   };
 
   const handleSyncRetry = () => {
@@ -205,6 +216,8 @@ export default function InboxPage() {
         status={syncStatus}
         message={syncMessage}
         newNewsletterCount={newNewsletterCount}
+        syncResults={syncResults}
+        totalEmailsProcessed={totalEmailsProcessed}
         onDismiss={handleSyncDismiss}
         onRetry={handleSyncRetry}
         onViewSettings={handleViewSettings}
