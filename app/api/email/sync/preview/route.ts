@@ -52,7 +52,9 @@ export async function GET(request: Request) {
     const whitelistedEmails = await db.query.userNewsletterEmailWhitelist.findMany({
       where: eq(userNewsletterEmailWhitelist.userId, session.user.id),
     });
-    const whitelistedDomains = new Set(whitelistedEmails.map(e => e.domain));
+    const whitelistedEmailSet = new Set(whitelistedEmails.map(e => e.email));
+    
+    console.log(`[Preview] Found ${whitelistedEmails.length} whitelisted emails for user ${session.user.id}:`, whitelistedEmails.map(e => e.email));
 
     // Extract unique email addresses with counts and whitelist status
     const emailMap = new Map();
@@ -65,14 +67,21 @@ export async function GET(request: Request) {
         if (emailMap.has(senderEmail)) {
           // Increment count for existing email
           emailMap.get(senderEmail).count++;
+          // Add newsletter to the array
+          emailMap.get(senderEmail).newsletters.push(n);
         } else {
           // Add new email entry
+          const isWhitelisted = whitelistedEmailSet.has(senderEmail);
+          if (isWhitelisted) {
+            console.log(`[Preview] Email ${senderEmail} is already whitelisted`);
+          }
+          
           emailMap.set(senderEmail, {
             email: senderEmail,
             name: senderName,
             domain,
             count: 1,
-            isWhitelisted: whitelistedDomains.has(domain),
+            isWhitelisted,
             sample: {
               subject: n.subject,
               from: n.from?.text,
@@ -81,6 +90,7 @@ export async function GET(request: Request) {
               confidence: n.confidence,
               score: n.score,
             },
+            newsletters: [n], // Store the raw newsletter data
           });
         }
       }

@@ -4,60 +4,133 @@ import { authOptions } from '@/lib/auth';
 import { EmailService } from '@/lib/services/email-service';
 import { db } from '@/lib/db';
 import { emailAccounts } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔄 Email callback initiated');
+    
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.error('❌ No session found in callback');
+      return NextResponse.json({ error: 'Unauthorized - No session found' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
-    const provider = searchParams.get('provider') || 'gmail';
+    const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+    const state = searchParams.get('state');
+    const provider = state || searchParams.get('provider') || 'gmail';
+
+    console.log('📋 Callback parameters:', {
+      hasCode: !!code,
+      error,
+      errorDescription,
+      provider,
+      userId: session.user.id
+    });
+
+    // Check for OAuth errors
+    if (error) {
+      console.error('❌ OAuth error received:', { error, errorDescription });
+      return NextResponse.redirect(
+        new URL(`/settings/email?error=oauth_error&message=${encodeURIComponent(errorDescription || error)}`, request.url)
+      );
+    }
 
     if (!code) {
-      return NextResponse.json({ error: 'Missing code parameter' }, { status: 400 });
+      console.error('❌ No authorization code received');
+      return NextResponse.redirect(
+        new URL('/settings/email?error=no_code', request.url)
+      );
     }
 
     const emailService = EmailService.getInstance();
     let tokens;
 
     try {
+      console.log(`🔐 Processing ${provider} callback...`);
+      
       if (provider === 'gmail') {
         tokens = await emailService.handleGmailCallback(code);
       } else if (provider === 'outlook') {
         tokens = await emailService.handleOutlookCallback(code);
       } else {
-        return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
+        console.error('❌ Invalid provider:', provider);
+        return NextResponse.redirect(
+          new URL('/settings/email?error=invalid_provider', request.url)
+        );
       }
+      
+      console.log('✅ Tokens obtained successfully');
     } catch (error) {
-      console.error('Error getting tokens:', error);
-      return NextResponse.redirect(new URL('/settings/email?error=token_error', request.url));
+      console.error('❌ Error getting tokens:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown token error';
+      return NextResponse.redirect(
+        new URL(`/settings/email?error=token_error&message=${encodeURIComponent(errorMessage)}`, request.url)
+      );
     }
 
     try {
+      console.log('👤 Getting user info...');
+      
       // Get user info from the provider
       const userInfo = await emailService.getUserInfo(provider, tokens.accessToken);
+      
+      if (!userInfo.email) {
+        throw new Error('No email address found in user info');
+      }
 
-      // Save the account
-      await db.insert(emailAccounts).values({
-        userId: session.user.id,
-        provider,
-        email: userInfo.email,
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        tokenExpiresAt: tokens.expiresAt,
+      console.log('💾 Saving account to database...');
+      
+      // Check if account already exists
+      const existingAccount = await db.query.emailAccounts.findFirst({
+        where: eq(emailAccounts.userId, session.user.id) && eq(emailAccounts.email, userInfo.email),
       });
 
-      // Redirect to success page
-      return NextResponse.redirect(new URL('/settings/email?success=true', request.url));
+      if (existingAccount) {
+        console.log('🔄 Updating existing account...');
+        await db.update(emailAccounts)
+          .set({
+            provider,
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            tokenExpiresAt: tokens.expiresAt,
+            updatedAt: new Date(),
+          })
+          .where(eq(emailAccounts.id, existingAccount.id));
+      } else {
+        console.log('➕ Creating new account...');
+        await db.insert(emailAccounts).values({
+          userId: session.user.id,
+          provider,
+          email: userInfo.email,
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          tokenExpiresAt: tokens.expiresAt,
+        });
+      }
+
+      console.log('✅ Account saved successfully');
+      
+      // Redirect to success page with return URL
+      const returnUrl = '/settings/email?success=true&email=' + encodeURIComponent(userInfo.email);
+      return NextResponse.redirect(
+        new URL(returnUrl, request.url)
+      );
     } catch (error) {
-      console.error('Error saving account:', error);
-      return NextResponse.redirect(new URL('/settings/email?error=save_error', request.url));
+      console.error('❌ Error saving account:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown save error';
+      return NextResponse.redirect(
+        new URL(`/settings/email?error=save_error&message=${encodeURIComponent(errorMessage)}`, request.url)
+      );
     }
   } catch (error) {
-    console.error('Error in email callback:', error);
-    return NextResponse.redirect(new URL('/settings/email?error=unknown', request.url));
+    console.error('❌ Unexpected error in email callback:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.redirect(
+      new URL(`/settings/email?error=unknown&message=${encodeURIComponent(errorMessage)}`, request.url)
+    );
   }
 } 

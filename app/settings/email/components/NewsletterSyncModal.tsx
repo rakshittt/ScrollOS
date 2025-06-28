@@ -17,13 +17,14 @@ interface EmailPreview {
   count: number;
   isWhitelisted: boolean;
   sample: {
-  subject: string;
+    subject: string;
     from: string;
     senderEmail: string;
-  date: string;
-  confidence: 'low' | 'medium' | 'high';
+    date: string;
+    confidence: 'low' | 'medium' | 'high';
     score: number;
   };
+  newsletters?: any[];
 }
 
 interface ImportedCount {
@@ -79,6 +80,11 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
         seen.add(e.email);
         return true;
       });
+      
+      // Debug: Log whitelisted emails
+      const whitelistedEmails = uniqueEmails.filter(e => e.isWhitelisted);
+      console.log(`[NewsletterSyncModal] Found ${whitelistedEmails.length} whitelisted emails:`, whitelistedEmails.map(e => e.email));
+      
       setEmails(uniqueEmails);
       console.log('[NewsletterSyncModal] Unique emails set:', uniqueEmails);
     } catch (error) {
@@ -118,16 +124,29 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
     setIsLoading(true);
     setStep('importing');
     console.log('[NewsletterSyncModal] Whitelisting emails:', Array.from(selectedEmails));
+    
     try {
+      // Collect all newsletter data from selected emails
+      const previewData: any[] = [];
+      emails.forEach(email => {
+        if (selectedEmails.has(email.email) && email.newsletters) {
+          previewData.push(...email.newsletters);
+        }
+      });
+      
+      console.log(`[NewsletterSyncModal] Sending ${previewData.length} newsletters with import request`);
+      
       const response = await fetch('/api/email/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           accountId,
           acceptedEmails: Array.from(selectedEmails),
+          previewData, // Send the preview data to avoid fetching again
         }),
       });
       if (!response.ok) throw new Error('Failed to whitelist emails');
+      
       // After import, fetch imported counts and show results
       await fetchImportedCounts();
       setStep('results');
@@ -261,6 +280,11 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
             {selectedEmails.size > 0 && (
               <div className="text-sm text-muted-foreground">
                 {selectedEmails.size} email{selectedEmails.size !== 1 ? 's' : ''} selected • {totalNewsletterCount} newsletter{totalNewsletterCount !== 1 ? 's' : ''} to import
+                {emails.filter(e => selectedEmails.has(e.email) && e.isWhitelisted).length > 0 && (
+                  <span className="ml-2 text-green-600 font-medium">
+                    • {emails.filter(e => selectedEmails.has(e.email) && e.isWhitelisted).length} already whitelisted
+                  </span>
+                )}
               </div>
             )}
           <Button
@@ -290,69 +314,118 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {emails.map((e) => (
+                        {emails.map((e) => {
+                          // Debug: Log whitelisted status for each email
+                          if (e.isWhitelisted) {
+                            console.log(`[NewsletterSyncModal] Rendering whitelisted email: ${e.email}`);
+                          }
+                          
+                          return (
                           <Card
                             key={e.email}
                             className={
-                              `flex flex-col gap-3 p-5 border rounded-xl shadow-sm hover:border-primary focus-within:ring-2 focus-within:ring-primary-500 transition-all duration-150 group min-h-[120px] animate-fade-in ${
-                                selectedEmails.has(e.email) 
-                                  ? 'border-primary bg-primary/5 ring-1 ring-primary/20' 
-                                  : 'border-border bg-background'
+                              `flex flex-col gap-2 p-4 border rounded-lg shadow-sm hover:border-primary focus-within:ring-2 focus-within:ring-primary-500 transition-all duration-150 group min-h-[100px] animate-fade-in ${
+                                e.isWhitelisted 
+                                  ? 'border-green-400 bg-green-100/80 ring-2 ring-green-300 shadow-lg shadow-green-200/50' 
+                                  : selectedEmails.has(e.email) 
+                                    ? 'border-primary bg-primary/5 ring-1 ring-primary/20' 
+                                    : 'border-border bg-background'
                               }`
                             }
                             tabIndex={0}
-                            aria-label={`Email ${e.email}`}
-                            style={{ background: selectedEmails.has(e.email) ? 'var(--primary-50)' : 'var(--background-secondary)' }}
+                            aria-label={`Email ${e.email}${e.isWhitelisted ? ' (Whitelisted)' : ''}`}
+                            style={{ 
+                              background: e.isWhitelisted 
+                                ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%)' 
+                                : selectedEmails.has(e.email) 
+                                  ? 'var(--primary-50)' 
+                                  : 'var(--background-secondary)' 
+                            }}
                           >
-                            <div className="flex items-center gap-4 mb-1">
-                <Checkbox
+                            <div className="flex items-start gap-3">
+                              <Checkbox
                                 id={e.email}
                                 checked={selectedEmails.has(e.email)}
                                 onCheckedChange={(checked) => handleSelectEmail(e.email, !!checked)}
-                                className="mt-0.5 cursor-pointer h-5 w-5 border-2 border-border hover:border-primary transition-colors data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                className="mt-0.5 cursor-pointer h-4 w-4 border-2 border-border hover:border-primary transition-colors data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                 style={{ zIndex: 2 }}
                                 aria-label={`Select email ${e.email}`}
                               />
-                              <img
-                                src={`https://www.google.com/s2/favicons?domain=${e.domain}`}
-                                alt={e.domain}
-                                className="h-8 w-8 rounded bg-muted border border-border flex-shrink-0 shadow-md"
-                                style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.08)' }}
-                />
-                <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-lg text-foreground truncate" title={e.name || e.email}>
-                                  {e.name || e.email}
-                                </div>
-                                <div className="text-sm text-muted-foreground truncate flex items-center gap-1" title={e.email}>
-                                  {e.email}
-                                  {e.isWhitelisted && (
-                                    <div title="Domain is already whitelisted">
-                                      <Shield className="h-3 w-3 text-green-600" />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <Badge className={`capitalize ${getConfidenceBadgeStyles(e.sample.confidence)}`}>
-                                  {e.sample.confidence} confidence
-                                </Badge>
-                                <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                                  {e.count} newsletter{e.count !== 1 ? 's' : ''}
-                                </Badge>
+                              <div className="relative flex-shrink-0">
+                                <img
+                                  src={`https://www.google.com/s2/favicons?domain=${e.domain}`}
+                                  alt={e.domain}
+                                  className={`h-8 w-8 rounded-md bg-muted border border-border flex-shrink-0 shadow-sm ${
+                                    e.isWhitelisted ? 'ring-2 ring-green-400 shadow-green-300/50' : ''
+                                  }`}
+                                  style={{ boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1)' }}
+                                />
                                 {e.isWhitelisted && (
-                                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                                    Whitelisted
-                                  </Badge>
+                                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border border-white shadow-sm">
+                                    <Shield className="h-2.5 w-2.5 text-white" />
+                                  </div>
                                 )}
                               </div>
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-semibold text-base text-foreground truncate" title={e.name || e.email}>
+                                    {e.name || e.email}
+                                  </h3>
+                                  {e.isWhitelisted && (
+                                    <span className="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full font-bold shadow-sm">
+                                      ✓ WHITELISTED
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground font-medium" title={e.email}>
+                                  {e.email}
+                                </p>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <Badge className={`capitalize text-xs font-medium ${getConfidenceBadgeStyles(e.sample.confidence)}`}>
+                                    {e.sample.confidence}
+                                  </Badge>
+                                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs font-medium">
+                                    {e.count} newsletter{e.count !== 1 ? 's' : ''}
+                                  </Badge>
+                                  {/* {e.isWhitelisted && (
+                                    <Badge className="bg-green-500 text-white border-green-500 text-xs font-bold shadow-sm">
+                                      <Shield className="h-2.5 w-2.5 mr-1" />
+                                      IMPORTED
+                                    </Badge>
+                                  )} */}
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
-                              <span className="truncate max-w-[120px]" title={e.sample.subject}>Subject: <span className="text-foreground font-medium">{e.sample.subject}</span></span>
-                              <span className="whitespace-nowrap">{new Date(e.sample.date).toLocaleString()}</span>
-                              <span className="text-info font-medium">Type: {getNewsletterType(e.sample)}</span>
+                            
+                            <div className={`border-t pt-2 ${e.isWhitelisted ? 'border-green-200' : 'border-border'}`}>
+                              <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 text-xs ${
+                                e.isWhitelisted ? 'text-green-800' : 'text-muted-foreground'
+                              }`}>
+                                <div className="space-y-0.5">
+                                  <span className="font-medium text-foreground">Subject:</span>
+                                  <p className="text-foreground font-medium truncate" title={e.sample.subject}>
+                                    {e.sample.subject}
+                                  </p>
+                                </div>
+                                <div className="space-y-0.5">
+                                  <span className="font-medium text-foreground">Type:</span>
+                                  <p className="text-foreground font-medium">
+                                    {getNewsletterType(e.sample)}
+                                  </p>
+                                </div>
+                              </div>
+                              {e.isWhitelisted && (
+                                <div className="mt-2 p-1.5 bg-green-50 border border-green-200 rounded-md">
+                                  <span className="text-green-700 font-medium flex items-center gap-1.5 text-xs">
+                                    <Shield className="h-3 w-3" />
+                                    Ready to sync
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </Card>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -360,188 +433,8 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
               </div>
             </>
           )}
-          {/* Step 2: Importing Progress */}
-          {step === 'importing' && (
-            <div className="flex flex-col items-center justify-center flex-1 animate-fade-in">
-              <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
-              <div className="text-lg font-semibold text-primary mb-2 animate-fade-in">Importing newsletters...</div>
-              <div className="text-xs text-muted-foreground animate-fade-in">This may take a minute. You can close this modal and come back later.</div>
-            </div>
-          )}
-          {/* Step 3: Results */}
-          {step === 'results' && (
-            <div className="px-6 py-8 overflow-y-auto max-h-[60vh] animate-fade-in">
-              <div className="flex flex-col items-center mb-8">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-fade-in">
-                  <CheckCircle2 className="h-8 w-8 text-green-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-foreground mb-2 animate-fade-in">Import Complete!</h3>
-                <p className="text-muted-foreground text-center animate-fade-in">
-                  Your newsletters have been successfully imported and are ready to read.
-                </p>
-              </div>
-
-              {/* Import Summary */}
-              <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl p-6 mb-6 border border-green-200 dark:border-green-800 animate-fade-in">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold text-foreground">Import Summary</h4>
-                  <div className="flex items-center space-x-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium text-primary">Success</span>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800">
-                    <div className="text-2xl font-bold text-green-600 mb-1">
-                      {selectedEmails.size}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Email{selectedEmails.size !== 1 ? 's' : ''} Whitelisted
-                    </div>
-                  </div>
-                  
-                  <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <div className="text-2xl font-bold text-blue-600 mb-1">
-                      {totalNewsletterCount}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Newsletter{totalNewsletterCount !== 1 ? 's' : ''} Imported
-                    </div>
-                  </div>
-                  
-                  <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800">
-                    <div className="text-2xl font-bold text-purple-600 mb-1">
-                      {emails.filter(e => e.isWhitelisted).length}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Already Whitelisted
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Imported Emails List */}
-              <div className="mb-6 animate-fade-in">
-                <h4 className="text-lg font-semibold text-foreground mb-4">Imported Newsletters</h4>
-                
-                {importedCounts && importedCounts.length > 0 ? (
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {importedCounts.map((item, index) => (
-                      <div 
-                        key={item.email} 
-                        className="flex items-center gap-4 p-4 bg-background border border-border rounded-lg hover:bg-accent/5 transition-colors animate-fade-in"
-                        style={{ animationDelay: `${index * 100}ms` }}
-                      >
-                        <img
-                          src={`https://www.google.com/s2/favicons?domain=${item.email.split('@')[1]}`}
-                          alt={item.email.split('@')[1]}
-                          className="h-8 w-8 rounded bg-muted border border-border flex-shrink-0 shadow-sm"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-foreground truncate" title={item.email}>
-                            {item.email}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {item.email.split('@')[1]}
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="text-xs text-primary bg-primary/10 px-3 py-1 rounded-full font-semibold">
-                            {item.count} Newsletter{item.count !== 1 ? 's' : ''}
-                          </div>
-                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                </div>
-              </div>
-            ))}
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {/* Fallback: Show selected emails with their counts */}
-                    {Array.from(selectedEmails).map((email, index) => {
-                      const emailData = emails.find(e => e.email === email);
-                      return (
-                        <div 
-                          key={email} 
-                          className="flex items-center gap-4 p-4 bg-background border border-border rounded-lg hover:bg-accent/5 transition-colors animate-fade-in"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <img
-                            src={`https://www.google.com/s2/favicons?domain=${email.split('@')[1]}`}
-                            alt={email.split('@')[1]}
-                            className="h-8 w-8 rounded bg-muted border border-border flex-shrink-0 shadow-sm"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-foreground truncate" title={email}>
-                              {emailData?.name || email}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {email}
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="text-xs text-primary bg-primary/10 px-3 py-1 rounded-full font-semibold">
-                              {emailData?.count || 0} Newsletter{(emailData?.count || 0) !== 1 ? 's' : ''}
-                            </div>
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Next Steps */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 mb-6 animate-fade-in">
-                <h4 className="text-lg font-semibold text-foreground mb-3 flex items-center">
-                  <Mail className="h-5 w-5 mr-2 text-blue-600" />
-                  What's Next?
-                </h4>
-                <div className="space-y-3 text-sm text-muted-foreground">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <p>Your newsletters are now available in your inbox</p>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <p>Use categories and rules to organize your newsletters</p>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <p>Set up automatic syncing to import new newsletters regularly</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4 animate-fade-in">
-                <div className="text-sm text-muted-foreground text-center sm:text-left">
-                  You can close this modal and continue using the app
-                </div>
-                <div className="flex space-x-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setStep('select');
-                      setSelectedEmails(new Set());
-                    }}
-                    className="animate-fade-in"
-                  >
-                    Import More
-                  </Button>
-                  <Button 
-                    onClick={onClose} 
-                    className="bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 animate-fade-in"
-                  >
-                    Done
-                  </Button>
-                </div>
-              </div>
-              </div>
-            )}
-          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
-} 
+}

@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Accept emails and store in whitelist
-    const { accountId, acceptedEmails } = body;
+    const { accountId, acceptedEmails, previewData } = body;
     if (!accountId || !acceptedEmails || !Array.isArray(acceptedEmails)) {
       return NextResponse.json(
         { error: 'Account ID and accepted emails are required' },
@@ -113,18 +113,71 @@ export async function POST(request: NextRequest) {
         await db.insert(userNewsletterEmailWhitelist).values({
           userId: session.user.id,
           email,
-            });
+        });
       }
     }
 
-    // Import newsletters synchronously (no background job)
-    await importNewsletters({
-      userId: session.user.id,
-      accountId: account.id,
-      acceptedEmails,
-    });
+    // If preview data is provided, use it directly instead of fetching again
+    if (previewData && Array.isArray(previewData)) {
+      console.log(`📥 Using provided preview data for ${acceptedEmails.length} emails`);
+      
+      // Filter preview data to only include accepted emails
+      const acceptedPreviewData = previewData.filter((newsletter: any) => {
+        const senderEmail = newsletter.from?.value?.[0]?.address || '';
+        return acceptedEmails.includes(senderEmail);
+      });
 
-    return NextResponse.json({ success: true, message: 'Emails whitelisted. Newsletters have been imported.' });
+      // Import newsletters directly from preview data
+      let importedCount = 0;
+
+      for (const newsletter of acceptedPreviewData) {
+        try {
+          // Check if newsletter already exists
+          const existingNewsletter = await db.query.newsletters.findFirst({
+            where: eq(newsletters.messageId, newsletter.id),
+          });
+
+          if (!existingNewsletter) {
+            // Insert newsletter
+            await db.insert(newsletters).values({
+              userId: session.user.id,
+              emailAccountId: account.id,
+              messageId: newsletter.id,
+              title: newsletter.subject,
+              subject: newsletter.subject,
+              sender: newsletter.from?.text || '',
+              senderEmail: newsletter.from?.value?.[0]?.address || '',
+              content: newsletter.text || '',
+              htmlContent: newsletter.html || '',
+              receivedAt: new Date(newsletter.date),
+              isRead: false,
+              isStarred: false,
+              isArchived: false,
+              importedAt: new Date(),
+            });
+            importedCount++;
+          }
+        } catch (error) {
+          console.error(`Error importing newsletter ${newsletter.id}:`, error);
+        }
+      }
+
+      console.log(`✅ Imported ${importedCount} newsletters from preview data`);
+      return NextResponse.json({ 
+        success: true, 
+        message: `Emails whitelisted. ${importedCount} newsletters imported.`,
+        importedCount 
+      });
+    } else {
+      // Fallback: Import newsletters using the existing method
+      await importNewsletters({
+        userId: session.user.id,
+        accountId: account.id,
+        acceptedEmails,
+      });
+
+      return NextResponse.json({ success: true, message: 'Emails whitelisted. Newsletters have been imported.' });
+    }
   } catch (error) {
     console.error('❌ Error whitelisting emails:', error);
     return NextResponse.json(
