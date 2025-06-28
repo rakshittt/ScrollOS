@@ -1,9 +1,9 @@
-'use client';
+'use client'
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function OAuthCompletePage() {
+function OAuthCompleteInner() {
   const searchParams = useSearchParams();
   
   useEffect(() => {
@@ -38,5 +38,13 @@ export default function OAuthCompletePage() {
         <p className="text-sm text-muted-foreground">This window will close automatically.</p>
       </div>
     </div>
+  );
+}
+
+export default function OAuthCompletePage() {
+  return (
+    <Suspense>
+      <OAuthCompleteInner />
+    </Suspense>
   );
 } 

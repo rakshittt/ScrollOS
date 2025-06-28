@@ -23,30 +23,31 @@ export async function importNewsletters({ userId, accountId, acceptedEmails }: {
   const toInsert = [];
   for (const n of accountNewsletters) {
     const senderEmail = n.from?.value?.[0]?.address || '';
-    if (acceptedEmails.includes(senderEmail) && !existingIds.has(n.id)) {
+    const messageId = typeof n.id === 'string' ? n.id : String(n.id);
+    if (acceptedEmails.includes(senderEmail) && !existingIds.has(messageId)) {
       let content = '';
       let htmlContent = '';
       // Fetch full message for content
       try {
         if (account.provider === 'gmail') {
           const gmail = await emailService.getGmailClient(account);
-          const email = await gmail.users.messages.get({ userId: 'me', id: n.id, format: 'full' });
+          const email = await gmail.users.messages.get({ userId: 'me', id: messageId, format: 'full' });
           const emailData = emailService.extractGmailData(email.data);
           content = emailData?.text || '';
           htmlContent = emailData?.html || '';
         } else if (account.provider === 'outlook') {
           const client = await emailService.getOutlookClient(account);
-          const fullMessage = await client.api(`/me/messages/${n.id}`).get();
+          const fullMessage = await client.api(`/me/messages/${messageId}`).get();
           content = fullMessage.body?.content || '';
           htmlContent = fullMessage.body?.contentType === 'html' ? fullMessage.body.content : '';
         }
       } catch (err) {
-        console.error(`[importNewsletters] Failed to fetch full content for message ${n.id}:`, err);
+        console.error(`[importNewsletters] Failed to fetch full content for message ${messageId}:`, err);
       }
       toInsert.push({
         userId,
         emailAccountId: accountId,
-        messageId: n.id,
+        messageId,
         title: n.subject || '',
         sender: n.from?.text || '',
         senderEmail,

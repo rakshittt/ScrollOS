@@ -82,8 +82,8 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
       });
       
       // Debug: Log whitelisted emails
-      const whitelistedEmails = uniqueEmails.filter(e => e.isWhitelisted);
-      console.log(`[NewsletterSyncModal] Found ${whitelistedEmails.length} whitelisted emails:`, whitelistedEmails.map(e => e.email));
+      const whitelistedEmails = uniqueEmails.filter((e: EmailPreview) => e.isWhitelisted);
+      console.log(`[NewsletterSyncModal] Found ${whitelistedEmails.length} whitelisted emails:`, whitelistedEmails.map((e: EmailPreview) => e.email));
       
       setEmails(uniqueEmails);
       console.log('[NewsletterSyncModal] Unique emails set:', uniqueEmails);
@@ -230,8 +230,8 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
 
   // Calculate total newsletter count from selected emails
   const totalNewsletterCount = emails
-    .filter(e => selectedEmails.has(e.email))
-    .reduce((sum, e) => sum + e.count, 0);
+    .filter((e: EmailPreview) => selectedEmails.has(e.email))
+    .reduce((sum, e: EmailPreview) => sum + e.count, 0);
 
   // Step indicator
   const stepIndicator = (
@@ -280,9 +280,9 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
             {selectedEmails.size > 0 && (
               <div className="text-sm text-muted-foreground">
                 {selectedEmails.size} email{selectedEmails.size !== 1 ? 's' : ''} selected • {totalNewsletterCount} newsletter{totalNewsletterCount !== 1 ? 's' : ''} to import
-                {emails.filter(e => selectedEmails.has(e.email) && e.isWhitelisted).length > 0 && (
+                {emails.filter((e: EmailPreview) => selectedEmails.has(e.email) && e.isWhitelisted).length > 0 && (
                   <span className="ml-2 text-green-600 font-medium">
-                    • {emails.filter(e => selectedEmails.has(e.email) && e.isWhitelisted).length} already whitelisted
+                    • {emails.filter((e: EmailPreview) => selectedEmails.has(e.email) && e.isWhitelisted).length} already whitelisted
                   </span>
                 )}
               </div>
