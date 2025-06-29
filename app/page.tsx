@@ -60,8 +60,9 @@ export default function LandingPage() {
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
               <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
+              <Link href="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">About</Link>
               <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Testimonials</a>
-              <a href="#contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Contact</a>
+              <Link href="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Contact</Link>
             </nav>
             
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -601,7 +602,7 @@ export default function LandingPage() {
             <div>
               <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6">Company</h3>
               <ul className="space-y-2 sm:space-y-3 text-sm sm:text-base text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors duration-200">About</a></li>
+                <li><Link href="/about" className="hover:text-foreground transition-colors duration-200">About</Link></li>
                 <li><a href="#" className="hover:text-foreground transition-colors duration-200">Blog</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors duration-200">Careers</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors duration-200">Press</a></li>
@@ -611,18 +612,26 @@ export default function LandingPage() {
             <div>
               <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6">Support</h3>
               <ul className="space-y-2 sm:space-y-3 text-sm sm:text-base text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors duration-200">Help Center</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors duration-200">Contact</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors duration-200">Privacy</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors duration-200">Terms</a></li>
+                <li><Link href="/help" className="hover:text-foreground transition-colors duration-200">Help Center</Link></li>
+                <li><Link href="/contact" className="hover:text-foreground transition-colors duration-200">Contact</Link></li>
+                <li><Link href="/legal/privacy" className="hover:text-foreground transition-colors duration-200">Privacy</Link></li>
+                <li><Link href="/legal/terms" className="hover:text-foreground transition-colors duration-200">Terms</Link></li>
               </ul>
             </div>
           </div>
           
-          <div className="mt-12 sm:mt-16 border-t border-border/50 pt-6 sm:pt-8 text-center">
-            <p className="text-sm sm:text-base text-muted-foreground">
-              © 2024 News360. All rights reserved.
-            </p>
+          <div className="mt-12 sm:mt-16 border-t border-border/50 pt-6 sm:pt-8">
+            <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+              <p className="text-sm sm:text-base text-muted-foreground">
+                © 2025 News360. All rights reserved.
+              </p>
+              <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+                <Link href="/legal/privacy" className="hover:text-foreground transition-colors duration-200">Privacy Policy</Link>
+                <Link href="/legal/terms" className="hover:text-foreground transition-colors duration-200">Terms of Service</Link>
+                <Link href="/legal/cookies" className="hover:text-foreground transition-colors duration-200">Cookie Policy</Link>
+                <Link href="/legal/contact" className="hover:text-foreground transition-colors duration-200">Contact</Link>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

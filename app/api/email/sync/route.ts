@@ -193,13 +193,17 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Fallback: Import newsletters using the existing method
-      await importNewsletters({
+      const result = await importNewsletters({
         userId: session.user.id,
         accountId: account.id,
         acceptedEmails,
       });
 
-      return NextResponse.json({ success: true, message: 'Emails whitelisted. Newsletters have been imported.' });
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Emails whitelisted. Newsletters have been imported.',
+        importedCount: result?.inserted || 0
+      });
     }
   } catch (error) {
     console.error('❌ Error whitelisting emails:', error);
