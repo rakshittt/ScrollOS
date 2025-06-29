@@ -16,6 +16,7 @@ interface AppLayoutProps {
   accounts?: any[];
   selectedAccountId?: number | null;
   onAccountChange?: (id: number | null) => void;
+  onShowOnboarding?: () => void;
 }
 
 export function AppLayout({ 
@@ -29,7 +30,8 @@ export function AppLayout({
   searchQuery = '',
   accounts = [],
   selectedAccountId,
-  onAccountChange
+  onAccountChange,
+  onShowOnboarding
 }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -56,6 +58,7 @@ export function AppLayout({
           accounts={accounts}
           selectedAccountId={selectedAccountId}
           onAccountChange={onAccountChange}
+          onShowOnboarding={onShowOnboarding}
         />
         <main className="flex-1 relative overflow-y-auto focus:outline-none bg-background">
           {children}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, Menu, Moon, Sun, Settings, RefreshCw, Loader2, X, Mail, LogOut, User, ChevronDown, Sparkles, ShieldCheck } from 'lucide-react';
+import { Search, Menu, Moon, Sun, Settings, RefreshCw, Loader2, X, Mail, LogOut, User, ChevronDown, Sparkles, ShieldCheck, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/hooks/use-toast';
@@ -17,9 +17,10 @@ interface HeaderProps {
   accounts?: any[];
   selectedAccountId?: number | null;
   onAccountChange?: (id: number | null) => void;
+  onShowOnboarding?: () => void;
 }
 
-export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts = [], selectedAccountId, onAccountChange }: HeaderProps) {
+export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts = [], selectedAccountId, onAccountChange, onShowOnboarding }: HeaderProps) {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
@@ -431,6 +432,13 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
                 >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                onSelect={() => onShowOnboarding?.()}
+                className="flex items-center px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-accent hover:text-foreground"
+              >
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Onboarding
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Root>

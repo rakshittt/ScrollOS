@@ -46,6 +46,8 @@ export const users = pgTable('users', {
   twoFactorSecret: text('two_factor_secret'),
   twoFactorBackupCodes: json('two_factor_backup_codes').$type<string[]>(),
   twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  onboardingCompleted: boolean('onboarding_completed').default(false),
+  onboardingStep: integer('onboarding_step').default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

@@ -5,6 +5,9 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { NewsletterList } from '@/app/inbox/components/NewsletterList';
 import { ReadingPane } from '@/app/inbox/components/ReadingPane';
 import { SyncNotificationBanner } from '@/app/inbox/components/SyncNotificationBanner';
+// import { WelcomeBanner } from '@/components/onboarding/WelcomeBanner';
+import { OnboardingGuide } from '@/components/onboarding/OnboardingGuide';
+import { EmptyInboxState } from '@/components/onboarding/EmptyInboxState';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,7 +44,39 @@ export default function InboxPage() {
     error?: string;
   }>>([]);
   const [totalEmailsProcessed, setTotalEmailsProcessed] = useState<number>(0);
+  
+  // Onboarding state
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  // const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const [hasEmailConnected, setHasEmailConnected] = useState(false);
+  
   const { toast } = useToast();
+
+  // Check onboarding status on mount
+  useEffect(() => {
+    if (session?.user) {
+      checkOnboardingStatus();
+    }
+  }, [session]);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const response = await fetch('/api/user/onboarding');
+      if (response.ok) {
+        const data = await response.json();
+        setOnboardingCompleted(data.onboardingCompleted || false);
+        
+        // Only show welcome banner if onboarding is not completed AND user hasn't connected email
+        // If user has connected email, they're already engaged, so skip onboarding
+        // setShowWelcomeBanner(!data.onboardingCompleted && !hasEmailConnected);
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+      // Show welcome banner by default only if no email is connected
+      // setShowWelcomeBanner(!hasEmailConnected);
+    }
+  };
 
   // Fetch accounts on mount
   useEffect(() => {
@@ -50,7 +85,32 @@ export default function InboxPage() {
         const response = await fetch('/api/email/accounts');
         if (response.ok) {
           const data = await response.json();
-        setAccounts(data);
+          setAccounts(data);
+          const hasConnected = data.length > 0;
+          setHasEmailConnected(hasConnected);
+          
+          // If user has connected email, hide onboarding since they're already engaged
+          if (hasConnected) {
+            // setShowWelcomeBanner(false);
+            setShowOnboarding(false);
+            
+            // Mark onboarding as completed since user has connected email
+            if (!onboardingCompleted) {
+              try {
+                await fetch('/api/user/onboarding', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                    onboardingCompleted: true,
+                    completedSteps: [1, 2, 3, 4, 5] // Mark all steps as completed
+                  }),
+                });
+                setOnboardingCompleted(true);
+              } catch (error) {
+                console.error('Error marking onboarding as completed:', error);
+              }
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching accounts:', error);
@@ -58,9 +118,37 @@ export default function InboxPage() {
     };
 
     if (session) {
-    fetchAccounts();
+      fetchAccounts();
     }
-  }, [session]);
+  }, [session, onboardingCompleted]);
+
+  // Check if user has newsletters and mark onboarding as completed if they do
+  useEffect(() => {
+    const hasNewsletters = newsletterIds.length > 0 || Object.values(folderCounts).some(count => count > 0);
+    
+    if (hasNewsletters && !onboardingCompleted) {
+      // User has newsletters, so they're engaged - mark onboarding as completed
+      const markOnboardingCompleted = async () => {
+        try {
+          await fetch('/api/user/onboarding', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              onboardingCompleted: true,
+              completedSteps: [1, 2, 3, 4, 5] // Mark all steps as completed
+            }),
+          });
+          setOnboardingCompleted(true);
+          // setShowWelcomeBanner(false);
+          setShowOnboarding(false);
+        } catch (error) {
+          console.error('Error marking onboarding as completed:', error);
+        }
+      };
+      
+      markOnboardingCompleted();
+    }
+  }, [newsletterIds, folderCounts, onboardingCompleted]);
 
   // Fetch categories on mount
   useEffect(() => {
@@ -155,6 +243,22 @@ export default function InboxPage() {
     });
   };
 
+  // Onboarding handlers
+  const handleStartOnboarding = () => {
+    setShowOnboarding(true);
+    // setShowWelcomeBanner(false);
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    setOnboardingCompleted(true);
+    // setShowWelcomeBanner(false);
+  };
+
+  // const handleDismissWelcomeBanner = () => {
+  //   setShowWelcomeBanner(false);
+  // };
+
   // Navigation logic
   const handleNextNewsletter = useCallback(() => {
     if (newsletterIds.length === 0 || selectedNewsletterId === null) return;
@@ -198,50 +302,86 @@ export default function InboxPage() {
     setSelectedCategoryId(null); // Clear category when a folder is selected
   };
 
+  // Check if inbox is empty
+  const isInboxEmpty = folderCounts.inbox === 0 && newsletterIds.length === 0;
+
+  // Check if user has newsletters (either in inbox or other folders)
+  const hasNewsletters = newsletterIds.length > 0 || Object.values(folderCounts).some(count => count > 0);
+
+  // Only show onboarding if inbox is empty AND user hasn't connected email
+  // If user has newsletters, they're already engaged, so skip onboarding
+  const shouldShowOnboarding = isInboxEmpty && !hasEmailConnected && !hasNewsletters;
+
   return (
-    <AppLayout
-      onCategorySelect={handleCategorySelect}
-      selectedCategoryId={selectedCategoryId}
-      onFolderSelect={handleFolderSelect}
-      selectedFolder={selectedFolder}
-      onFolderCountsUpdate={handleFolderCountsUpdate}
-      onSearchChange={handleSearchChange}
-      searchQuery={searchQuery}
-      accounts={accounts}
-      selectedAccountId={selectedAccountId}
-      onAccountChange={setSelectedAccountId}
-    >
-      {/* Sync Notification Banner */}
-      <SyncNotificationBanner
-        status={syncStatus}
-        message={syncMessage}
-        newNewsletterCount={newNewsletterCount}
-        syncResults={syncResults}
-        totalEmailsProcessed={totalEmailsProcessed}
-        onDismiss={handleSyncDismiss}
-        onRetry={handleSyncRetry}
-        onViewSettings={handleViewSettings}
+    <>
+      {/* Welcome Banner for new users */}
+      {/* {showWelcomeBanner && shouldShowOnboarding && (
+        <WelcomeBanner
+          onStartOnboarding={handleStartOnboarding}
+          onDismiss={handleDismissWelcomeBanner}
+        />
+      )} */}
+
+      {/* Onboarding Guide Modal */}
+      <OnboardingGuide
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        onComplete={handleOnboardingComplete}
       />
-      
-      <div className="flex flex-1">
-        <NewsletterList
-          selectedId={selectedNewsletterId}
-          onSelectNewsletter={setSelectedNewsletterId}
-          onNewsletterIdsUpdate={setNewsletterIds}
-          categoryId={selectedCategoryId}
-          folder={selectedFolder}
-          searchQuery={searchQuery}
-          onNewsletterAction={handleNewsletterAction as (action: 'star' | 'unstar' | 'bin' | 'restore') => void}
-          emailAccountId={selectedAccountId}
-          categories={categories}
+
+      <AppLayout
+        onCategorySelect={handleCategorySelect}
+        selectedCategoryId={selectedCategoryId}
+        onFolderSelect={handleFolderSelect}
+        selectedFolder={selectedFolder}
+        onFolderCountsUpdate={handleFolderCountsUpdate}
+        onSearchChange={handleSearchChange}
+        searchQuery={searchQuery}
+        accounts={accounts}
+        selectedAccountId={selectedAccountId}
+        onAccountChange={setSelectedAccountId}
+        onShowOnboarding={handleStartOnboarding}
+      >
+        {/* Sync Notification Banner */}
+        <SyncNotificationBanner
+          status={syncStatus}
+          message={syncMessage}
+          newNewsletterCount={newNewsletterCount}
+          syncResults={syncResults}
+          totalEmailsProcessed={totalEmailsProcessed}
+          onDismiss={handleSyncDismiss}
+          onRetry={handleSyncRetry}
+          onViewSettings={handleViewSettings}
         />
-        <ReadingPane
-          selectedId={selectedNewsletterId}
-          onNext={canNavigateNext ? handleNextNewsletter : undefined}
-          onPrevious={canNavigatePrevious ? handlePreviousNewsletter : undefined}
-          onRemove={() => handleNewsletterAction('bin')}
-        />
-      </div>
-    </AppLayout>
+        
+        {/* Show empty state only when truly empty and user needs onboarding */}
+        {shouldShowOnboarding ? (
+          <EmptyInboxState
+            onStartOnboarding={handleStartOnboarding}
+            hasEmailConnected={hasEmailConnected}
+          />
+        ) : (
+          <div className="flex flex-1">
+            <NewsletterList
+              selectedId={selectedNewsletterId}
+              onSelectNewsletter={setSelectedNewsletterId}
+              onNewsletterIdsUpdate={setNewsletterIds}
+              categoryId={selectedCategoryId}
+              folder={selectedFolder}
+              searchQuery={searchQuery}
+              onNewsletterAction={handleNewsletterAction as (action: 'star' | 'unstar' | 'bin' | 'restore') => void}
+              emailAccountId={selectedAccountId}
+              categories={categories}
+            />
+            <ReadingPane
+              selectedId={selectedNewsletterId}
+              onNext={canNavigateNext ? handleNextNewsletter : undefined}
+              onPrevious={canNavigatePrevious ? handlePreviousNewsletter : undefined}
+              onRemove={() => handleNewsletterAction('bin')}
+            />
+          </div>
+        )}
+      </AppLayout>
+    </>
   );
 }

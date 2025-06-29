@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import { validateEmail, validatePassword } from '@/lib/utils';
 
 export async function POST(req: Request) {
   try {
@@ -15,43 +16,47 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Enhanced email validation
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
       return NextResponse.json(
-        { message: 'Invalid email format' },
+        { message: emailValidation.error },
         { status: 400 }
       );
     }
 
-    // Validate password strength
-    if (password.length < 8) {
+    // Enhanced password validation
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
       return NextResponse.json(
-        { message: 'Password must be at least 8 characters long' },
+        { 
+          message: 'Password does not meet requirements',
+          details: passwordValidation.errors.join(', ')
+        },
         { status: 400 }
       );
     }
 
     // Check if user already exists
     const existingUser = await db.query.users.findFirst({
-      where: eq(users.email, email),
+      where: eq(users.email, email.toLowerCase().trim()),
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { message: 'User already exists' },
+        { message: 'An account with this email already exists' },
         { status: 400 }
       );
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
     try {
       const [user] = await db.insert(users).values({
-        email,
-        name: name || email.split('@')[0],
+        email: email.toLowerCase().trim(),
+        name: name?.trim() || email.split('@')[0],
         password: hashedPassword,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -59,7 +64,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json(
         { 
-          message: 'User created successfully',
+          message: 'Account created successfully',
           user: {
             id: user.id,
             email: user.email,

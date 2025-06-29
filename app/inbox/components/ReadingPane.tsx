@@ -636,7 +636,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
             <div className="flex items-center space-x-2 text-sm">
               <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
               <span className="text-foreground font-medium">Focus Mode</span>
-              <span className="text-muted-foreground">Press R to exit</span>
+              <span className="text-muted-foreground">Press M to exit</span>
             </div>
           </div>
         </div>
