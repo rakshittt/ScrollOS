@@ -51,8 +51,12 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 sm:h-16 items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
-                <Mail className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground" />
+              <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl overflow-hidden shadow-lg">
+                <img 
+                  src="/NEWS360.png" 
+                  alt="News360 Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">News360</span>
             </div>
@@ -568,8 +572,12 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
             <div className="space-y-4 sm:space-y-6">
               <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
-                  <Mail className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground" />
+                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl overflow-hidden shadow-lg">
+                  <img 
+                    src="/NEWS360.png" 
+                    alt="News360 Logo" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">News360</span>
               </div>

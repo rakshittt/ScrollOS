@@ -218,8 +218,12 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
           </Button>
           
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-sm">N</span>
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm">
+              <img 
+                src="/NEWS360.png" 
+                alt="News360 Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <span className="font-medium text-foreground hidden sm:block">
               News360

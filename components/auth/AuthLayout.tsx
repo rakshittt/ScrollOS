@@ -6,7 +6,9 @@ export function AuthLayout({ children, title, description }: { children: React.R
     <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-primary/5 to-background animate-fade-in">
       {/* Left: Illustration/Brand */}
       <div className="hidden md:flex flex-col justify-center items-center w-1/2 bg-background-secondary p-12 border-r border-border">
-        <Image src="/globe.svg" alt="Logo" width={80} height={80} className="mb-6" />
+        <div className="w-20 h-20 rounded-xl overflow-hidden shadow-lg mb-6">
+          <Image src="/NEWS360.png" alt="News360 Logo" width={80} height={80} className="w-full h-full object-cover" />
+        </div>
         <h1 className="text-3xl font-bold text-primary mb-2">{title}</h1>
         <p className="text-lg text-muted-foreground max-w-md text-center">{description}</p>
       </div>
