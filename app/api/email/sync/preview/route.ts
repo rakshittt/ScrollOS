@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const emailService = EmailService.getInstance();
+    const emailService = new EmailService();
     const newsletters = await emailService.previewNewsletters(account);
 
     // Get user's whitelisted emails to check domain status

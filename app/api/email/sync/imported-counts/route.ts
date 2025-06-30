@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { emailAccounts, newsletters } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
+import { redis } from '@/lib/redis';
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -22,7 +23,15 @@ export async function GET(request: NextRequest) {
   if (!account || account.userId !== session.user.id) {
     return NextResponse.json({ error: 'Account not found' }, { status: 404 });
   }
-  // Fetch all newsletters for this account
+
+  // Try to get real-time sync progress from Redis
+  const redisKey = `sync:${account.userId}:${account.id}`;
+  const cached = await redis.get(redisKey);
+  if (cached) {
+    return NextResponse.json({ progress: JSON.parse(cached) });
+  }
+
+  // Fallback: Fetch all newsletters for this account and count by sender
   const allNewsletters = await db.query.newsletters.findMany({
     where: eq(newsletters.emailAccountId, account.id),
     columns: { senderEmail: true },

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const emailService = EmailService.getInstance();
+    const emailService = new EmailService();
     let tokens;
 
     try {

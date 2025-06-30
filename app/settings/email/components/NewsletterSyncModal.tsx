@@ -50,6 +50,9 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
   const [importProgress, setImportProgress] = useState(0);
   const [importStatus, setImportStatus] = useState('');
   const [actualImportedCount, setActualImportedCount] = useState(0);
+  const [syncProgress, setSyncProgress] = useState<any>(null);
+  const [syncResults, setSyncResults] = useState<any[]>([]);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const { toast } = useToast();
 
   // Step 1: Fetch emails on open
@@ -72,6 +75,40 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
       console.log('[NewsletterSyncModal] Emails loaded:', emails.map(e => e.email));
     }
   }, [emails]);
+
+  // Poll for real-time sync progress when importing
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (step === 'importing' && accountId) {
+      setSyncStatus('syncing');
+      const poll = async () => {
+        try {
+          const res = await fetch(`/api/email/sync/imported-counts?accountId=${accountId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.progress) {
+              setSyncProgress(data.progress);
+              setSyncStatus(data.progress.status);
+              setSyncResults(data.progress.emailResults || []);
+              setImportProgress(data.progress.progress || 0);
+              setImportStatus(data.progress.status === 'syncing' ? 'Importing newsletters...' : data.progress.status === 'success' ? 'Import completed successfully!' : 'Import failed.');
+              if (data.progress.status === 'success' || data.progress.status === 'error') {
+                if (interval) clearInterval(interval);
+                setTimeout(() => setStep('results'), 1000);
+              }
+            }
+          }
+        } catch (err) {
+          // Ignore polling errors
+        }
+      };
+      poll();
+      interval = setInterval(poll, 1500);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [step, accountId]);
 
   const fetchEmails = async () => {
     try {
@@ -498,24 +535,47 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
                   </div>
                   <div className="absolute inset-0 w-24 h-24 mx-auto border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
                 </div>
-                
                 <div className="space-y-3">
                   <h3 className="text-xl font-semibold text-foreground">Importing Newsletters</h3>
                   <p className="text-sm text-muted-foreground">{importStatus}</p>
                 </div>
-
-                {/* Progress Bar */}
+                {/* Real-time Progress Bar */}
                 <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                   <div 
                     className="h-full bg-primary transition-all duration-500 ease-out rounded-full"
-                    style={{ width: `${importProgress}%` }}
+                    style={{ width: `${syncProgress?.progress ?? importProgress}%` }}
                   />
                 </div>
-                
                 <div className="text-xs text-muted-foreground">
-                  {Math.round(importProgress)}% complete
+                  {Math.round(syncProgress?.progress ?? importProgress)}% complete
                 </div>
-
+                {/* Real-time Results Summary */}
+                {syncResults.length > 0 && (
+                  <div className="text-xs text-muted-foreground space-y-1 mt-2">
+                    <p>• {syncResults.filter((r: any) => r.status === 'success').length} successful</p>
+                    <p>• {syncResults.filter((r: any) => r.status === 'error').length} failed</p>
+                    <p>• {syncResults.filter((r: any) => r.status === 'skipped').length} skipped</p>
+                  </div>
+                )}
+                {/* Live per-email feedback */}
+                {syncResults.length > 0 && (
+                  <div className="mt-4 max-h-40 overflow-y-auto rounded border border-border bg-background text-left">
+                    {syncResults.map((r: any, idx: number) => (
+                      <div key={r.email + idx} className="flex items-center gap-2 px-3 py-1 border-b last:border-b-0 border-border text-xs">
+                        {r.status === 'success' && <span className="text-green-600"><CheckCircle2 className="h-4 w-4" /></span>}
+                        {r.status === 'error' && <span className="text-red-600"><AlertCircle className="h-4 w-4" /></span>}
+                        {r.status === 'skipped' && <span className="text-gray-500"><Mail className="h-4 w-4" /></span>}
+                        <span className="truncate flex-1" title={r.email}>{r.email}</span>
+                        <span className="font-medium">
+                          {r.status === 'success' && 'Imported'}
+                          {r.status === 'error' && 'Failed'}
+                          {r.status === 'skipped' && 'Skipped'}
+                        </span>
+                        {r.error && <span className="text-red-500 ml-2">{r.error}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="text-xs text-muted-foreground space-y-1">
                   <p>• Importing {totalNewsletterCount} newsletters</p>
                   <p>• Whitelisting {selectedEmails.size} email addresses</p>

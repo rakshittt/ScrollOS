@@ -70,13 +70,13 @@ export function EmailAccountsList({ accounts: initialAccounts }: EmailAccountsLi
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+              {/* <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">Auto-sync</span>
                 <Switch
                   checked={account.syncEnabled ?? false}
                   onChange={(e) => handleToggleSync(account.id, e.target.checked)}
                 />
-              </div>
+              </div> */}
 
               <Button
                 variant="outline"

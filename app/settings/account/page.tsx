@@ -18,6 +18,7 @@ import {
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Progress } from '@/components/ui/Progress';
 
 interface UserProfile {
   name: string;
@@ -54,6 +55,9 @@ export default function AccountPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
+  // Storage usage state
+  const [storage, setStorage] = useState<{ usedBytes: number; limitBytes: number } | null>(null);
+  const [storageLoading, setStorageLoading] = useState(true);
 
   useEffect(() => {
     if (session?.user) {
@@ -67,6 +71,21 @@ export default function AccountPage() {
       });
     }
   }, [session]);
+
+  useEffect(() => {
+    async function fetchStorage() {
+      setStorageLoading(true);
+      try {
+        const res = await fetch('/api/user/storage');
+        if (res.ok) {
+          setStorage(await res.json());
+        }
+      } finally {
+        setStorageLoading(false);
+      }
+    }
+    fetchStorage();
+  }, []);
 
   const handleProfileUpdate = async () => {
     if (!profile.name.trim() || !profile.email.trim()) {
@@ -253,6 +272,44 @@ export default function AccountPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Storage Usage Bar */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Storage Usage</CardTitle>
+          <CardDescription>Your storage usage across all newsletters</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {storageLoading ? (
+            <div className="text-muted-foreground text-sm">Loading storage usage...</div>
+          ) : storage ? (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">
+                  {((storage.usedBytes / storage.limitBytes) * 100).toFixed(0)}% of {formatBytes(storage.limitBytes)} used
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatBytes(storage.usedBytes)} of {formatBytes(storage.limitBytes)}
+                </span>
+              </div>
+              <Progress
+                value={Math.min((storage.usedBytes / storage.limitBytes) * 100, 100)}
+                className={
+                  (storage.usedBytes / storage.limitBytes) > 0.9
+                    ? 'bg-red-200'
+                    : (storage.usedBytes / storage.limitBytes) > 0.8
+                    ? 'bg-yellow-200'
+                    : 'bg-green-200'
+                }
+              />
+              {(storage.usedBytes / storage.limitBytes) > 0.9 && (
+                <div className="text-xs text-red-600 mt-1">You are almost out of storage!</div>
+              )}
+            </div>
+          ) : (
+            <div className="text-muted-foreground text-sm">Unable to load storage usage.</div>
+          )}
+        </CardContent>
+      </Card>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-4 mb-4">
@@ -535,4 +592,13 @@ export default function AccountPage() {
       </div>
     </div>
   );
+}
+
+// Helper to format bytes as human readable
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 } 

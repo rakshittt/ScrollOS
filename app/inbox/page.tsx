@@ -139,15 +139,14 @@ export default function InboxPage() {
             }),
           });
           setOnboardingCompleted(true);
-          // setShowWelcomeBanner(false);
           setShowOnboarding(false);
         } catch (error) {
           console.error('Error marking onboarding as completed:', error);
         }
       };
-      
       markOnboardingCompleted();
     }
+    // Do nothing if onboardingCompleted is already true
   }, [newsletterIds, folderCounts, onboardingCompleted]);
 
   // Fetch categories on mount

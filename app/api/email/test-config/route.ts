@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Test auth URL generation
-    const emailService = EmailService.getInstance();
+    const emailService = new EmailService();
     let authUrl;
     
     try {

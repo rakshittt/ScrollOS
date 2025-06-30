@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { categories } from '@/lib/schema';
 import { eq, and } from 'drizzle-orm';
+import { redis } from '@/lib/redis';
 
 // GET /api/categories - Get all categories for the user
 export async function GET(request: NextRequest) {
@@ -12,12 +13,16 @@ export async function GET(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
+    const redisKey = `categories:${session.user.id}`;
+    const cached = await redis.get(redisKey);
+    if (cached) {
+      return NextResponse.json(JSON.parse(cached));
+    }
     const userCategories = await db.query.categories.findMany({
       where: eq(categories.userId, session.user.id),
       orderBy: (categories, { asc }) => [asc(categories.name)],
     });
-
+    await redis.set(redisKey, JSON.stringify(userCategories), 'EX', 60 * 60); // 1 hour TTL
     return NextResponse.json(userCategories);
   } catch (error) {
     console.error('Error fetching categories:', error);
@@ -65,6 +70,10 @@ export async function POST(request: NextRequest) {
       color: color || '#ff385c',
       isSystem: false,
     }).returning();
+
+    // Invalidate Redis cache for this user
+    const redisKey = `categories:${session.user.id}`;
+    await redis.del(redisKey);
 
     return NextResponse.json(newCategory);
   } catch (error) {

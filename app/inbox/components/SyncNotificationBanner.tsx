@@ -18,6 +18,7 @@ interface SyncNotificationBannerProps {
   newNewsletterCount?: number;
   syncResults?: SyncResult[];
   totalEmailsProcessed?: number;
+  progress?: any;
   onDismiss?: () => void;
   onRetry?: () => void;
   onViewSettings?: () => void;
@@ -29,6 +30,7 @@ export function SyncNotificationBanner({
   newNewsletterCount = 0,
   syncResults = [],
   totalEmailsProcessed = 0,
+  progress,
   onDismiss,
   onRetry,
   onViewSettings
@@ -148,6 +150,25 @@ export function SyncNotificationBanner({
   const errorEmails = syncResults.filter(r => r.status === 'error');
   const skippedEmails = syncResults.filter(r => r.status === 'skipped');
 
+  // If real-time progress is available, use it for progress bar and results
+  const percent = progress?.progress ?? null;
+  const realTimeResults = progress?.emailResults ?? syncResults;
+  const realTimeStatus = progress?.status ?? status;
+  const total = progress?.totalProcessed ?? totalEmailsProcessed;
+  const synced = progress?.syncedCount ?? realTimeResults.filter((r: SyncResult) => r.status === 'success').length;
+
+  // Detailed status text
+  let statusText = '';
+  if (realTimeStatus === 'syncing' && typeof percent === 'number' && total) {
+    if (percent >= 90) {
+      statusText = 'Almost done!';
+    } else {
+      statusText = `Syncing ${synced} of ${total} emails...`;
+    }
+  } else if (realTimeStatus === 'success') {
+    statusText = 'Sync complete!';
+  }
+
   return (
     <div className={cn(
       "border-b transition-all duration-300 ease-in-out",
@@ -179,32 +200,65 @@ export function SyncNotificationBanner({
         </div>
       </div>
 
+      {/* Progress Bar (real-time) */}
+      {realTimeStatus === 'syncing' && typeof percent === 'number' && (
+        <div className="px-4 pb-2">
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div
+              className="h-full bg-blue-500 transition-all duration-500 ease-out rounded-full"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+            <span>{percent}% complete</span>
+            <span className="opacity-70">{statusText}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Show checkmark and green bar on completion */}
+      {realTimeStatus === 'success' && (
+        <div className="px-4 pb-2">
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div
+              className="h-full bg-green-500 transition-all duration-500 ease-out rounded-full flex items-center justify-end pr-2"
+              style={{ width: '100%' }}
+            >
+              <CheckCircle className="h-4 w-4 text-white" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-1 text-xs text-green-700">
+            <span>Sync complete!</span>
+          </div>
+        </div>
+      )}
+
       {/* Compact Results Summary - Always visible when there are results */}
-      {syncResults.length > 0 && !showDetails && (
+      {realTimeResults.length > 0 && !showDetails && (
         <div className="px-4 pb-3 border-t border-current/20">
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center space-x-4">
-              {successEmails.length > 0 && (
+              {realTimeResults.filter((r: SyncResult) => r.status === 'success').length > 0 && (
                 <div className="flex items-center space-x-1">
                   <CheckCircle className="h-3 w-3 text-green-600" />
-                  <span>{successEmails.length} successful</span>
+                  <span>{realTimeResults.filter((r: SyncResult) => r.status === 'success').length} successful</span>
                 </div>
               )}
-              {errorEmails.length > 0 && (
+              {realTimeResults.filter((r: SyncResult) => r.status === 'error').length > 0 && (
                 <div className="flex items-center space-x-1">
                   <AlertCircle className="h-3 w-3 text-red-600" />
-                  <span>{errorEmails.length} failed</span>
+                  <span>{realTimeResults.filter((r: SyncResult) => r.status === 'error').length} failed</span>
                 </div>
               )}
-              {skippedEmails.length > 0 && (
+              {realTimeResults.filter((r: SyncResult) => r.status === 'skipped').length > 0 && (
                 <div className="flex items-center space-x-1">
                   <Mail className="h-3 w-3 text-gray-600" />
-                  <span>{skippedEmails.length} skipped</span>
+                  <span>{realTimeResults.filter((r: SyncResult) => r.status === 'skipped').length} skipped</span>
                 </div>
               )}
             </div>
             <span className="text-xs opacity-70">
-              Total: {totalEmailsProcessed} emails processed
+              Total: {progress?.totalProcessed ?? totalEmailsProcessed} emails processed
             </span>
           </div>
         </div>

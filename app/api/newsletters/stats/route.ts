@@ -3,12 +3,22 @@ import { db } from '@/lib/db';
 import { newsletters } from '@/lib/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
+import { redis } from '@/lib/redis';
 
 export async function GET(request: NextRequest) {
   try {
     const userId = await requireAuth();
     const { searchParams } = new URL(request.url);
     const emailAccountId = searchParams.get('emailAccountId');
+
+    // Redis key for stats
+    const redisKey = emailAccountId
+      ? `stats:${userId}:${emailAccountId}`
+      : `stats:${userId}`;
+    const cached = await redis.get(redisKey);
+    if (cached) {
+      return NextResponse.json(JSON.parse(cached));
+    }
 
     // Build base condition
     const baseCondition = [eq(newsletters.userId, userId)];
@@ -37,11 +47,13 @@ export async function GET(request: NextRequest) {
         .where(and(...baseCondition, eq(newsletters.isArchived, true)))
     ]);
 
-    return NextResponse.json({
+    const stats = {
       inbox: allCount[0].count,
       starred: starredCount[0].count,
       bin: binCount[0].count
-    });
+    };
+    await redis.set(redisKey, JSON.stringify(stats), 'EX', 300); // 5 min TTL
+    return NextResponse.json(stats);
   } catch (error) {
     console.error('Error fetching folder counts:', error);
     if (error instanceof Error && error.message === 'Authentication required') {

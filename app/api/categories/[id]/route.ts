@@ -4,6 +4,7 @@ import { categories, newsletters } from '@/lib/schema';
 import { and, eq } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
+import { redis } from '@/lib/redis';
 
 // PATCH /api/categories/[id] - Update a category
 export async function PATCH(
@@ -83,6 +84,10 @@ export async function PATCH(
       )
       .returning();
 
+    // Invalidate Redis cache for this user
+    const redisKey = `categories:${session.user.id}`;
+    await redis.del(redisKey);
+
     return NextResponse.json(updatedCategory);
   } catch (error) {
     console.error('Error updating category:', error);
@@ -153,6 +158,10 @@ export async function DELETE(
         eq(categories.userId, session.user.id)
       )
     );
+
+    // Invalidate Redis cache for this user
+    const redisKey = `categories:${session.user.id}`;
+    await redis.del(redisKey);
 
     return NextResponse.json({ success: true });
   } catch (error) {

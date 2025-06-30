@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { newsletters, newsletterRules, categories, userNewsletterEmailWhitelist } from '@/lib/schema';
 import { eq, desc, like, and, or, sql, inArray } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
+import { redis } from '@/lib/redis';
 
 type RuleCondition = {
   type: 'sender' | 'subject' | 'content';
@@ -73,7 +74,6 @@ async function applyRules(newsletter: any, userId: number) {
 export async function GET(request: NextRequest) {
   try {
     const userId = await requireAuth();
-
     const { searchParams } = new URL(request.url);
     const folder = searchParams.get('folder') || 'inbox';
     const categoryId = searchParams.get('categoryId');
@@ -81,8 +81,6 @@ export async function GET(request: NextRequest) {
     const emailAccountId = searchParams.get('emailAccountId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
-
-    // New filter parameters
     const search = searchParams.get('search');
     const readStatus = searchParams.get('readStatus');
     const starredStatus = searchParams.get('starredStatus');
@@ -91,6 +89,14 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'date';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
+    // Redis cache key (user, folder, filters, page)
+    const cacheKey = `inbox:${userId}:${folder}:${categoryId || ''}:${query || ''}:${emailAccountId || ''}:${page}:${limit}:${search || ''}:${readStatus || ''}:${starredStatus || ''}:${dateRange || ''}:${categories || ''}:${sortBy}:${sortOrder}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return NextResponse.json(JSON.parse(cached));
+    }
+
+    const startTime = Date.now();
     // Build query conditions - show all newsletters for the user
     const conditions = [
       eq(newsletters.userId, userId)
@@ -206,7 +212,8 @@ export async function GET(request: NextRequest) {
         sender: newsletters.sender,
         senderEmail: newsletters.senderEmail,
         subject: newsletters.subject,
-        content: newsletters.content, // Keep for preview, but could be truncated
+        // Only fetch a snippet of content (first 200 chars)
+        content: sql<string>`LEFT(${newsletters.content}, 200)`,
         isRead: newsletters.isRead,
         isStarred: newsletters.isStarred,
         isArchived: newsletters.isArchived,
@@ -216,8 +223,7 @@ export async function GET(request: NextRequest) {
         receivedAt: newsletters.receivedAt,
         createdAt: newsletters.createdAt,
         updatedAt: newsletters.updatedAt,
-        importedAt: newsletters.importedAt // Include importedAt for new badge
-        // Exclude htmlContent, tags, category, deletedAt for list view
+        importedAt: newsletters.importedAt
       })
       .from(newsletters)
       .where(and(...conditions))
@@ -242,6 +248,13 @@ export async function GET(request: NextRequest) {
       }
     };
 
+    // Log query execution time
+    const elapsed = Date.now() - startTime;
+    if (elapsed > 500) {
+      console.warn(`⚠️ Slow inbox query for user ${userId}: ${elapsed}ms`);
+    }
+    // Cache the response for 30 seconds
+    await redis.set(cacheKey, JSON.stringify(response), 'EX', 30);
     return NextResponse.json(response);
   } catch (error) {
     console.error('❌ Error fetching newsletters:', error);

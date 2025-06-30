@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
       let totalSynced = 0;
       let syncedCount = 0;
-      const emailService = EmailService.getInstance();
+      const emailService = new EmailService();
       const syncResults: Array<{
         email: string;
         newslettersFound: number;
