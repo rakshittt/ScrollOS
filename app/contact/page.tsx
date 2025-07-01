@@ -1,3 +1,4 @@
+import LandingHeader from '@/components/layout/LandingHeader';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -7,7 +8,7 @@ import { Mail, Phone, MapPin, Clock, ArrowLeft } from 'lucide-react';
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-surface">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
@@ -23,7 +24,7 @@ export default function ContactPage() {
               Contact Us
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Have a question or need help? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+              Reach out to the News360 team for support, feedback, or partnership opportunities.
             </p>
           </div>
         </div>
@@ -59,7 +60,7 @@ export default function ContactPage() {
                   <Label htmlFor="subject">Subject</Label>
                   <select
                     id="subject"
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm ring-offset-surface placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaryBase focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     required
                   >
                     <option value="">Select a subject</option>
@@ -79,7 +80,7 @@ export default function ContactPage() {
                   <textarea
                     id="message"
                     rows={6}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm ring-offset-surface placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaryBase focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="Tell us how we can help you..."
                     required
                   />
@@ -103,7 +104,7 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <Mail className="h-5 w-5 text-blue-600 mt-1" />
+                  <Mail className="h-5 w-5 text-highlight mt-1" />
                   <div>
                     <h4 className="font-semibold text-foreground">Email</h4>
                     <p className="text-muted-foreground">info@news360.com</p>
@@ -114,7 +115,7 @@ export default function ContactPage() {
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <Phone className="h-5 w-5 text-green-600 mt-1" />
+                  <Phone className="h-5 w-5 text-success mt-1" />
                   <div>
                     <h4 className="font-semibold text-foreground">Phone</h4>
                     <p className="text-muted-foreground">+1 (555) 123-4567</p>
@@ -125,7 +126,7 @@ export default function ContactPage() {
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <MapPin className="h-5 w-5 text-red-600 mt-1" />
+                  <MapPin className="h-5 w-5 text-error mt-1" />
                   <div>
                     <h4 className="font-semibold text-foreground">Address</h4>
                     <p className="text-muted-foreground">

@@ -19,6 +19,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Progress } from '@/components/ui/Progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/Dialog';
 
 interface UserProfile {
   name: string;
@@ -58,6 +59,7 @@ export default function AccountPage() {
   // Storage usage state
   const [storage, setStorage] = useState<{ usedBytes: number; limitBytes: number } | null>(null);
   const [storageLoading, setStorageLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -209,10 +211,7 @@ export default function AccountPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!confirm('Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.')) {
-      return;
-    }
-
+    setShowDeleteModal(false);
     try {
       setIsLoading(true);
       const response = await fetch('/api/user/account', {
@@ -222,8 +221,8 @@ export default function AccountPage() {
       if (!response.ok) throw new Error('Failed to delete account');
 
       toast.success('Account deleted successfully');
-      // Redirect to home page or sign out
-      window.location.href = '/';
+      // Redirect to sign in page
+      window.location.href = '/auth/signin';
     } catch (error) {
       console.error('Error deleting account:', error);
       toast.error('Failed to delete account');
@@ -552,7 +551,7 @@ export default function AccountPage() {
                 <h3 className="font-medium text-red-800">Delete Account</h3>
                 <p className="text-sm text-red-600">Permanently delete your account and all data</p>
               </div>
-              <Button variant="outline" onClick={handleDeleteAccount} disabled={isLoading} className="border-red-300 text-red-700 hover:bg-red-100">
+              <Button variant="outline" onClick={() => setShowDeleteModal(true)} disabled={isLoading} className="border-red-300 text-red-700 hover:bg-red-100">
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Account
               </Button>
@@ -590,6 +589,31 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       </div>
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Account</DialogTitle>
+            <DialogDescription>
+              <span className="text-red-600 font-semibold">Warning:</span> This action will permanently delete your account and <b>all data</b> associated with it, including newsletters, categories, rules, preferences, and email accounts. <br />
+              <span className="font-medium">This cannot be undone.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to proceed? This action is irreversible.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowDeleteModal(false)} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAccount} disabled={isLoading}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete My Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

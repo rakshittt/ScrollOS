@@ -3,6 +3,7 @@ import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
+import AzureADProvider from 'next-auth/providers/azure-ad';
 import { db } from '@/lib/db';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
@@ -26,8 +27,17 @@ const authOptions: NextAuthOptions = {
   adapter: DrizzleAdapter(db),
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_AUTH_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_AUTH_CLIENT_SECRET!,
+    }),
+    AzureADProvider({
+      clientId: process.env.OUTLOOK_CLIENT_ID!,
+      clientSecret: process.env.OUTLOOK_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: 'openid email profile offline_access Mail.Read User.Read'
+        }
+      }
     }),
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,

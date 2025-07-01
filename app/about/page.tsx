@@ -1,3 +1,4 @@
+import LandingHeader from '@/components/layout/LandingHeader';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -6,26 +7,18 @@ import { ArrowLeft, Users, Target, Zap, Heart, Award, Globe, Mail, Shield } from
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-surface">
+      {/* <LandingHeader /> */}
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <Button asChild variant="ghost" className="mb-4">
-            <Link href="/">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Link>
-          </Button>
-          
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-foreground mb-4">
-              About News360
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              We're on a mission to transform how people consume and manage newsletters, 
-              making information discovery more efficient and enjoyable.
-            </p>
-          </div>
+        {/* About Content */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            About News360
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            We're on a mission to transform how people consume and manage newsletters, 
+            making information discovery more efficient and enjoyable.
+          </p>
         </div>
 
         <div className="space-y-8">
@@ -33,7 +26,7 @@ export default function AboutPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center space-x-2">
-                <Target className="h-6 w-6 text-blue-600" />
+                <Target className="h-6 w-6 text-highlight" />
                 <CardTitle>Our Mission</CardTitle>
               </div>
             </CardHeader>
@@ -60,7 +53,7 @@ export default function AboutPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-start space-x-3">
-                  <Zap className="h-6 w-6 text-yellow-600 mt-1" />
+                  <Zap className="h-6 w-6 text-warning mt-1" />
                   <div>
                     <h4 className="font-semibold text-foreground">Efficiency</h4>
                     <p className="text-sm text-muted-foreground">
@@ -70,7 +63,7 @@ export default function AboutPage() {
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <Heart className="h-6 w-6 text-red-600 mt-1" />
+                  <Heart className="h-6 w-6 text-error mt-1" />
                   <div>
                     <h4 className="font-semibold text-foreground">User-Centric</h4>
                     <p className="text-sm text-muted-foreground">
@@ -80,7 +73,7 @@ export default function AboutPage() {
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <Shield className="h-6 w-6 text-green-600 mt-1" />
+                  <Shield className="h-6 w-6 text-success mt-1" />
                   <div>
                     <h4 className="font-semibold text-foreground">Privacy</h4>
                     <p className="text-sm text-muted-foreground">
@@ -90,7 +83,7 @@ export default function AboutPage() {
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <Globe className="h-6 w-6 text-purple-600 mt-1" />
+                  <Globe className="h-6 w-6 text-info mt-1" />
                   <div>
                     <h4 className="font-semibold text-foreground">Accessibility</h4>
                     <p className="text-sm text-muted-foreground">
@@ -118,7 +111,7 @@ export default function AboutPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primaryBase/20 to-primaryBase/10 flex items-center justify-center">
                     <span className="text-2xl font-bold text-primary">JD</span>
                   </div>
                   <h4 className="font-semibold text-foreground">John Doe</h4>
@@ -126,7 +119,7 @@ export default function AboutPage() {
                 </div>
                 
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primaryBase/20 to-primaryBase/10 flex items-center justify-center">
                     <span className="text-2xl font-bold text-primary">JS</span>
                   </div>
                   <h4 className="font-semibold text-foreground">Jane Smith</h4>
@@ -134,7 +127,7 @@ export default function AboutPage() {
                 </div>
                 
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primaryBase/20 to-primaryBase/10 flex items-center justify-center">
                     <span className="text-2xl font-bold text-primary">MJ</span>
                   </div>
                   <h4 className="font-semibold text-foreground">Mike Johnson</h4>
@@ -196,7 +189,7 @@ export default function AboutPage() {
           </Card>
 
           {/* CTA */}
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+          <Card className="bg-gradient-to-br from-primaryBase/10 to-primaryBase/5 border-primaryBase/20">
             <CardContent className="pt-6 text-center">
               <h3 className="text-2xl font-bold text-foreground mb-4">
                 Ready to transform your newsletter experience?

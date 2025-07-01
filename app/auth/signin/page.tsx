@@ -202,7 +202,7 @@ function SignIn() {
             </Button>
             
             {/* OAuth Sign-in Options */}
-            <div className="relative">
+            {/* <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
               </div>
@@ -242,14 +242,14 @@ function SignIn() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => handleOAuthSignIn('github')}
+                onClick={() => handleOAuthSignIn('azure-ad')}
                 disabled={isLoading}
                 className="w-full"
               >
-                <Github className="mr-2 h-4 w-4" />
-                GitHub
+                <svg className="mr-2 h-4 w-4" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#0078D4"/><path d="M16.001 6.5L7.5 25.5h3.5l1.75-4h6.5l1.75 4h3.5l-8.501-19zm0 4.75l2.625 6.25h-5.25L16 11.25zm-2.625 8.25l2.625-6.25 2.625 6.25h-5.25z" fill="#fff"/></svg>
+                Outlook
               </Button>
-            </div>
+            </div> */}
             
             <p className="text-sm text-center text-muted-foreground">
               Don't have an account?{' '}

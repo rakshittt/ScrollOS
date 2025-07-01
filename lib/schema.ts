@@ -83,7 +83,9 @@ export const accounts = pgTable('accounts', {
   scope: text('scope'),
   idToken: text('id_token'),
   sessionState: text('session_state'),
-});
+}, (table) => ({
+  providerProviderAccountIdUnique: unique().on(table.provider, table.providerAccountId),
+}));
 
 export const sessions = pgTable('sessions', {
   id: serial('id').primaryKey(),

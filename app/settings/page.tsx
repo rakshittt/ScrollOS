@@ -66,14 +66,14 @@ const settingsSections: SettingsSection[] = [
 //     href: '/settings/rules',
 //     color: 'text-orange-600'
 //   },
-  {
-    id: 'appearance',
-    title: 'Appearance',
-    description: 'Customize the app theme, colors, and visual preferences',
-    icon: Palette,
-    href: '/settings/appearance',
-    color: 'text-pink-600'
-  },
+  // {
+  //   id: 'appearance',
+  //   title: 'Appearance',
+  //   description: 'Customize the app theme, colors, and visual preferences',
+  //   icon: Palette,
+  //   href: '/settings/appearance',
+  //   color: 'text-pink-600'
+  // },
 //   {
 //     id: 'notifications',
 //     title: 'Notifications',
@@ -119,7 +119,7 @@ export default function SettingsPage() {
     //     break;
       case 'get-help':
         // Open help documentation or contact support
-        window.open('https://docs.newsletter-reader.com', '_blank');
+        window.open('/settings/help');
         break;
     }
   };

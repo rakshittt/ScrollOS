@@ -1,3 +1,4 @@
+import LandingHeader from '@/components/layout/LandingHeader';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -45,13 +46,10 @@ export default function LegalPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Legal Information
-          </h1>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-foreground mb-4">Legal</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Important legal documents and policies that govern your use of News360. 
-            We're committed to transparency and protecting your rights.
+            Read our terms, privacy policy, and other legal documents.
           </p>
         </div>
 

@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/Checkbox';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, Loader2, Mail, Shield, Sparkles, X, RefreshCw, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, Mail, Shield, Sparkles, X, RefreshCw, AlertCircle , Inbox} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface EmailPreview {
@@ -714,6 +714,7 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
                       window.location.href = '/inbox';
                     }}
                   >
+                    <Inbox className="h-4 w-4 mr-2" />
                     Go to Inbox
                   </Button>
                 </div>
