@@ -38,6 +38,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            try {
+              var settings = JSON.parse(localStorage.getItem('appearanceSettings') || '{}');
+              var theme = settings.theme || 'system';
+              var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+              var html = document.documentElement;
+              html.classList.remove('light', 'dark');
+              if (theme === 'dark' || (theme === 'system' && systemTheme === 'dark')) {
+                html.classList.add('dark');
+              } else {
+                html.classList.add('light');
+              }
+            } catch(e) {}
+          `
+        }} />
+      </head>
       <body className={`${inter.className} h-full bg-background antialiased`}>
         <AuthProvider>
           {children}

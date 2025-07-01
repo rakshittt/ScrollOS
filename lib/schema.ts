@@ -7,7 +7,8 @@ import {
     serial,
     text,
     timestamp,
-    varchar
+    varchar,
+    unique
 } from 'drizzle-orm/pg-core';
 
 export const newsletters = pgTable('newsletters', {
@@ -134,7 +135,9 @@ export const emailAccounts = pgTable('email_accounts', {
   syncFrequency: integer('sync_frequency').default(3600), // in seconds
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-});
+}, (table) => ({
+  uniqueUserProviderEmail: unique().on(table.userId, table.provider, table.email),
+}));
 
 export const userPreferences = pgTable('user_preferences', {
   id: serial('id').primaryKey(),

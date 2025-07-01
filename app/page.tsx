@@ -33,7 +33,8 @@ import {
   Settings,
   Bell,
   Lock,
-  Sparkles
+  Sparkles,
+  Monitor
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -80,8 +81,36 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-16 sm:py-24 lg:py-32 xl:py-40">
+      {/* Hero Section - Mobile Only */}
+      <section className="block md:hidden relative overflow-hidden py-12">
+        <div className="container mx-auto px-4 relative">
+          <div className="mx-auto max-w-lg text-center flex flex-col items-center">
+            <div className="flex items-center justify-center space-x-3 mb-6">
+              <div className="h-12 w-12 rounded-2xl overflow-hidden shadow-lg bg-white flex items-center justify-center border border-border">
+                <img src="/NEWS360.png" alt="News360 Logo" className="w-10 h-10 object-contain" />
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">News360</span>
+            </div>
+            <div className="flex flex-col items-center mb-6">
+              <Smartphone className="h-12 w-12 text-primary mb-2 animate-bounce" />
+              <Monitor className="h-10 w-10 text-accent animate-pulse" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Best experienced on Desktop</h1>
+            <p className="text-base text-muted-foreground mb-6">
+              News360 is designed for a beautiful, productive experience on larger screens.<br />
+              Explore all features, pricing, and more below!
+            </p>
+            <a href="#features" className="inline-block mt-2">
+              <Button size="lg" variant="outline" className="w-full flex items-center justify-center">
+                Learn More
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </a>
+          </div>
+        </div>
+      </section>
+      {/* Hero Section - Desktop/Tablet Only */}
+      <section className="hidden md:block relative overflow-hidden py-16 sm:py-24 lg:py-32 xl:py-40">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5"></div>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="mx-auto max-w-4xl text-center">

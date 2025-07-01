@@ -707,6 +707,15 @@ export function NewsletterSyncModal({ isOpen, onClose, accountId }: NewsletterSy
                     <CheckCircle2 className="h-4 w-4 mr-2" />
                     Done
                   </Button>
+                  <Button
+                    variant="secondary"
+                    className="min-w-[140px]"
+                    onClick={() => {
+                      window.location.href = '/inbox';
+                    }}
+                  >
+                    Go to Inbox
+                  </Button>
                 </div>
               </div>
             </div>

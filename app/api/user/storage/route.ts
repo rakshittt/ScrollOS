@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const userId = session.user.id;
   const redisKey = `storage:usage:${userId}`;
   const cached = await redis.get(redisKey);
-  if (cached) return NextResponse.json(JSON.parse(cached));
+  if (typeof cached === 'string') return NextResponse.json(JSON.parse(cached));
 
   // Sum the byte length of content and htmlContent for all newsletters
   const result = await db
@@ -28,6 +28,6 @@ export async function GET(request: NextRequest) {
 
   const usedBytes = result[0]?.total || 0;
   const data = { usedBytes, limitBytes: STORAGE_LIMIT_BYTES };
-  await redis.set(redisKey, JSON.stringify(data), 'EX', 300); // cache 5 min
+  await redis.set(redisKey, JSON.stringify(data), { ex: 300 }); // cache 5 min
   return NextResponse.json(data);
 } 

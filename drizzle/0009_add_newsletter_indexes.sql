@@ -12,6 +12,10 @@ CREATE INDEX IF NOT EXISTS idx_newsletters_user_id_email_account_id ON newslette
 CREATE INDEX IF NOT EXISTS idx_newsletters_received_at ON newsletters(received_at DESC);
 CREATE INDEX IF NOT EXISTS idx_newsletters_priority_received_at ON newsletters(priority DESC, received_at DESC);
 CREATE INDEX IF NOT EXISTS idx_newsletters_user_id_priority_received_at ON newsletters(user_id, priority DESC, received_at DESC);
+CREATE INDEX IF NOT EXISTS idx_newsletters_user_folder_received_at
+  ON newsletters(user_id, folder, received_at DESC);
+CREATE INDEX IF NOT EXISTS idx_newsletters_user_category_received_at
+  ON newsletters(user_id, category_id, received_at DESC);
 
 -- Whitelist table indexes
 CREATE INDEX IF NOT EXISTS idx_user_newsletter_email_whitelist_user_id ON user_newsletter_email_whitelist(user_id);

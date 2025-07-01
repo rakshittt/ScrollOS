@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       ? `stats:${userId}:${emailAccountId}`
       : `stats:${userId}`;
     const cached = await redis.get(redisKey);
-    if (cached) {
+    if (typeof cached === 'string') {
       return NextResponse.json(JSON.parse(cached));
     }
 
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       starred: starredCount[0].count,
       bin: binCount[0].count
     };
-    await redis.set(redisKey, JSON.stringify(stats), 'EX', 300); // 5 min TTL
+    await redis.set(redisKey, JSON.stringify(stats), { ex: 300 }); // 5 min TTL
     return NextResponse.json(stats);
   } catch (error) {
     console.error('Error fetching folder counts:', error);

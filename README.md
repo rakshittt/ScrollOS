@@ -591,21 +591,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Redis Setup
 
-This app uses Redis for caching and real-time features (sync progress, onboarding state, etc).
+This app uses Upstash Redis for caching and real-time features (sync progress, onboarding state, etc).
 
-### Local Development
-- Install Redis locally: https://redis.io/download
-- Start Redis: `redis-server`
-- The app will connect to `redis://localhost:6379` by default.
-
-### Production
-- Set the `REDIS_URL` environment variable to your Redis instance URL.
-- Example: `REDIS_URL=redis://username:password@host:port`
+### Setup (All Environments)
+- Create a free Upstash Redis database: https://upstash.com/
+- Copy your REST URL and REST TOKEN from the Upstash console.
+- Set the following environment variables in your `.env.local` or deployment environment:
+  - `UPSTASH_REDIS_REST_URL` (your Upstash Redis REST URL)
+  - `UPSTASH_REDIS_REST_TOKEN` (your Upstash Redis REST token)
 
 ### Usage
-- Redis is used for:
+- Upstash Redis is used for:
   - Caching onboarding state
   - Caching categories and stats
   - Storing sync progress for real-time updates
 
-No manual setup is needed beyond running Redis and setting the environment variable.
+No manual setup is needed beyond creating an Upstash Redis database and setting the environment variables.
+
+For more details, see the [Upstash Redis documentation](https://upstash.com/docs/redis/overall/getstarted).

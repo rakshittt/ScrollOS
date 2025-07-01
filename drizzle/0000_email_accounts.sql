@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS "email_accounts" (
   "sync_enabled" BOOLEAN DEFAULT true,
   "sync_frequency" INTEGER DEFAULT 3600,
   "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT unique_user_provider_email UNIQUE ("user_id", "provider", "email")
 );
 
 CREATE INDEX IF NOT EXISTS "email_accounts_user_id_idx" ON "email_accounts"("user_id");

@@ -433,6 +433,40 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, [isFullscreen, showFullscreenHeaderTemporarily]);
 
+  // Inject dark mode override styles for newsletter content
+  useEffect(() => {
+    const styleId = 'newsletter-darkmode-override';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        .dark .prose * {
+          color: #f4f4f5 !important;
+          background: transparent !important;
+          border-color: #444 !important;
+        }
+        .dark .prose a { color: #60a5fa !important; }
+        .dark .prose strong, .dark .prose b { color: #fff !important; }
+        .dark .prose em { color: #f4f4f5 !important; }
+        .dark .prose code { color: #f4f4f5 !important; background: #222 !important; }
+        .dark .prose pre { color: #f4f4f5 !important; background: #18181b !important; }
+        .dark .prose img {
+          filter: brightness(0.95) contrast(1.1) drop-shadow(0 0 2px #222);
+          background: transparent !important;
+          border-radius: 4px;
+        }
+        .dark .prose img[src*="zomato"],
+        .dark .prose img[alt*="zomato"] {
+          background: #fff !important;
+          padding: 2px;
+          border-radius: 4px;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    return () => {};
+  }, []);
+
   const getReadingModeStyles = () => {
     switch (readingMode) {
       case 'focus':
@@ -507,9 +541,9 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
     // that maintains the fullscreen layout - this prevents the inbox flash
     // This happens during navigation between newsletters
     return (
-      <div className="fixed inset-0 z-50 bg-background flex flex-col">
+      <div className="fixed inset-0 z-50 bg-surface flex flex-col">
         {/* Fullscreen Header for loading state */}
-        <div className="bg-background/95 backdrop-blur-md border-b border-border shadow-sm">
+        <div className="bg-surface/95 backdrop-blur-md border-b border-border shadow-sm">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center space-x-4">
               <Button
@@ -571,7 +605,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
   // Normal Layout - Only render when not in fullscreen mode
   if (!session) {
     return (
-      <div className="flex-1 bg-background flex items-center justify-center">
+      <div className="flex-1 bg-surface flex items-center justify-center">
         <p className="text-muted-foreground">Please sign in to view newsletters</p>
       </div>
     );
@@ -579,7 +613,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
 
   if (!selectedId) {
     return (
-      <div className="flex-1 bg-background flex items-center justify-center">
+      <div className="flex-1 bg-surface flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
             <BookOpen className="w-8 h-8 text-muted-foreground" />
@@ -595,7 +629,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
 
   if (isLoading) {
     return (
-      <div className="flex-1 bg-background flex items-center justify-center">
+      <div className="flex-1 bg-surface flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
           <p className="text-muted-foreground">Loading newsletter...</p>
@@ -606,9 +640,9 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
 
   if (!newsletter) {
     return (
-      <div className="flex-1 bg-background flex items-center justify-center">
+      <div className="flex-1 bg-surface flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 mx-auto bg-error/10 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto bg-error rounded-full flex items-center justify-center">
             <X className="w-8 h-8 text-error" />
           </div>
           <div>
@@ -626,15 +660,15 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
       ref={containerRef}
       className={cn(
         "flex-1 flex flex-col relative overflow-hidden",
-        readingMode === 'focus' ? 'bg-background-secondary' : ''
+        readingMode === 'focus' ? 'bg-surface-secondary' : ''
       )}
     >
       {/* Focus Mode Indicator */}
       {readingMode === 'focus' && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="bg-background/90 backdrop-blur-md border border-border rounded-lg px-4 py-2 shadow-lg">
+          <div className="bg-surface/90 backdrop-blur-md border border-border rounded-lg px-4 py-2 shadow-lg">
             <div className="flex items-center space-x-2 text-sm">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-primaryBase rounded-full animate-pulse" />
               <span className="text-foreground font-medium">Focus Mode</span>
               <span className="text-muted-foreground">Press M to exit</span>
             </div>
@@ -761,7 +795,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                             )}
                           </div>
                         </DropdownMenu.Trigger>
-                        <DropdownMenu.Content align="end" className="w-56 p-2 z-50 rounded-lg border bg-background shadow-lg">
+                        <DropdownMenu.Content align="end" className="w-56 p-2 z-50 rounded-lg border bg-surface shadow-lg">
                           <div className="px-2 py-1.5">
                             <h4 className="text-sm font-semibold text-foreground mb-2">
                               {newsletter.categoryId ? 'Change Category' : 'Add Category'}
@@ -790,7 +824,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                                     className={cn(
                                       "flex items-center space-x-3 p-2 rounded-md transition-colors cursor-pointer",
                                       "hover:bg-accent hover:text-foreground",
-                                      newsletter.categoryId === category.id && "bg-primary/10 text-primary",
+                                      newsletter.categoryId === category.id && "bg-primaryBase/10 text-primaryBase",
                                       isCategoryLoading && "opacity-50 pointer-events-none"
                                     )}
                                   >
@@ -953,42 +987,42 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                   <div className="flex items-center justify-between">
                     <span>Next Newsletter</span>
                     <div className="flex items-center space-x-1">
-                      <kbd className="px-2 py-1 bg-accent rounded text-xs">J</kbd>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">J</kbd>
                       <span className="text-muted-foreground">or</span>
-                      <kbd className="px-2 py-1 bg-accent rounded text-xs">→</kbd>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">→</kbd>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Previous Newsletter</span>
                     <div className="flex items-center space-x-1">
-                      <kbd className="px-2 py-1 bg-accent rounded text-xs">K</kbd>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">K</kbd>
                       <span className="text-muted-foreground">or</span>
-                      <kbd className="px-2 py-1 bg-accent rounded text-xs">←</kbd>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">←</kbd>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Scroll Down</span>
                     <div className="flex items-center space-x-1">
-                      <kbd className="px-2 py-1 bg-accent rounded text-xs">↓</kbd>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">↓</kbd>
                       <span className="text-muted-foreground">or</span>
-                      <kbd className="px-2 py-1 bg-accent rounded text-xs">Space</kbd>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">Space</kbd>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Scroll Up</span>
                     <div className="flex items-center space-x-1">
-                      <kbd className="px-2 py-1 bg-accent rounded text-xs">↑</kbd>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">↑</kbd>
                       <span className="text-muted-foreground">or</span>
-                      <kbd className="px-2 py-1 bg-accent rounded text-xs">Page Up</kbd>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">Page Up</kbd>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Scroll to Top</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">Home</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">Home</kbd>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Scroll to Bottom</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">End</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">End</kbd>
                   </div>
                 </div>
               </div>
@@ -999,27 +1033,27 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center justify-between">
                     <span>Star/Unstar</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">S</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">S</kbd>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Move to Bin</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">E</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">E</kbd>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Toggle Reading Mode</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">R</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">R</kbd>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Toggle Fullscreen</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">F</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">F</kbd>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Exit Fullscreen</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">ESC</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">ESC</kbd>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Category Management</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">C</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">C</kbd>
                   </div>
                 </div>
               </div>
@@ -1030,19 +1064,19 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center justify-between">
                     <span>Increase Font Size</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">+</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">+</kbd>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Decrease Font Size</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">-</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">-</kbd>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Reset Font Size</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">0</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">0</kbd>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Show This Help</span>
-                    <kbd className="px-2 py-1 bg-accent rounded text-xs">?</kbd>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">?</kbd>
                   </div>
                 </div>
               </div>

@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { EmailService } from '@/lib/services/email-service';
 import { db } from '@/lib/db';
 import { emailAccounts } from '@/lib/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -74,24 +74,32 @@ export async function GET(request: NextRequest) {
 
     try {
       console.log('👤 Getting user info...');
-      
+      console.log('Session in callback:', session);
       // Get user info from the provider
       const userInfo = await emailService.getUserInfo(provider, tokens.accessToken);
-      
+      console.log('User info from provider:', userInfo);
       if (!userInfo.email) {
         throw new Error('No email address found in user info');
       }
 
-      console.log('💾 Saving account to database...');
-      
-      // Check if account already exists
-      const existingAccount = await db.query.emailAccounts.findFirst({
-        where: eq(emailAccounts.userId, session.user.id) && eq(emailAccounts.email, userInfo.email),
+      console.log('🔍 Checking for existing account:', {
+        userId: session.user.id,
+        provider,
+        email: userInfo.email
       });
+      const existingAccount = await db.query.emailAccounts.findFirst({
+        where: and(
+          eq(emailAccounts.userId, session.user.id),
+          eq(emailAccounts.email, userInfo.email),
+          eq(emailAccounts.provider, provider)
+        ),
+      });
+      console.log('🔎 Query result for existing account:', existingAccount);
 
+      console.log('💾 Saving account to database...');
       if (existingAccount) {
-        console.log('🔄 Updating existing account...');
-        await db.update(emailAccounts)
+        console.log('🔄 Updating existing account for this user...');
+        const updateResult = await db.update(emailAccounts)
           .set({
             provider,
             accessToken: tokens.accessToken,
@@ -99,17 +107,21 @@ export async function GET(request: NextRequest) {
             tokenExpiresAt: tokens.expiresAt,
             updatedAt: new Date(),
           })
-          .where(eq(emailAccounts.id, existingAccount.id));
+          .where(eq(emailAccounts.id, existingAccount.id))
+          .returning();
+        console.log('Update result:', updateResult);
       } else {
-        console.log('➕ Creating new account...');
-        await db.insert(emailAccounts).values({
+        // Always create a new account for this user if not found
+        console.log('➕ Creating new account for this user...');
+        const insertResult = await db.insert(emailAccounts).values({
           userId: session.user.id,
           provider,
           email: userInfo.email,
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
           tokenExpiresAt: tokens.expiresAt,
-        });
+        }).returning();
+        console.log('Insert result:', insertResult);
       }
 
       console.log('✅ Account saved successfully');

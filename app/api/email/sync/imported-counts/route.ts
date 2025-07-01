@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   // Try to get real-time sync progress from Redis
   const redisKey = `sync:${account.userId}:${account.id}`;
   const cached = await redis.get(redisKey);
-  if (cached) {
+  if (typeof cached === 'string') {
     return NextResponse.json({ progress: JSON.parse(cached) });
   }
 

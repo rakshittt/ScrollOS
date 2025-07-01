@@ -988,7 +988,7 @@ export class EmailService {
       emailResults: [],
       progress: 0,
       error: null
-    }), 'EX', progressTTL);
+    }),  {ex: progressTTL});
 
     let syncedCount = 0;
     let totalProcessed = 0;
@@ -1022,7 +1022,7 @@ export class EmailService {
         emailResults,
         progress: 100,
         error: null
-      }), 'EX', progressTTL);
+      }),  {ex: progressTTL});
 
       console.log(`✅ Synced ${syncedCount} newsletters from ${totalProcessed} processed emails`);
       return { 
@@ -1039,7 +1039,7 @@ export class EmailService {
         emailResults,
         progress: 100,
         error: error instanceof Error ? error.message : 'Unknown error'
-      }), 'EX', progressTTL);
+      }), {ex: progressTTL});
       console.error('Error syncing newsletters from whitelisted emails:', error);
       throw error;
     }
@@ -1092,7 +1092,7 @@ export class EmailService {
             emailResults,
             progress,
             error: null
-          }), 'EX', progressTTL);
+          }),  {ex: progressTTL});
         }
       }
 
@@ -1147,7 +1147,7 @@ export class EmailService {
             emailResults,
             progress,
             error: null
-          }), 'EX', progressTTL);
+          }),  {ex: progressTTL});
         }
       }
 
@@ -1600,7 +1600,9 @@ export class EmailService {
               from: emailData.from,
               date: emailData.date,
               score: analysis.score,
-              confidence: analysis.confidence
+              confidence: analysis.confidence,
+              text: emailData.text || '',
+              html: emailData.html || ''
             });
             console.log(`✅ Found newsletter: "${emailData.subject}" (Score: ${analysis.score})`);
           }
@@ -1710,7 +1712,9 @@ export class EmailService {
               from: emailData.from,
               date: emailData.date,
               score: analysis.score,
-              confidence: analysis.confidence
+              confidence: analysis.confidence,
+              text: emailData.text || '',
+              html: emailData.html || ''
             });
             console.log(`✅ Found newsletter: "${emailData.subject}" (Score: ${analysis.score})`);
           }

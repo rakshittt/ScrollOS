@@ -31,9 +31,42 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
 
+  useEffect(() => {
+    // Check the <html> class or localStorage on mount
+    const html = document.documentElement;
+    let dark = html.classList.contains('dark');
+    // Fallback: check localStorage
+    if (!dark) {
+      try {
+        const settings = JSON.parse(localStorage.getItem('appearanceSettings') || '{}');
+        if (settings.theme === 'dark') dark = true;
+        if (settings.theme === 'system') {
+          const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          if (systemTheme === 'dark') dark = true;
+        }
+      } catch (e) {}
+    }
+    setIsDarkMode(dark);
+  }, []);
+
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      const html = document.documentElement;
+      html.classList.remove('light', 'dark');
+      if (next) {
+        html.classList.add('dark');
+      } else {
+        html.classList.add('light');
+      }
+      // Update localStorage.appearanceSettings
+      try {
+        const settings = JSON.parse(localStorage.getItem('appearanceSettings') || '{}');
+        settings.theme = next ? 'dark' : 'light';
+        localStorage.setItem('appearanceSettings', JSON.stringify(settings));
+      } catch (e) {}
+      return next;
+    });
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {

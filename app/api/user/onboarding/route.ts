@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   // Try Redis first
   const cached = await redis.get(redisKey);
-  if (cached) {
+  if (typeof cached === 'string') {
     return NextResponse.json(JSON.parse(cached));
   }
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     onboardingStep: user.onboardingStep ?? 0,
     completedSteps: [],
   };
-  await redis.set(redisKey, JSON.stringify(onboarding), 'EX', REDIS_TTL);
+  await redis.set(redisKey, JSON.stringify(onboarding), { ex: REDIS_TTL });
   return NextResponse.json(onboarding);
 }
 
@@ -69,7 +69,7 @@ export async function PUT(request: NextRequest) {
     onboardingStep: onboardingStep ?? 0,
     completedSteps: completedSteps ?? [],
   };
-  await redis.set(redisKey, JSON.stringify(onboarding), 'EX', REDIS_TTL);
+  await redis.set(redisKey, JSON.stringify(onboarding), { ex: REDIS_TTL });
 
   return NextResponse.json({ success: true });
 } 

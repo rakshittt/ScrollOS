@@ -263,6 +263,40 @@ export function FullscreenReader({
     return (currentTime - importedTime) < twelveHoursInMs;
   };
 
+  // Inject dark mode override styles for newsletter content
+  useEffect(() => {
+    const styleId = 'newsletter-darkmode-override';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        .dark .prose * {
+          color: #f4f4f5 !important;
+          background: transparent !important;
+          border-color: #444 !important;
+        }
+        .dark .prose a { color: #60a5fa !important; }
+        .dark .prose strong, .dark .prose b { color: #fff !important; }
+        .dark .prose em { color: #f4f4f5 !important; }
+        .dark .prose code { color: #f4f4f5 !important; background: #222 !important; }
+        .dark .prose pre { color: #f4f4f5 !important; background: #18181b !important; }
+        .dark .prose img {
+          filter: brightness(0.95) contrast(1.1) drop-shadow(0 0 2px #222);
+          background: transparent !important;
+          border-radius: 4px;
+        }
+        .dark .prose img[src*="zomato"],
+        .dark .prose img[alt*="zomato"] {
+          background: #fff !important;
+          padding: 2px;
+          border-radius: 4px;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    return () => {};
+  }, []);
+
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Fullscreen Header */}

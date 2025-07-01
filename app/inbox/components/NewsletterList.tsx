@@ -45,13 +45,10 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPageLoading, setIsPageLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<PaginationData | null>(null);
-  const [useLoadMore, setUseLoadMore] = useState(false);
-  const [allNewsletters, setAllNewsletters] = useState<Newsletter[]>([]);
   const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isInitialMount = useRef(true);
@@ -79,34 +76,28 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
     categoryId,
     debouncedSearchQuery,
     emailAccountId,
-    useLoadMore,
     activeFilters
-  }), [folder, categoryId, debouncedSearchQuery, emailAccountId, useLoadMore, activeFilters]);
+  }), [folder, categoryId, debouncedSearchQuery, emailAccountId, activeFilters]);
 
   // Reset pagination when filters change (but not on initial mount)
   useEffect(() => {
     if (!isInitialMount.current) {
       setCurrentPage(1);
-      setAllNewsletters([]);
       setPagination(null);
     } else {
       isInitialMount.current = false;
     }
   }, [fetchParams]);
 
-  const fetchNewsletters = useCallback(async (isPageChange = false, isLoadMore = false) => {
+  const fetchNewsletters = useCallback(async (isPageChange = false) => {
     if (!session) return;
-    
     try {
       if (isPageChange) {
         setIsPageLoading(true);
-      } else if (isLoadMore) {
-        setIsLoadingMore(true);
       } else {
         setError(null);
         setIsLoading(true);
       }
-      
       const params = new URLSearchParams();
       params.append('folder', folder);
       if (categoryId) {
@@ -119,8 +110,7 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
         params.append('emailAccountId', emailAccountId.toString());
       }
       params.append('page', currentPage.toString());
-      params.append('limit', '50');
-      
+      params.append('limit', '20'); // Set page size to 20
       // Add filter parameters
       if (activeFilters) {
         if (activeFilters.searchQuery) {
@@ -143,9 +133,7 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
           params.append('sortOrder', activeFilters.sortOrder);
         }
       }
-      
       const url = `/api/newsletters?${params.toString()}`;
-      
       const response = await fetch(url);
       if (response.status === 401) {
         setError('Please sign in to view your newsletters');
@@ -153,40 +141,20 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
       }
       if (!response.ok) throw new Error('Failed to fetch newsletters');
       const data = await response.json();
-      
-      // Handle new paginated response format
       if (data.newsletters && data.pagination) {
-        if (useLoadMore && isLoadMore) {
-          // Append to existing newsletters for load more
-          setAllNewsletters(prev => {
-            const updatedNewsletters = [...prev, ...data.newsletters];
-            setNewsletters(updatedNewsletters);
-            onNewsletterIdsUpdate(updatedNewsletters.map((n: Newsletter) => n.id));
-            return updatedNewsletters;
-          });
-        } else {
-          setNewsletters(data.newsletters);
-          setAllNewsletters(data.newsletters);
-          onNewsletterIdsUpdate(data.newsletters.map((n: Newsletter) => n.id));
-        }
+        setNewsletters(data.newsletters);
+        onNewsletterIdsUpdate(data.newsletters.map((n: Newsletter) => n.id));
         setPagination(data.pagination);
-        
-        // Show helpful message if provided
         if (data.message) {
           toast.info(data.message);
         }
-        
-        // Only auto-select first newsletter if we don't have a selected one and there are newsletters
         if (data.newsletters.length > 0 && !selectedId) {
           onSelectNewsletter(data.newsletters[0].id);
         } else if (data.newsletters.length === 0 && selectedId) {
-          // Clear selection if no newsletters found
           onSelectNewsletter(null);
         }
       } else {
-        // Fallback for old format
         setNewsletters(data);
-        setAllNewsletters(data);
         onNewsletterIdsUpdate(data.map((n: Newsletter) => n.id));
         if (data.length > 0 && !selectedId) {
           onSelectNewsletter(data[0].id);
@@ -200,9 +168,8 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
     } finally {
       setIsLoading(false);
       setIsPageLoading(false);
-      setIsLoadingMore(false);
     }
-  }, [session, folder, categoryId, debouncedSearchQuery, emailAccountId, currentPage, useLoadMore, selectedId, onSelectNewsletter, onNewsletterIdsUpdate, activeFilters]);
+  }, [session, folder, categoryId, debouncedSearchQuery, emailAccountId, currentPage, selectedId, onSelectNewsletter, onNewsletterIdsUpdate, activeFilters]);
 
   // Single useEffect to handle all fetch scenarios
   useEffect(() => {
@@ -218,18 +185,6 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
   }, []);
-
-  const handleLoadMore = useCallback(() => {
-    if (!pagination?.hasNext) return;
-    setCurrentPage(prev => prev + 1);
-  }, [pagination?.hasNext]);
-
-  const toggleViewMode = useCallback(() => {
-    setUseLoadMore(!useLoadMore);
-    setCurrentPage(1);
-    setAllNewsletters([]);
-    setPagination(null);
-  }, [useLoadMore]);
 
   const handleNewsletterClick = useCallback(async (newsletter: Newsletter) => {
     onSelectNewsletter(newsletter.id);
@@ -353,7 +308,6 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
     setActiveFilters(filters);
     // Reset pagination when filters change
     setCurrentPage(1);
-    setAllNewsletters([]);
     setPagination(null);
   }, []);
 
@@ -361,7 +315,6 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
     setActiveFilters(null);
     // Reset pagination when filters are cleared
     setCurrentPage(1);
-    setAllNewsletters([]);
     setPagination(null);
   }, []);
 
@@ -415,7 +368,7 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
             )}
             {pagination && (
               <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                {useLoadMore ? 'Load More' : 'Pagination'}
+                Pagination
               </span>
             )}
           </div>
@@ -435,11 +388,6 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
               onClearFilters={handleClearFilters}
               variant="compact"
             />
-            {useLoadMore && pagination && (
-              <span className="text-xs text-muted-foreground">
-                {allNewsletters.length} loaded
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -489,67 +437,23 @@ export function NewsletterList({ selectedId, onSelectNewsletter, onNewsletterIds
         <div className="border-t border-border p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-muted-foreground">
-              {useLoadMore ? (
-                `${allNewsletters.length} of ${pagination.totalCount} newsletters`
-              ) : (
-                `Page ${pagination.currentPage} of ${pagination.totalPages}`
-              )}
+              Page {pagination.currentPage} of {pagination.totalPages}
             </span>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={toggleViewMode}
-                className="text-xs text-primary hover:text-primary/80 underline"
-              >
-                {useLoadMore ? 'Show pagination' : 'Load more mode'}
-              </button>
-              <span className="text-sm text-muted-foreground">
-                {pagination.totalCount} total newsletters
-              </span>
-            </div>
+            <span className="text-sm text-muted-foreground">
+              {pagination.totalCount} total newsletters
+            </span>
           </div>
-          
-          {useLoadMore ? (
-            // Load More Mode
-            <div className="flex justify-center">
-              {pagination.hasNext ? (
-                <Button
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMore}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  {isLoadingMore ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
-                      Loading more...
-                    </>
-                  ) : (
-                    'Load More Newsletters'
-                  )}
-                </Button>
-              ) : (
-                <span className="text-sm text-muted-foreground">
-                  All newsletters loaded
-                </span>
-              )}
+          {isPageLoading ? (
+            <div className="flex items-center justify-center py-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
             </div>
           ) : (
-            // Pagination Mode
-            <>
-              {isPageLoading ? (
-                <div className="flex items-center justify-center py-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-                  <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
-                </div>
-              ) : (
-                <Pagination
-                  currentPage={pagination.currentPage}
-                  totalPages={pagination.totalPages}
-                  onPageChange={handlePageChange}
-                />
-              )}
-            </>
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+            />
           )}
         </div>
       )}

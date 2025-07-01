@@ -88,12 +88,19 @@ export async function GET(request: NextRequest) {
     const categories = searchParams.get('categories');
     const sortBy = searchParams.get('sortBy') || 'date';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const lastSeenDate = searchParams.get('lastSeenDate');
 
     // Redis cache key (user, folder, filters, page)
-    const cacheKey = `inbox:${userId}:${folder}:${categoryId || ''}:${query || ''}:${emailAccountId || ''}:${page}:${limit}:${search || ''}:${readStatus || ''}:${starredStatus || ''}:${dateRange || ''}:${categories || ''}:${sortBy}:${sortOrder}`;
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return NextResponse.json(JSON.parse(cached));
+    const cacheKey = `inbox:${userId}:${folder}:${categoryId || ''}:${query || ''}:${emailAccountId || ''}:${page}:${limit}:${search || ''}:${readStatus || ''}:${starredStatus || ''}:${dateRange || ''}:${categories || ''}:${sortBy}:${sortOrder}:${lastSeenDate || ''}`;
+    const isCacheable = !search && !readStatus && !starredStatus && !dateRange && !categories && !emailAccountId && sortBy === 'date' && sortOrder === 'desc' && !lastSeenDate && (!categoryId || folder !== 'inbox');
+    let cacheHit = false;
+    if (isCacheable) {
+      const cached = await redis.get(cacheKey);
+      if (typeof cached === 'string') {
+        cacheHit = true;
+        console.log(`[CACHE] Inbox cache hit for user ${userId}`);
+        return NextResponse.json(JSON.parse(cached));
+      }
     }
 
     const startTime = Date.now();
@@ -176,6 +183,11 @@ export async function GET(request: NextRequest) {
       }
     }
     
+    // For keyset pagination, add the keyset condition to the conditions array before building the query
+    if (lastSeenDate) {
+      conditions.push(sql`${newsletters.receivedAt} < ${new Date(lastSeenDate)}`);
+    }
+    
     // Get total count for pagination
     const totalCountResult = await db
       .select({ count: sql<number>`count(*)` })
@@ -201,40 +213,69 @@ export async function GET(request: NextRequest) {
         : [desc(newsletters.receivedAt), desc(newsletters.priority)];
     }
 
-    // Execute query with pagination - select only fields needed for list view
-    const result = await db
-      .select({
-        id: newsletters.id,
-        userId: newsletters.userId,
-        emailAccountId: newsletters.emailAccountId,
-        messageId: newsletters.messageId,
-        title: newsletters.title,
-        sender: newsletters.sender,
-        senderEmail: newsletters.senderEmail,
-        subject: newsletters.subject,
-        // Only fetch a snippet of content (first 200 chars)
-        content: sql<string>`LEFT(${newsletters.content}, 200)`,
-        isRead: newsletters.isRead,
-        isStarred: newsletters.isStarred,
-        isArchived: newsletters.isArchived,
-        categoryId: newsletters.categoryId,
-        priority: newsletters.priority,
-        folder: newsletters.folder,
-        receivedAt: newsletters.receivedAt,
-        createdAt: newsletters.createdAt,
-        updatedAt: newsletters.updatedAt,
-        importedAt: newsletters.importedAt
-      })
-      .from(newsletters)
-      .where(and(...conditions))
-      .orderBy(...orderByClause)
-      .limit(limit)
-      .offset((page - 1) * limit);
+    let newslettersQuery;
+    if (!lastSeenDate) {
+      newslettersQuery = db
+        .select({
+          id: newsletters.id,
+          userId: newsletters.userId,
+          emailAccountId: newsletters.emailAccountId,
+          messageId: newsletters.messageId,
+          title: newsletters.title,
+          sender: newsletters.sender,
+          senderEmail: newsletters.senderEmail,
+          subject: newsletters.subject,
+          content: sql<string>`LEFT(${newsletters.content}, 200)`,
+          isRead: newsletters.isRead,
+          isStarred: newsletters.isStarred,
+          isArchived: newsletters.isArchived,
+          categoryId: newsletters.categoryId,
+          priority: newsletters.priority,
+          folder: newsletters.folder,
+          receivedAt: newsletters.receivedAt,
+        })
+        .from(newsletters)
+        .where(and(...conditions))
+        .orderBy(...orderByClause)
+        .limit(limit)
+        .offset((page - 1) * limit);
+    } else {
+      newslettersQuery = db
+        .select({
+          id: newsletters.id,
+          userId: newsletters.userId,
+          emailAccountId: newsletters.emailAccountId,
+          messageId: newsletters.messageId,
+          title: newsletters.title,
+          sender: newsletters.sender,
+          senderEmail: newsletters.senderEmail,
+          subject: newsletters.subject,
+          content: sql<string>`LEFT(${newsletters.content}, 200)`,
+          isRead: newsletters.isRead,
+          isStarred: newsletters.isStarred,
+          isArchived: newsletters.isArchived,
+          categoryId: newsletters.categoryId,
+          priority: newsletters.priority,
+          folder: newsletters.folder,
+          receivedAt: newsletters.receivedAt,
+        })
+        .from(newsletters)
+        .where(and(...conditions))
+        .orderBy(...orderByClause)
+        .limit(limit);
+    }
+    const result = await newslettersQuery;
 
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalCount / limit);
     const hasNext = page < totalPages;
     const hasPrevious = page > 1;
+
+    // For keyset pagination, set nextLastSeenDate
+    let nextLastSeenDate = null;
+    if (result && result.length === limit) {
+      nextLastSeenDate = result[result.length - 1].receivedAt;
+    }
 
     const response = {
       newsletters: result,
@@ -244,7 +285,8 @@ export async function GET(request: NextRequest) {
         totalCount,
         hasNext,
         hasPrevious,
-        limit
+        limit,
+        nextLastSeenDate,
       }
     };
 
@@ -253,8 +295,10 @@ export async function GET(request: NextRequest) {
     if (elapsed > 500) {
       console.warn(`⚠️ Slow inbox query for user ${userId}: ${elapsed}ms`);
     }
-    // Cache the response for 30 seconds
-    await redis.set(cacheKey, JSON.stringify(response), 'EX', 30);
+    if (isCacheable) {
+      await redis.set(cacheKey, JSON.stringify(response), { ex: 30 });
+      console.log(`[CACHE] Inbox cache set for user ${userId}`);
+    }
     return NextResponse.json(response);
   } catch (error) {
     console.error('❌ Error fetching newsletters:', error);

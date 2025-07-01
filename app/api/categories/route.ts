@@ -15,14 +15,14 @@ export async function GET(request: NextRequest) {
     }
     const redisKey = `categories:${session.user.id}`;
     const cached = await redis.get(redisKey);
-    if (cached) {
+    if (typeof cached === 'string') {
       return NextResponse.json(JSON.parse(cached));
     }
     const userCategories = await db.query.categories.findMany({
       where: eq(categories.userId, session.user.id),
       orderBy: (categories, { asc }) => [asc(categories.name)],
     });
-    await redis.set(redisKey, JSON.stringify(userCategories), 'EX', 60 * 60); // 1 hour TTL
+    await redis.set(redisKey, JSON.stringify(userCategories), { ex: 60 * 60 }); // 1 hour TTL
     return NextResponse.json(userCategories);
   } catch (error) {
     console.error('Error fetching categories:', error);

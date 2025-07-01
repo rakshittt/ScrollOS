@@ -52,18 +52,7 @@ export function MobileNav() {
               >
                 Contact
               </a>
-              <div className="pt-4 border-t space-y-2">
-                <Link href="/auth/signin" onClick={() => setIsOpen(false)}>
-                  <Button variant="ghost" className="w-full justify-start">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/auth/signup" onClick={() => setIsOpen(false)}>
-                  <Button className="w-full justify-start">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
+              
             </nav>
           </Card>
         </div>
