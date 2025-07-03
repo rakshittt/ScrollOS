@@ -27,19 +27,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Get counts for each folder
-    const [allCount, starredCount, binCount] = await Promise.all([
-      // Inbox: ALL newsletters (not filtered)
+    const [inboxCount, starredCount, binCount] = await Promise.all([
+      // Inbox: not archived
       db
         .select({ count: sql<number>`count(*)` })
         .from(newsletters)
-        .where(and(...baseCondition)),
-      
-      // Starred: is starred
+        .where(and(...baseCondition, eq(newsletters.isArchived, false))),
+      // Starred: is starred and not archived
       db
         .select({ count: sql<number>`count(*)` })
         .from(newsletters)
-        .where(and(...baseCondition, eq(newsletters.isStarred, true))),
-      
+        .where(and(...baseCondition, eq(newsletters.isStarred, true), eq(newsletters.isArchived, false))),
       // Bin: is archived
       db
         .select({ count: sql<number>`count(*)` })
@@ -48,7 +46,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const stats = {
-      inbox: allCount[0].count,
+      inbox: inboxCount[0].count,
       starred: starredCount[0].count,
       bin: binCount[0].count
     };

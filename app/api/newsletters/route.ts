@@ -113,6 +113,7 @@ export async function GET(request: NextRequest) {
     // If folder is 'inbox', allow categoryId
     if (folder === 'inbox') {
       // No additional filters: show all newsletters (inbox + starred + archived)
+      conditions.push(eq(newsletters.isArchived, false));
       if (categoryId) {
         conditions.push(eq(newsletters.categoryId, parseInt(categoryId)));
       }

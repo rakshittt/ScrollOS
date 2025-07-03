@@ -34,7 +34,8 @@ import {
   Bell,
   Lock,
   Sparkles,
-  Monitor
+  Monitor,
+  XCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -337,141 +338,101 @@ export default function LandingPage() {
               Simple, transparent pricing
             </h2>
             <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
-              Choose the plan that works best for you. Start free, upgrade anytime.
+              Choose the plan that works best for you. Upgrade anytime.
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-6">
-            <Card className="relative border border-border/50 bg-background/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4 sm:pb-6">
-                <CardTitle className="text-xl sm:text-2xl font-bold">Free</CardTitle>
-                <div className="mt-4 sm:mt-6">
-                  <span className="text-4xl sm:text-5xl font-bold">$0</span>
-                  <span className="text-lg sm:text-xl text-muted-foreground">/month</span>
-                </div>
-                <CardDescription className="text-sm sm:text-base leading-relaxed">
-                  Perfect for getting started with newsletter management
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 sm:space-y-6">
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Connect 1 email account</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Basic categorization</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">100 newsletters per month</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Basic search</span>
-                  </div>
-                </div>
-                <Link href="/auth/signup">
-                  <Button className="w-full text-base sm:text-lg py-2.5 sm:py-3 font-semibold" variant="outline">
-                    Get Started Free
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-3xl mx-auto">
+            {/* Pro Plan */}
             <Card className="relative border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-              <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2">
-                <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold shadow-lg">
+              <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold shadow-lg mb-1">
                   Most Popular
                 </Badge>
+                {/* <Badge className="bg-green-500 text-white px-2 py-1 text-xs font-semibold shadow">7 Day Free Trial</Badge> */}
               </div>
               <CardHeader className="pb-4 sm:pb-6">
-                <CardTitle className="text-xl sm:text-2xl font-bold">Pro</CardTitle>
+                <CardTitle className="text-2xl sm:text-3xl font-bold">Pro</CardTitle>
                 <div className="mt-4 sm:mt-6">
-                  <span className="text-4xl sm:text-5xl font-bold">$9</span>
+                  <span className="text-5xl font-bold">₹299</span>
                   <span className="text-lg sm:text-xl text-muted-foreground">/month</span>
                 </div>
-                <CardDescription className="text-sm sm:text-base leading-relaxed">
-                  For power users who want advanced features
+                <CardDescription className="text-base leading-relaxed mt-2">
+                  The perfect plan for most users—ample storage, multiple accounts, and fast sync.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 sm:space-y-6">
-                <div className="space-y-3 sm:space-y-4">
+              <CardContent className="space-y-5 sm:space-y-6 mt-2">
+                <div className="space-y-4">
                   <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Connect up to 5 email accounts</span>
+                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
+                    <span className="text-base">Store up to 1,000 newsletters</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Advanced categorization</span>
+                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
+                    <span className="text-base">Connect up to 3 Gmail accounts</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Unlimited newsletters</span>
+                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
+                    <span className="text-base">Unlimited categories</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Advanced search & filters</span>
+                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
+                    <span className="text-base">Basic search & filters</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Reading analytics</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Custom categories & rules</span>
+                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
+                    <span className="text-base">Priority sync</span>
                   </div>
                 </div>
+                <div className="mb-2 text-center text-green-600 font-medium text-sm">7 Day Free Trial – Cancel anytime</div>
                 <Link href="/auth/signup">
-                  <Button className="w-full text-base sm:text-lg py-2.5 sm:py-3 font-semibold shadow-lg">
+                  <Button className="w-full text-lg py-3 font-semibold shadow-lg">
                     Start Pro Trial
                   </Button>
                 </Link>
               </CardContent>
             </Card>
-
+            {/* Pro Plus Plan */}
             <Card className="relative border border-border/50 bg-background/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+              <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                <Badge className="bg-green-500 text-white px-2 py-1 text-xs font-semibold shadow">7 Day Free Trial</Badge>
+              </div>
               <CardHeader className="pb-4 sm:pb-6">
-                <CardTitle className="text-xl sm:text-2xl font-bold">Enterprise</CardTitle>
+                <CardTitle className="text-2xl sm:text-3xl font-bold">Pro Plus</CardTitle>
                 <div className="mt-4 sm:mt-6">
-                  <span className="text-4xl sm:text-5xl font-bold">$29</span>
+                  <span className="text-5xl font-bold">₹799</span>
                   <span className="text-lg sm:text-xl text-muted-foreground">/month</span>
                 </div>
-                <CardDescription className="text-sm sm:text-base leading-relaxed">
-                  For teams and organizations
+                <CardDescription className="text-base leading-relaxed mt-2">
+                  For power users who need maximum storage and more account connections.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 sm:space-y-6">
-                <div className="space-y-3 sm:space-y-4">
+              <CardContent className="space-y-5 sm:space-y-6 mt-2">
+                <div className="space-y-4">
                   <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Everything in Pro</span>
+                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
+                    <span className="text-base">Store up to 5,000 newsletters</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Unlimited email accounts</span>
+                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
+                    <span className="text-base">Connect up to 10 Gmail accounts</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Team collaboration</span>
+                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
+                    <span className="text-base">Unlimited categories</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Advanced analytics</span>
+                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
+                    <span className="text-base">Basic search & filters</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Priority support</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 sm:mr-4 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                    <span className="text-sm sm:text-base">Custom integrations</span>
+                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
+                    <span className="text-base">Priority sync</span>
                   </div>
                 </div>
+                <div className="mb-2 text-center text-green-600 font-medium text-sm">7 Day Free Trial – Cancel anytime</div>
                 <Link href="/auth/signup">
-                  <Button className="w-full text-base sm:text-lg py-2.5 sm:py-3 font-semibold" variant="outline">
-                    Contact Sales
+                  <Button className="w-full text-lg py-3 font-semibold" variant="outline">
+                    Go Pro Plus
                   </Button>
                 </Link>
               </CardContent>
