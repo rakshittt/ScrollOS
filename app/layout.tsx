@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import AuthProvider from '@/components/auth/AuthProvider';
 import { Toaster } from 'sonner';
+import { cookies } from 'next/headers';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,31 +32,28 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Read theme from cookie (set by client on first visit)
+  let themeClass = 'h-full';
+  try {
+    const cookieStore = await cookies();
+    const theme = cookieStore.get('theme');
+    // Debug: log the theme cookie value
+    console.log('[SSR] theme cookie:', theme);
+    if (theme?.value === 'dark') themeClass += ' dark';
+    if (theme?.value === 'light') themeClass += ' light';
+    // Debug: log the computed themeClass
+    console.log('[SSR] themeClass:', themeClass);
+  } catch (e) {
+    console.error('[SSR] Error reading theme cookie:', e);
+  }
   return (
-    <html lang="en" className="h-full">
-      <head>
-        <script dangerouslySetInnerHTML={{
-          __html: `
-            try {
-              var settings = JSON.parse(localStorage.getItem('appearanceSettings') || '{}');
-              var theme = settings.theme || 'system';
-              var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-              var html = document.documentElement;
-              html.classList.remove('light', 'dark');
-              if (theme === 'dark' || (theme === 'system' && systemTheme === 'dark')) {
-                html.classList.add('dark');
-              } else {
-                html.classList.add('light');
-              }
-            } catch(e) {}
-          `
-        }} />
-      </head>
+    <html lang="en" className={themeClass}>
+      <head />
       <body className={`${inter.className} h-full bg-background antialiased`}>
         <AuthProvider>
           {children}

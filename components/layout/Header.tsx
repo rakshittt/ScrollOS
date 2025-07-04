@@ -65,6 +65,10 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
         settings.theme = next ? 'dark' : 'light';
         localStorage.setItem('appearanceSettings', JSON.stringify(settings));
       } catch (e) {}
+      // Set theme cookie for SSR hydration
+      try {
+        document.cookie = `theme=${next ? 'dark' : 'light'}; path=/; max-age=${60 * 60 * 24 * 365}`;
+      } catch (e) {}
       return next;
     });
   };

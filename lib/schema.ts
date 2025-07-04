@@ -49,6 +49,9 @@ export const users = pgTable('users', {
   twoFactorEnabled: boolean('two_factor_enabled').default(false),
   onboardingCompleted: boolean('onboarding_completed').default(false),
   onboardingStep: integer('onboarding_step').default(0),
+  plan: text('plan').notNull().default('pro'),
+  planTrialEndsAt: timestamp('plan_trial_ends_at'),
+  planExpiresAt: timestamp('plan_expires_at'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

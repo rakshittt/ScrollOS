@@ -12,6 +12,7 @@ import { Mail, Lock, User, Eye, EyeOff, CheckCircle, XCircle, AlertCircle } from
 import { validateEmail, validatePassword, getPasswordStrengthText, getPasswordStrengthColor } from '@/lib/utils';
 
 export default function SignUp() {
+  console.log('[DEBUG] Rendering SignUp page');
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,12 +23,21 @@ export default function SignUp() {
     name: '',
     email: '',
     password: '',
+    plan: 'pro', // default to 'pro', can be changed by user
   });
   
   // Validation state
   const [emailValidation, setEmailValidation] = useState<{ isValid: boolean; error?: string }>({ isValid: false });
   const [passwordValidation, setPasswordValidation] = useState<any>(null);
   const [isFormValid, setIsFormValid] = useState(false);
+
+  // Debug: log state on every render
+  console.log('[DEBUG] formData:', formData);
+  console.log('[DEBUG] error:', error);
+  console.log('[DEBUG] isLoading:', isLoading);
+  console.log('[DEBUG] emailValidation:', emailValidation);
+  console.log('[DEBUG] passwordValidation:', passwordValidation);
+  console.log('[DEBUG] isFormValid:', isFormValid);
 
   // Real-time validation
   useEffect(() => {
@@ -74,13 +84,26 @@ export default function SignUp() {
       });
 
       const data = await response.json();
+      // Debug: log the response and data
+      console.debug('Signup API response:', response);
+      console.debug('Signup API data:', data);
 
       if (!response.ok) {
+        console.error('Signup API error:', data);
         throw new Error(data.message || 'Something went wrong');
       }
 
-      router.push('/auth/signin?registered=true');
+      // If backend returns a Dodo checkout link, redirect instantly
+      if (data.checkout_url) {
+        console.log('[DEBUG] Redirecting to Dodo:', data.checkout_url);
+        window.location.href = data.checkout_url;
+        return;
+      }
+
+      // fallback: if no checkout_url, show error
+      setError('No payment link received. Please try again.');
     } catch (error) {
+      console.error('Signup error:', error);
       if (error instanceof Error) {
         setError(error.message);
       } else {
@@ -227,6 +250,28 @@ export default function SignUp() {
                 </button>
               </div>
               {renderPasswordRequirements()}
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Choose your plan</Label>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  className={`flex-1 border rounded-md px-4 py-2 text-center ${formData.plan === 'pro' ? 'border-primary bg-primary/10 font-semibold' : 'border-gray-300 bg-white'}`}
+                  onClick={() => setFormData(prev => ({ ...prev, plan: 'pro' }))}
+                >
+                  Pro<br />
+                  <span className="text-xs text-muted-foreground">₹399/mo</span>
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 border rounded-md px-4 py-2 text-center ${formData.plan === 'pro_plus' ? 'border-primary bg-primary/10 font-semibold' : 'border-gray-300 bg-white'}`}
+                  onClick={() => setFormData(prev => ({ ...prev, plan: 'pro_plus' }))}
+                >
+                  Pro Plus<br />
+                  <span className="text-xs text-muted-foreground">₹799/mo</span>
+                </button>
+              </div>
             </div>
             
             {error && (

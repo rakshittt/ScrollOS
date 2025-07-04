@@ -72,10 +72,13 @@ const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user.id.toString(),
+          id: user.id,
           email: user.email,
           name: user.name,
           image: user.image,
+          plan: user.plan,
+          planTrialEndsAt: user.planTrialEndsAt ? user.planTrialEndsAt.toISOString() : undefined,
+          planExpiresAt: user.planExpiresAt ? user.planExpiresAt.toISOString() : undefined,
         };
       },
     }),

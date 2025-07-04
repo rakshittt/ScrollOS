@@ -7,11 +7,11 @@ import { validateEmail, validatePassword } from '@/lib/utils';
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name } = await req.json();
+    const { email, password, name, plan } = await req.json();
 
-    if (!email || !password) {
+    if (!email || !password || !plan) {
       return NextResponse.json(
-        { message: 'Email and password are required' },
+        { message: 'Email, password, and plan are required' },
         { status: 400 }
       );
     }
@@ -52,27 +52,42 @@ export async function POST(req: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Declare Dodo env variables at the top
+    const DODO_PRODUCT_ID = process.env.DODO_PRODUCT_ID;
+    const DODO_PRODUCT_ID_PRO = process.env.DODO_PRODUCT_ID_PRO;
+    const DODO_PRODUCT_ID_PRO_PLUS = process.env.DODO_PRODUCT_ID_PRO_PLUS;
+    const DODO_RETURN_URL = process.env.DODO_RETURN_URL;
+    if (!DODO_RETURN_URL) {
+      return NextResponse.json({ message: 'Dodo Payments environment variables missing' }, { status: 500 });
+    }
+
     // Create user
     try {
+      const now = new Date();
+      const trialEnds = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
       const [user] = await db.insert(users).values({
         email: email.toLowerCase().trim(),
         name: name?.trim() || email.split('@')[0],
         password: hashedPassword,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: now,
+        updatedAt: now,
+        plan: plan,
+        planTrialEndsAt: trialEnds,
+        planExpiresAt: null,
       }).returning();
 
-      return NextResponse.json(
-        { 
-          message: 'Account created successfully',
-          user: {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-          }
-        },
-        { status: 201 }
-      );
+      // Generate Dodo Payments static checkout link (no backend fetch)
+      const baseUrl = 'https://checkout.dodopayments.com/buy/';
+      let productId = DODO_PRODUCT_ID;
+      if (plan === 'pro' && DODO_PRODUCT_ID_PRO) {
+        productId = DODO_PRODUCT_ID_PRO;
+      } else if (plan === 'pro_plus' && DODO_PRODUCT_ID_PRO_PLUS) {
+        productId = DODO_PRODUCT_ID_PRO_PLUS;
+      }
+      // Construct redirect_url with userId and plan for callback
+      const redirectUrl = encodeURIComponent(`${DODO_RETURN_URL}?userId=${user.id}&plan=${plan}`);
+      const checkoutUrl = `${baseUrl}${productId}?redirect_url=${redirectUrl}&email=${encodeURIComponent(user.email)}`;
+      return NextResponse.json({ checkout_url: checkoutUrl }, { status: 201 });
     } catch (dbError) {
       console.error('Database error during user creation:', dbError);
       return NextResponse.json(

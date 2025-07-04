@@ -20,6 +20,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Progress } from '@/components/ui/Progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/Dialog';
+import { Badge } from '@/components/ui/Badge';
+import { format } from 'date-fns';
 
 interface UserProfile {
   name: string;
@@ -60,6 +62,11 @@ export default function AccountPage() {
   const [storage, setStorage] = useState<{ usedBytes: number; limitBytes: number } | null>(null);
   const [storageLoading, setStorageLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // Plan info
+  const plan = session?.user?.plan || 'pro';
+  const planTrialEndsAt = session?.user?.planTrialEndsAt ? new Date(session.user.planTrialEndsAt) : null;
+  const planExpired = planTrialEndsAt && new Date() > planTrialEndsAt;
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -271,6 +278,48 @@ export default function AccountPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Plan Info */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Your Plan</CardTitle>
+          <CardDescription>
+            <span className="font-semibold mr-2">{plan === 'pro_plus' ? 'Pro Plus' : 'Pro'}</span>
+            {planTrialEndsAt && !planExpired && (
+              <Badge className="bg-green-500 text-white ml-2">Trial ends {format(planTrialEndsAt, 'PPP')}</Badge>
+            )}
+            {planTrialEndsAt && planExpired && (
+              <Badge className="bg-red-500 text-white ml-2">Trial expired</Badge>
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {plan === 'pro' && (
+            <Button
+              className="mt-2"
+              onClick={async () => {
+                setIsUpgrading(true);
+                try {
+                  const res = await fetch('/api/user/plan', { method: 'POST' });
+                  if (res.ok) {
+                    await update();
+                    toast.success('Upgraded to Pro Plus!');
+                  } else {
+                    const data = await res.json();
+                    toast.error(data.error || 'Upgrade failed');
+                  }
+                } catch (e) {
+                  toast.error('Upgrade failed');
+                } finally {
+                  setIsUpgrading(false);
+                }
+              }}
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? 'Upgrading...' : 'Upgrade to Pro Plus'}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
       {/* Storage Usage Bar */}
       <Card className="mb-6">
         <CardHeader>

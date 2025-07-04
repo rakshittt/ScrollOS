@@ -25,6 +25,10 @@ export default function SignedInHeader() {
         settings.theme = next ? "dark" : "light";
         localStorage.setItem("appearanceSettings", JSON.stringify(settings));
       } catch {}
+      // Set theme cookie for SSR hydration
+      try {
+        document.cookie = `theme=${next ? 'dark' : 'light'}; path=/; max-age=${60 * 60 * 24 * 365}`;
+      } catch {}
       return next;
     });
   };
