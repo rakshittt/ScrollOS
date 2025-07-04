@@ -1,12 +1,10 @@
 export const dynamic = 'force-dynamic';
 import { cookies } from 'next/headers';
 import { Inter } from 'next/font/google';
-import SignedInHeader from '@/components/layout/SignedInHeader';
-import LandingFooter from '@/components/layout/LandingFooter';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
+export default async function InboxLayout({ children }: { children: React.ReactNode }) {
   let themeClass = 'h-full';
   try {
     const cookieStore = await cookies();
@@ -16,11 +14,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
   } catch {}
   return (
     <html lang="en" className={themeClass}>
-      <body className={`${inter.className} h-full bg-background antialiased`}>
-        <SignedInHeader />
-        {children}
-        <LandingFooter />
-      </body>
+      <body className={`${inter.className} h-full bg-background antialiased`}>{children}</body>
     </html>
   );
 } 
