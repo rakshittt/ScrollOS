@@ -1,10 +1,11 @@
-import { google } from 'googleapis';
-import { Client } from '@microsoft/microsoft-graph-client';
-import { simpleParser } from 'mailparser';
 import { db } from '@/lib/db';
 import { emailAccounts, newsletters } from '@/lib/schema';
+import { Client } from '@microsoft/microsoft-graph-client';
 import { eq } from 'drizzle-orm';
+import { google } from 'googleapis';
+import { simpleParser } from 'mailparser';
 import nodemailer from 'nodemailer';
+import { redis } from '@/lib/redis';
 
 interface NewsletterScore {
   score: number;
@@ -13,7 +14,6 @@ interface NewsletterScore {
 }
 
 export class EmailService {
-  private static instance: EmailService;
   private gmailClient: any;
   private outlookClient: any;
 
@@ -146,14 +146,7 @@ export class EmailService {
     'icloud.com', 'me.com', 'live.com', 'msn.com', 'protonmail.com'
   ];
 
-  private constructor() {}
-
-  static getInstance(): EmailService {
-    if (!EmailService.instance) {
-      EmailService.instance = new EmailService();
-    }
-    return EmailService.instance;
-  }
+  public constructor() {}
 
   // Add this new method
   private checkNewsletterSender(fromEmail: string): boolean {
@@ -309,18 +302,18 @@ export class EmailService {
       reasons.push('HTML-heavy content');
     }
 
-    // 14. Personal email domains (-30)
+    // 14. Personal email domains (-30) - Reduced penalty for preview
     if (fromEmail.includes('gmail.com') || fromEmail.includes('outlook.com') || 
         fromEmail.includes('yahoo.com') || fromEmail.includes('hotmail.com')) {
-      score -= 30;
-      reasons.push('Sent from personal email domain');
+      score -= 15; // Reduced from -30
+      reasons.push('Sent from personal email domain (reduced penalty)');
     }
 
-    // 15. Very short content (-20)
+    // 15. Very short content (-20) - Reduced penalty for preview
     const totalContentLength = content.length + htmlContent.length;
     if (totalContentLength < 100) {
-      score -= 20;
-      reasons.push(`Very short content (${totalContentLength} chars)`);
+      score -= 10; // Reduced from -20
+      reasons.push(`Very short content (${totalContentLength} chars, reduced penalty)`);
     }
 
     // Determine confidence level
@@ -331,7 +324,11 @@ export class EmailService {
     return { score, reasons, confidence };
   }
 
-  private extractDomain(email: string): string {
+  public extractDomain(email: string): string {
+    if (!email || typeof email !== 'string') {
+      return '';
+    }
+    
     const match = email.match(/@([^>]+)/);
     return match ? match[1].toLowerCase() : '';
   }
@@ -466,21 +463,22 @@ export class EmailService {
 
           const emailData = this.extractGmailData(email.data);
           
-          if (!emailData) {
-            console.warn(`Failed to extract data for email ${messageId}`);
+          // Skip if email data is invalid
+          if (!emailData || !emailData.from) {
+            console.log(`⏭️ Skipping email with invalid data: ${messageId}`);
             continue;
           }
+          
+          // Add account information to emailData
+          emailData.userId = account.userId;
+          emailData.emailAccountId = account.id;
 
           // Parse and analyze the email
           const analysis = this.analyzeNewsletterScore(emailData);
           
-        //   // Log analysis for debugging
-        //   console.log(`\nAnalyzing: "${emailData.subject}"`);
-        //   console.log(`From: ${emailData.from?.text}`);
-        //   console.log(`Score: ${analysis.score} (${analysis.confidence})`);
-        //   console.log(`Reasons: ${analysis.reasons.join(', ')}`);
+          console.log(`📧 Email: "${emailData.subject}" from ${emailData.from?.emailAddress?.address} - Score: ${analysis.score}, Confidence: ${analysis.confidence}`);
           
-          if (analysis.score >= 40) {
+          if (analysis.score >= 25) {
             // Check if already exists
             const existing = await db.query.newsletters.findFirst({
               where: eq(newsletters.messageId, messageId as string),
@@ -490,8 +488,8 @@ export class EmailService {
               try {
                 // Store in database
                 await db.insert(newsletters).values({
-                  userId: account.userId,
-                  emailAccountId: account.id,
+                  userId: emailData.userId,
+                  emailAccountId: emailData.emailAccountId,
                   messageId: messageId as string,
                   title: emailData.subject || '',
                   sender: emailData.from?.text || '',
@@ -499,7 +497,11 @@ export class EmailService {
                   subject: emailData.subject || '',
                   content: emailData.text || '',
                   htmlContent: emailData.html || '',
-                  receivedAt: emailData.date || new Date()
+                  receivedAt: emailData.date || new Date(),
+                  importedAt: new Date(),
+                  isRead: false,
+                  isStarred: false,
+                  isArchived: false,
                 });
 
                 // Apply newsletter mode if enabled
@@ -606,17 +608,43 @@ export class EmailService {
       },
     });
 
-    // Enhanced Outlook search with multiple strategies
-    const searchFilters = [
-      "categories/any(c:c eq 'newsletters' or c eq 'updates' or c eq 'promotions')",
-      "contains(subject,'newsletter') or contains(subject,'unsubscribe')",
-      "contains(from/emailAddress/address,'noreply') or contains(from/emailAddress/address,'no-reply')",
-      "hasAttachments eq false and importance eq 'low'"
+    // Use the same search strategy as Gmail but adapted for Outlook
+    const searchQueries = [
+      // Category-based searches (Outlook equivalent of Gmail categories)
+      "categories/any(c:c eq 'promotions')",
+      "categories/any(c:c eq 'updates')", 
+      "categories/any(c:c eq 'newsletters')",
+      
+      // Subject-based searches (individual filters to avoid syntax issues)
+      "contains(subject,'newsletter')",
+      "contains(subject,'digest')",
+      "contains(subject,'update')",
+      "contains(subject,'bulletin')",
+      "contains(subject,'issue')",
+      "contains(subject,'edition')",
+      "contains(subject,'weekly')",
+      
+      // Sender-based searches (individual filters)
+      "contains(from/emailAddress/address,'mailchimp.com')",
+      "contains(from/emailAddress/address,'constantcontact.com')",
+      "contains(from/emailAddress/address,'substack.com')",
+      "contains(from/emailAddress/address,'beehiiv.com')",
+      "contains(from/emailAddress/address,'noreply')",
+      "contains(from/emailAddress/address,'no-reply')",
+      "contains(from/emailAddress/address,'hello@')",
+      "contains(from/emailAddress/address,'team@')",
+      "contains(from/emailAddress/address,'ghost.org')",
+      
+      // Low importance emails (Outlook equivalent of Gmail promotions)
+      "importance eq 'low' and hasAttachments eq false",
+      
+      // Recent emails (last 30 days)
+      `receivedDateTime ge ${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()}`
     ];
 
     const allMessages = new Map();
 
-    for (const filter of searchFilters) {
+    for (const filter of searchQueries) {
       try {
         const messages = await client
           .api('/me/messages')
@@ -627,6 +655,32 @@ export class EmailService {
         messages.value.forEach((msg: any) => allMessages.set(msg.id, msg));
       } catch (error) {
         console.warn(`Outlook search filter failed: ${filter}`, error);
+      }
+    }
+
+    // Also try searching by categories using a different approach
+    try {
+      const categoryMessages = await client
+        .api('/me/messages')
+        .filter("categories/any(c:c eq 'newsletters')")
+        .top(100)
+        .get();
+      
+      categoryMessages.value.forEach((msg: any) => allMessages.set(msg.id, msg));
+    } catch (error) {
+      console.warn('Outlook category search failed, trying alternative approach:', error);
+      
+      // Fallback: search for emails with specific subjects that are likely newsletters
+      try {
+        const fallbackMessages = await client
+          .api('/me/messages')
+          .filter("contains(subject,'newsletter') or contains(subject,'digest') or contains(subject,'update')")
+          .top(100)
+          .get();
+        
+        fallbackMessages.value.forEach((msg: any) => allMessages.set(msg.id, msg));
+      } catch (fallbackError) {
+        console.warn('Outlook fallback search also failed:', fallbackError);
       }
     }
 
@@ -687,7 +741,11 @@ export class EmailService {
           subject: newsletter.parsed.subject || '',
           content: newsletter.parsed.text || '',
           htmlContent: newsletter.parsed.html || '',
-          receivedAt: newsletter.parsed.date || new Date()
+          receivedAt: newsletter.parsed.date || new Date(),
+          importedAt: new Date(),
+          isRead: false,
+          isStarred: false,
+          isArchived: false,
         });
       }
     }
@@ -726,17 +784,34 @@ export class EmailService {
   }
 
   async getOutlookAuthUrl(): Promise<string> {
+    if (!process.env.OUTLOOK_CLIENT_ID) {
+      throw new Error('OUTLOOK_CLIENT_ID is not configured');
+    }
+    if (!process.env.OUTLOOK_REDIRECT_URI) {
+      throw new Error('OUTLOOK_REDIRECT_URI is not configured');
+    }
+
     const scopes = [
       'offline_access',
       'Mail.Read',
-      'Mail.ReadWrite',
+      'User.Read',
     ];
 
-    return `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
-      `client_id=${process.env.OUTLOOK_CLIENT_ID}&` +
+    const scopeString = encodeURIComponent(scopes.join(' '));
+    const clientId = encodeURIComponent(process.env.OUTLOOK_CLIENT_ID);
+    const redirectUri = encodeURIComponent(process.env.OUTLOOK_REDIRECT_URI);
+
+    const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+      `client_id=${clientId}&` +
       `response_type=code&` +
-      `redirect_uri=${process.env.OUTLOOK_REDIRECT_URI}&` +
-      `scope=${scopes.join(' ')}`;
+      `redirect_uri=${redirectUri}&` +
+      `scope=${scopeString}&` +
+      `response_mode=query&` +
+      `state=outlook`;
+
+    console.log('🔗 Generated Outlook auth URL:', authUrl.substring(0, 100) + '...');
+    
+    return authUrl;
   }
 
   async handleGmailCallback(code: string): Promise<{
@@ -759,25 +834,70 @@ export class EmailService {
     refreshToken: string;
     expiresAt: Date;
   }> {
-    const response = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+    console.log('🔐 Processing Outlook callback with code:', code.substring(0, 10) + '...');
+    
+    // Validate environment variables
+    if (!process.env.OUTLOOK_CLIENT_ID) {
+      throw new Error('OUTLOOK_CLIENT_ID is not configured');
+    }
+    if (!process.env.OUTLOOK_CLIENT_SECRET) {
+      throw new Error('OUTLOOK_CLIENT_SECRET is not configured');
+    }
+    if (!process.env.OUTLOOK_REDIRECT_URI) {
+      throw new Error('OUTLOOK_REDIRECT_URI is not configured');
+    }
+
+    const tokenUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
+    const tokenData = new URLSearchParams({
+      client_id: process.env.OUTLOOK_CLIENT_ID,
+      client_secret: process.env.OUTLOOK_CLIENT_SECRET,
+      code,
+      redirect_uri: process.env.OUTLOOK_REDIRECT_URI,
+      grant_type: 'authorization_code',
+    });
+
+    console.log('📡 Requesting tokens from Microsoft OAuth endpoint...');
+    
+    const response = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({
-        client_id: process.env.OUTLOOK_CLIENT_ID!,
-        client_secret: process.env.OUTLOOK_CLIENT_SECRET!,
-        code,
-        redirect_uri: process.env.OUTLOOK_REDIRECT_URI!,
-        grant_type: 'authorization_code',
-      }),
+      body: tokenData,
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Token request failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      
+      // Try to parse error response
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText };
+      }
+      
+      throw new Error(`Outlook OAuth failed: ${errorData.error || errorData.error_description || response.statusText}`);
+    }
+
     const tokens = await response.json();
+    
+    if (!tokens.access_token) {
+      console.error('❌ No access token in response:', tokens);
+      throw new Error('No access token received from Microsoft OAuth');
+    }
+
+    console.log('✅ Successfully obtained Outlook tokens');
+    
     return {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
-      expiresAt: new Date(Date.now() + tokens.expires_in * 1000),
+      expiresAt: new Date(Date.now() + (tokens.expires_in || 3600) * 1000),
     };
   }
 
@@ -787,24 +907,512 @@ export class EmailService {
     });
 
     if (!account) {
-      throw new Error('Email account not found');
+      throw new Error('Account not found');
     }
+
+      if (account.provider === 'gmail') {
+      return await this.fetchGmailNewsletters(account);
+      } else if (account.provider === 'outlook') {
+      return await this.fetchOutlookNewsletters(account);
+    } else {
+      throw new Error('Unsupported email provider');
+    }
+  }
+
+  async syncNewslettersFromWhitelistedDomains(accountId: number, whitelistedDomains: string[]) {
+    const account = await db.query.emailAccounts.findFirst({
+      where: eq(emailAccounts.id, accountId),
+    });
+
+    if (!account) {
+      throw new Error('Account not found');
+    }
+
+    if (whitelistedDomains.length === 0) {
+      console.log('No whitelisted domains found, skipping sync');
+      return { syncedCount: 0, message: 'No whitelisted domains found' };
+    }
+
+    console.log(`🔄 Syncing newsletters from whitelisted domains: ${whitelistedDomains.join(', ')}`);
+
+    let syncedCount = 0;
+    let totalProcessed = 0;
+
+    if (account.provider === 'gmail') {
+      // If you want to support domain-based sync with Redis, implement similar logic as for emails
+      // For now, call the original domain-based method (no Redis progress)
+      // const result = await this.fetchGmailNewslettersFromWhitelistedDomains(account, whitelistedDomains, redisKey, progressTTL);
+      const result = await this.fetchGmailNewslettersFromWhitelistedEmails(account, whitelistedDomains);
+      syncedCount = result.syncedCount;
+      totalProcessed = result.totalProcessed;
+    } else if (account.provider === 'outlook') {
+      // const result = await this.fetchOutlookNewslettersFromWhitelistedDomains(account, whitelistedDomains, redisKey, progressTTL);
+      const result = await this.fetchOutlookNewslettersFromWhitelistedEmails(account, whitelistedDomains);
+      syncedCount = result.syncedCount;
+      totalProcessed = result.totalProcessed;
+    } else {
+      throw new Error('Unsupported email provider');
+    }
+
+    console.log(`✅ Synced ${syncedCount} newsletters from ${totalProcessed} processed emails`);
+    return { syncedCount, totalProcessed };
+  }
+
+  async syncNewslettersFromWhitelistedEmails(accountId: number, whitelistedEmails: string[]) {
+    const account = await db.query.emailAccounts.findFirst({
+      where: eq(emailAccounts.id, accountId),
+    });
+
+    if (!account) {
+      throw new Error('Account not found');
+    }
+
+    if (whitelistedEmails.length === 0) {
+      console.log('No whitelisted emails found, skipping sync');
+      return { 
+        syncedCount: 0, 
+        message: 'No whitelisted emails found',
+        emailResults: [],
+        totalEmailsProcessed: 0
+      };
+    }
+
+    const redisKey = `sync:${account.userId}:${account.id}`;
+    const progressTTL = 60 * 60; // 1 hour
+
+    // Initialize progress in Redis
+    await redis.set(redisKey, JSON.stringify({
+      status: 'syncing',
+      syncedCount: 0,
+      totalProcessed: 0,
+      emailResults: [],
+      progress: 0,
+      error: null
+    }),  {ex: progressTTL});
+
+    let syncedCount = 0;
+    let totalProcessed = 0;
+    let emailResults: Array<{
+      email: string;
+      newslettersFound: number;
+      status: 'success' | 'error' | 'skipped';
+      error?: string;
+    }> = [];
 
     try {
       if (account.provider === 'gmail') {
-        await this.fetchGmailNewsletters(account);
+        const result = await this.fetchGmailNewslettersFromWhitelistedEmails(account, whitelistedEmails, redisKey, progressTTL);
+        syncedCount = result.syncedCount;
+        totalProcessed = result.totalProcessed;
+        emailResults = result.emailResults || [];
       } else if (account.provider === 'outlook') {
-        await this.fetchOutlookNewsletters(account);
+        const result = await this.fetchOutlookNewslettersFromWhitelistedEmails(account, whitelistedEmails, redisKey, progressTTL);
+        syncedCount = result.syncedCount;
+        totalProcessed = result.totalProcessed;
+        emailResults = result.emailResults || [];
+      } else {
+        throw new Error('Unsupported email provider');
       }
 
-      await db
-        .update(emailAccounts)
-        .set({ lastSyncedAt: new Date() })
-        .where(eq(emailAccounts.id, accountId));
+      // Final progress update
+      await redis.set(redisKey, JSON.stringify({
+        status: 'success',
+        syncedCount,
+        totalProcessed,
+        emailResults,
+        progress: 100,
+        error: null
+      }),  {ex: progressTTL});
+
+      console.log(`✅ Synced ${syncedCount} newsletters from ${totalProcessed} processed emails`);
+      return { 
+        syncedCount, 
+        totalProcessed, 
+        emailResults,
+        totalEmailsProcessed: emailResults.length
+      };
     } catch (error) {
-      console.error('Error syncing newsletters:', error);
+      await redis.set(redisKey, JSON.stringify({
+        status: 'error',
+        syncedCount,
+        totalProcessed,
+        emailResults,
+        progress: 100,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }), {ex: progressTTL});
+      console.error('Error syncing newsletters from whitelisted emails:', error);
       throw error;
     }
+  }
+
+  // Accept progressTTL as a parameter for correct scoping
+  private async fetchGmailNewslettersFromWhitelistedEmails(account: any, whitelistedEmails: string[], redisKey?: string, progressTTL?: number) {
+    const client = await this.getGmailClient(account);
+    let syncedCount = 0;
+    let totalProcessed = 0;
+    const emailResults: Array<{
+      email: string;
+      newslettersFound: number;
+      status: 'success' | 'error' | 'skipped';
+      error?: string;
+    }> = [];
+
+    try {
+      // Get recent emails (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const query = `after:${thirtyDaysAgo.toISOString().split('T')[0]}`;
+
+      const response = await client.users.messages.list({
+        userId: 'me',
+        q: query,
+        maxResults: 500,
+      });
+
+      const messages = response.data.messages || [];
+      console.log(`📧 Found ${messages.length} emails to process`);
+
+      // Process emails in batches
+      const batchSize = 50;
+      for (let i = 0; i < messages.length; i += batchSize) {
+        const batch = messages.slice(i, i + batchSize);
+        const batchResults = await this.processGmailBatchFromWhitelistedEmails(client, batch, whitelistedEmails, account);
+        syncedCount += batchResults.syncedCount;
+        totalProcessed += batchResults.totalProcessed;
+        if (batchResults.emailResults) {
+          emailResults.push(...batchResults.emailResults);
+        }
+        // Update progress in Redis after each batch
+        if (redisKey && progressTTL) {
+          const progress = Math.round(((i + batch.length) / messages.length) * 100);
+          await redis.set(redisKey, JSON.stringify({
+            status: 'syncing',
+            syncedCount,
+            totalProcessed,
+            emailResults,
+            progress,
+            error: null
+          }),  {ex: progressTTL});
+        }
+      }
+
+      return { syncedCount, totalProcessed, emailResults };
+    } catch (error) {
+      console.error('Error fetching Gmail newsletters from whitelisted emails:', error);
+      throw error;
+    }
+  }
+
+  private async fetchOutlookNewslettersFromWhitelistedEmails(account: any, whitelistedEmails: string[], redisKey?: string, progressTTL?: number) {
+    const client = await this.getOutlookClient(account);
+    let syncedCount = 0;
+    let totalProcessed = 0;
+    const emailResults: Array<{
+      email: string;
+      newslettersFound: number;
+      status: 'success' | 'error' | 'skipped';
+      error?: string;
+    }> = [];
+
+    try {
+      // Get recent emails (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const response = await client.api('/me/messages')
+        .filter(`receivedDateTime ge ${thirtyDaysAgo.toISOString()}`)
+        .top(500)
+        .get();
+
+      const messages = response.value || [];
+      console.log(`📧 Found ${messages.length} emails to process`);
+
+      // Process emails in batches
+      const batchSize = 50;
+      for (let i = 0; i < messages.length; i += batchSize) {
+        const batch = messages.slice(i, i + batchSize);
+        const batchResults = await this.processOutlookBatchFromWhitelistedEmails(client, batch, whitelistedEmails, account);
+        syncedCount += batchResults.syncedCount;
+        totalProcessed += batchResults.totalProcessed;
+        if (batchResults.emailResults) {
+          emailResults.push(...batchResults.emailResults);
+        }
+        // Update progress in Redis after each batch
+        if (redisKey && progressTTL) {
+          const progress = Math.round(((i + batch.length) / messages.length) * 100);
+          await redis.set(redisKey, JSON.stringify({
+            status: 'syncing',
+            syncedCount,
+            totalProcessed,
+            emailResults,
+            progress,
+            error: null
+          }),  {ex: progressTTL});
+        }
+      }
+
+      return { syncedCount, totalProcessed, emailResults };
+    } catch (error) {
+      console.error('Error fetching Outlook newsletters from whitelisted emails:', error);
+      throw error;
+    }
+  }
+
+  private async processGmailBatchFromWhitelistedEmails(client: any, messageIds: any[], whitelistedEmails: string[], account: any) {
+    let syncedCount = 0;
+    let totalProcessed = 0;
+    const emailResults: Array<{
+      email: string;
+      newslettersFound: number;
+      status: 'success' | 'error' | 'skipped';
+      error?: string;
+    }> = [];
+
+    for (const messageId of messageIds) {
+      let senderEmail = '';
+      try {
+        const message = await client.users.messages.get({
+          userId: 'me',
+          id: messageId.id,
+          format: 'full',
+        });
+
+        const emailData = this.extractGmailData(message.data);
+        
+        // Skip if email data is invalid
+        if (!emailData || !emailData.from) {
+          console.log(`⏭️ Skipping email with invalid data: ${messageId.id}`);
+          continue;
+        }
+        
+        // Add account information to emailData
+        emailData.userId = account.userId;
+        emailData.emailAccountId = account.id;
+        
+        // Extract sender email from the emailData structure
+        senderEmail = emailData.from.value?.[0]?.address || emailData.from.text || '';
+        if (!senderEmail) {
+          console.log(`⏭️ Skipping email with no sender address: ${messageId.id}`);
+          continue;
+        }
+        
+        // Check if sender email is in whitelist
+        if (!whitelistedEmails.includes(senderEmail)) {
+          console.log(`⏭️ Skipping email from non-whitelisted email: ${senderEmail}`);
+          continue;
+        }
+
+        totalProcessed++;
+
+        // Check if it's a newsletter
+        if (this.isNewsletter(emailData)) {
+          // Check if newsletter already exists
+          const existingNewsletter = await db.query.newsletters.findFirst({
+            where: eq(newsletters.messageId, messageId.id),
+          });
+
+          if (!existingNewsletter) {
+            // Insert newsletter
+            await db.insert(newsletters).values({
+              userId: emailData.userId,
+              emailAccountId: emailData.emailAccountId,
+              messageId: messageId.id,
+              title: emailData.subject, // Use subject as title
+              subject: emailData.subject,
+              sender: emailData.from.text || senderEmail,
+              senderEmail: senderEmail,
+              content: emailData.text || '',
+              htmlContent: emailData.html || '',
+              receivedAt: emailData.date,
+              isRead: false,
+              isStarred: false,
+              isArchived: false,
+              importedAt: new Date(),
+            });
+            syncedCount++;
+            console.log(`✅ Synced newsletter: ${emailData.subject} from ${senderEmail}`);
+            emailResults.push({
+              email: senderEmail,
+              newslettersFound: 1,
+              status: 'success',
+            });
+          }
+        } else {
+          // Not a newsletter, mark as skipped
+          emailResults.push({
+            email: senderEmail,
+            newslettersFound: 0,
+            status: 'skipped',
+          });
+        }
+      } catch (error) {
+        console.error(`Error processing Gmail message ${messageId.id}:`, error);
+        emailResults.push({
+          email: senderEmail || 'unknown',
+          newslettersFound: 0,
+          status: 'error',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { syncedCount, totalProcessed, emailResults };
+  }
+
+  private async processOutlookBatchFromWhitelistedEmails(client: any, messages: any[], whitelistedEmails: string[], account: any) {
+    let syncedCount = 0;
+    let totalProcessed = 0;
+    const emailResults: Array<{
+      email: string;
+      newslettersFound: number;
+      status: 'success' | 'error' | 'skipped';
+      error?: string;
+    }> = [];
+
+    for (const message of messages) {
+      let senderEmail = '';
+      try {
+        // Extract sender email from the message structure
+        senderEmail = message.from?.emailAddress?.address || '';
+        if (!senderEmail) {
+          console.log(`⏭️ Skipping email with no sender address: ${message.id}`);
+          continue;
+        }
+        
+        // Check if sender email is in whitelist
+        if (!whitelistedEmails.includes(senderEmail)) {
+          console.log(`⏭️ Skipping email from non-whitelisted email: ${senderEmail}`);
+          continue;
+        }
+
+        totalProcessed++;
+
+        // Check if it's a newsletter
+        const emailData = {
+          subject: message.subject || '',
+          from: {
+            text: message.from?.emailAddress?.name || senderEmail,
+            value: [{
+              address: senderEmail,
+              name: message.from?.emailAddress?.name || ''
+            }]
+          },
+          text: message.body?.content || '',
+          html: message.body?.content || '',
+          date: new Date(message.receivedDateTime),
+          userId: account.userId,
+          emailAccountId: account.id,
+        };
+
+        if (this.isNewsletter(emailData)) {
+          // Check if newsletter already exists
+          const existingNewsletter = await db.query.newsletters.findFirst({
+            where: eq(newsletters.messageId, message.id),
+          });
+
+          if (!existingNewsletter) {
+            // Insert newsletter
+            await db.insert(newsletters).values({
+              userId: emailData.userId,
+              emailAccountId: emailData.emailAccountId,
+              messageId: message.id,
+              title: emailData.subject,
+              subject: emailData.subject,
+              sender: emailData.from.text || senderEmail,
+              senderEmail: senderEmail,
+              content: emailData.text || '',
+              htmlContent: emailData.html || '',
+              receivedAt: emailData.date,
+              isRead: false,
+              isStarred: false,
+              isArchived: false,
+              importedAt: new Date(),
+            });
+            syncedCount++;
+            console.log(`✅ Synced newsletter: ${emailData.subject} from ${senderEmail}`);
+            emailResults.push({
+              email: senderEmail,
+              newslettersFound: 1,
+              status: 'success',
+            });
+          }
+        } else {
+          // Not a newsletter, mark as skipped
+          emailResults.push({
+            email: senderEmail,
+            newslettersFound: 0,
+            status: 'skipped',
+          });
+        }
+      } catch (error) {
+        console.error(`Error processing Outlook message ${message.id}:`, error);
+        emailResults.push({
+          email: senderEmail || 'unknown',
+          newslettersFound: 0,
+          status: 'error',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { syncedCount, totalProcessed, emailResults };
+  }
+
+  // Add these public methods
+  public async getGmailClient(account: any) {
+    const oauth2Client = this.getGmailOAuth2Client();
+    oauth2Client.setCredentials({
+      access_token: account.accessToken,
+      refresh_token: account.refreshToken,
+    });
+    return google.gmail({ version: 'v1', auth: oauth2Client });
+  }
+
+  public async getOutlookClient(account: any) {
+    // Check if token is expired and refresh if needed
+    if (account.tokenExpiresAt && new Date() >= new Date(account.tokenExpiresAt)) {
+      console.log('🔄 Outlook access token expired, refreshing...');
+      await this.refreshAccessToken(account.id);
+      
+      // Fetch the updated account with new token
+      const updatedAccount = await db.query.emailAccounts.findFirst({
+        where: eq(emailAccounts.id, account.id),
+      });
+      
+      if (!updatedAccount) {
+        throw new Error('Failed to fetch updated account after token refresh');
+      }
+      
+      account = updatedAccount;
+    }
+
+    return Client.init({
+      authProvider: (done) => {
+        done(null, account.accessToken);
+      },
+    });
+  }
+
+  public static async sendPasswordResetEmail(to: string, resetLink: string) {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || 'no-reply@newsletter.com',
+      to,
+      subject: 'Reset your password',
+      html: `<p>Hello,</p>
+        <p>You requested a password reset for your account.</p>
+        <p><a href="${resetLink}">Click here to reset your password</a></p>
+        <p>If you did not request this, you can ignore this email.</p>
+        <p>Thanks,<br/>The Newsletter Team</p>`
+    });
   }
 
   async refreshAccessToken(accountId: number) {
@@ -863,20 +1471,37 @@ export class EmailService {
   }
 
   async getUserInfo(provider: 'gmail' | 'outlook', accessToken: string) {
+    console.log(`👤 Getting user info for ${provider}...`);
+    
     if (provider === 'gmail') {
       const oauth2Client = this.getGmailOAuth2Client();
       oauth2Client.setCredentials({ access_token: accessToken });
       const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
       const profile = await gmail.users.getProfile({ userId: 'me' });
+      console.log('✅ Gmail user info obtained:', profile.data.emailAddress);
       return { email: profile.data.emailAddress! };
     } else if (provider === 'outlook') {
-      const client = Client.init({
-        authProvider: (done) => {
-          done(null, accessToken);
-        },
-      });
-      const user = await client.api('/me').get();
-      return { email: user.mail || user.userPrincipalName };
+      try {
+        const client = Client.init({
+          authProvider: (done) => {
+            done(null, accessToken);
+          },
+        });
+        
+        console.log('📡 Requesting Outlook user info...');
+        const user = await client.api('/me').get();
+        
+        const email = user.mail || user.userPrincipalName;
+        if (!email) {
+          throw new Error('No email address found in Outlook user info');
+        }
+        
+        console.log('✅ Outlook user info obtained:', email);
+        return { email };
+      } catch (error) {
+        console.error('❌ Error getting Outlook user info:', error);
+        throw new Error(`Failed to get Outlook user info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
     throw new Error('Invalid provider');
   }
@@ -966,15 +1591,20 @@ export class EmailService {
 
           const analysis = this.analyzeNewsletterScore(emailData);
           
-          if (analysis.score >= 35) {
+          console.log(`📧 Email: "${emailData.subject}" from ${emailData.from?.emailAddress?.address} - Score: ${analysis.score}, Confidence: ${analysis.confidence}`);
+          
+          if (analysis.score >= 25) {
             newsletters.push({
               id: messageId,
               subject: emailData.subject,
               from: emailData.from,
               date: emailData.date,
               score: analysis.score,
-              confidence: analysis.confidence
+              confidence: analysis.confidence,
+              text: emailData.text || '',
+              html: emailData.html || ''
             });
+            console.log(`✅ Found newsletter: "${emailData.subject}" (Score: ${analysis.score})`);
           }
         } catch (error) {
           console.error(`Failed to process email ${messageId}:`, error);
@@ -994,106 +1624,125 @@ export class EmailService {
       },
     });
 
-    // Enhanced Outlook search with multiple strategies
-    const searchFilters = [
-      "categories/any(c:c eq 'newsletters' or c eq 'updates' or c eq 'promotions')",
-      "contains(subject,'newsletter') or contains(subject,'unsubscribe')",
-      "contains(from/emailAddress/address,'noreply') or contains(from/emailAddress/address,'no-reply')",
-      "hasAttachments eq false and importance eq 'low'"
+    console.log('🔍 Starting Outlook newsletter preview search...');
+
+    // Use the same search strategy as Gmail but adapted for Outlook
+    const searchQueries = [
+      // Category-based searches (Outlook equivalent of Gmail categories)
+      "categories/any(c:c eq 'promotions')",
+      "categories/any(c:c eq 'updates')", 
+      "categories/any(c:c eq 'newsletters')",
+      
+      // Subject-based searches (individual filters to avoid syntax issues)
+      "contains(subject,'newsletter')",
+      "contains(subject,'digest')",
+      "contains(subject,'update')",
+      "contains(subject,'bulletin')",
+      "contains(subject,'issue')",
+      "contains(subject,'edition')",
+      "contains(subject,'weekly')",
+      
+      // Sender-based searches (individual filters)
+      "contains(from/emailAddress/address,'mailchimp.com')",
+      "contains(from/emailAddress/address,'constantcontact.com')",
+      "contains(from/emailAddress/address,'substack.com')",
+      "contains(from/emailAddress/address,'beehiiv.com')",
+      "contains(from/emailAddress/address,'noreply')",
+      "contains(from/emailAddress/address,'no-reply')",
+      "contains(from/emailAddress/address,'hello@')",
+      "contains(from/emailAddress/address,'team@')",
+      "contains(from/emailAddress/address,'ghost.org')",
+      
+      // Low importance emails (Outlook equivalent of Gmail promotions)
+      "importance eq 'low' and hasAttachments eq false",
+      
+      // Recent emails (last 30 days)
+      `receivedDateTime ge ${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()}`
     ];
 
-    const allMessages = new Map();
-
-    for (const filter of searchFilters) {
+    const allMessages = new Set();
+    
+    // Collect messages from all search queries (same as Gmail)
+    for (const query of searchQueries) {
       try {
-        const messages = await client
+        console.log(`🔍 Trying query: ${query}`);
+        const response = await client
           .api('/me/messages')
-          .filter(filter)
-          .top(100)
+          .filter(query)
+          .top(50) // Same as Gmail maxResults: 50
           .get();
 
-        messages.value.forEach((msg: any) => allMessages.set(msg.id, msg));
+        if (response.value) {
+          response.value.forEach((msg: any) => allMessages.add(msg.id));
+          console.log(`✅ Query found ${response.value.length} messages (total: ${allMessages.size})`);
+        }
       } catch (error) {
-        console.warn(`Outlook search filter failed: ${filter}`, error);
+        console.warn(`❌ Query failed: ${query}`, error);
       }
     }
 
     const newsletters = [];
-    
-    for (const [id, message] of allMessages) {
-      try {
-        const fullMessage = await client
-          .api(`/me/messages/${id}`)
-          .get();
+    const messageIds = Array.from(allMessages);
 
-        const emailData = {
-          id,
-          body: fullMessage.body,
-          subject: fullMessage.subject,
-          from: fullMessage.from,
-          receivedDateTime: fullMessage.receivedDateTime
-        };
+    // Process emails in batches of 5 (same as Gmail)
+    for (let i = 0; i < messageIds.length; i += 5) {
+      const batch = messageIds.slice(i, i + 5);
+      
+      for (const messageId of batch) {
+        try {
+          const fullMessage = await client
+            .api(`/me/messages/${messageId}`)
+            .get();
 
-        const analysis = this.analyzeNewsletterScore(emailData);
-        
-        if (analysis.score >= 35) {
-          newsletters.push({
-            id,
-            subject: fullMessage.subject,
-            from: {
-              text: fullMessage.from.emailAddress.name,
-              value: [{ address: fullMessage.from.emailAddress.address }]
-            },
-            date: fullMessage.receivedDateTime,
-            score: analysis.score,
-            confidence: analysis.confidence
-          });
+          // Extract Outlook data in the same format as Gmail data
+          const emailData = this.extractOutlookData(fullMessage);
+          
+          if (!emailData) {
+            continue;
+          }
+
+          const analysis = this.analyzeNewsletterScore(emailData);
+          
+          console.log(`📧 Email: "${emailData.subject}" from ${emailData.from?.value?.[0]?.address} - Score: ${analysis.score}, Confidence: ${analysis.confidence}`);
+          
+          if (analysis.score >= 25) {
+            newsletters.push({
+              id: messageId,
+              subject: emailData.subject,
+              from: emailData.from,
+              date: emailData.date,
+              score: analysis.score,
+              confidence: analysis.confidence,
+              text: emailData.text || '',
+              html: emailData.html || ''
+            });
+            console.log(`✅ Found newsletter: "${emailData.subject}" (Score: ${analysis.score})`);
+          }
+        } catch (error) {
+          console.error(`Failed to process email ${messageId}:`, error);
         }
-      } catch (error) {
-        console.error(`Error processing Outlook email ${id}:`, error);
       }
+      
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     return newsletters;
   }
 
-  // Add these public methods
-  public async getGmailClient(account: any) {
-    const oauth2Client = this.getGmailOAuth2Client();
-    oauth2Client.setCredentials({
-      access_token: account.accessToken,
-      refresh_token: account.refreshToken,
-    });
-    return google.gmail({ version: 'v1', auth: oauth2Client });
-  }
-
-  public async getOutlookClient(account: any) {
-    return Client.init({
-      authProvider: (done) => {
-        done(null, account.accessToken);
+  // Add this method to parse Outlook message data
+  private extractOutlookData(fullMessage: any) {
+    if (!fullMessage) return null;
+    return {
+      subject: fullMessage.subject || '',
+      from: {
+        value: [{
+          address: fullMessage.from?.emailAddress?.address || '',
+          name: fullMessage.from?.emailAddress?.name || ''
+        }]
       },
-    });
-  }
-
-  public static async sendPasswordResetEmail(to: string, resetLink: string) {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || 'no-reply@newsletter.com',
-      to,
-      subject: 'Reset your password',
-      html: `<p>Hello,</p>
-        <p>You requested a password reset for your account.</p>
-        <p><a href="${resetLink}">Click here to reset your password</a></p>
-        <p>If you did not request this, you can ignore this email.</p>
-        <p>Thanks,<br/>The Newsletter Team</p>`
-    });
+      text: fullMessage.body?.content || '',
+      html: fullMessage.body?.content || '',
+      date: new Date(fullMessage.receivedDateTime),
+    };
   }
 }

@@ -10,7 +10,7 @@ export async function syncNewsletters() {
       where: eq(emailAccounts.syncEnabled, true),
     });
 
-    const emailService = EmailService.getInstance();
+    const emailService = new EmailService();
 
     // Sync each account
     for (const account of accounts) {

@@ -3,12 +3,22 @@ import { db } from '@/lib/db';
 import { newsletters } from '@/lib/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
+import { redis } from '@/lib/redis';
 
 export async function GET(request: NextRequest) {
   try {
     const userId = await requireAuth();
     const { searchParams } = new URL(request.url);
     const emailAccountId = searchParams.get('emailAccountId');
+
+    // Redis key for stats
+    const redisKey = emailAccountId
+      ? `stats:${userId}:${emailAccountId}`
+      : `stats:${userId}`;
+    const cached = await redis.get(redisKey);
+    if (typeof cached === 'string') {
+      return NextResponse.json(JSON.parse(cached));
+    }
 
     // Build base condition
     const baseCondition = [eq(newsletters.userId, userId)];
@@ -17,19 +27,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Get counts for each folder
-    const [allCount, starredCount, binCount] = await Promise.all([
-      // Inbox: ALL newsletters (not filtered)
+    const [inboxCount, starredCount, binCount] = await Promise.all([
+      // Inbox: not archived
       db
         .select({ count: sql<number>`count(*)` })
         .from(newsletters)
-        .where(and(...baseCondition)),
-      
-      // Starred: is starred
+        .where(and(...baseCondition, eq(newsletters.isArchived, false))),
+      // Starred: is starred and not archived
       db
         .select({ count: sql<number>`count(*)` })
         .from(newsletters)
-        .where(and(...baseCondition, eq(newsletters.isStarred, true))),
-      
+        .where(and(...baseCondition, eq(newsletters.isStarred, true), eq(newsletters.isArchived, false))),
       // Bin: is archived
       db
         .select({ count: sql<number>`count(*)` })
@@ -37,11 +45,13 @@ export async function GET(request: NextRequest) {
         .where(and(...baseCondition, eq(newsletters.isArchived, true)))
     ]);
 
-    return NextResponse.json({
-      inbox: allCount[0].count,
+    const stats = {
+      inbox: inboxCount[0].count,
       starred: starredCount[0].count,
       bin: binCount[0].count
-    });
+    };
+    await redis.set(redisKey, JSON.stringify(stats), { ex: 300 }); // 5 min TTL
+    return NextResponse.json(stats);
   } catch (error) {
     console.error('Error fetching folder counts:', error);
     if (error instanceof Error && error.message === 'Authentication required') {

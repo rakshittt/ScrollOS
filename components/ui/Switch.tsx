@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const switchVariants = cva(
-  'peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary-500 data-[state=unchecked]:bg-muted-foreground/20',
+  'peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted-foreground/20',
   {
     variants: {
       size: {
@@ -39,22 +39,66 @@ export interface SwitchProps
     VariantProps<typeof switchVariants> {}
 
 const Switch = forwardRef<HTMLInputElement, SwitchProps>(
-  ({ className, size, ...props }, ref) => {
+  ({ className, size, onChange, checked, disabled, ...props }, ref) => {
+    const handleSwitchClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (onChange && !disabled) {
+        const newChecked = !checked;
+        
+        const event = {
+          target: {
+            checked: newChecked,
+            type: 'checkbox'
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        onChange(event);
+      }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (onChange && !disabled) {
+          const newChecked = !checked;
+          const event = {
+            target: {
+              checked: newChecked,
+              type: 'checkbox'
+            }
+          } as React.ChangeEvent<HTMLInputElement>;
+          onChange(event);
+        }
+      }
+    };
+
     return (
       <div className="relative">
         <input
           type="checkbox"
           className="peer sr-only"
           ref={ref}
+          checked={checked}
+          onChange={onChange}
+          disabled={disabled}
           {...props}
         />
         <div
           className={cn(switchVariants({ size: size as any, className }))}
-          data-state={props.checked ? 'checked' : 'unchecked'}
+          data-state={checked ? 'checked' : 'unchecked'}
+          onClick={handleSwitchClick}
+          onKeyDown={handleKeyDown}
+          role="button"
+          tabIndex={disabled ? -1 : 0}
+          aria-checked={checked}
+          aria-disabled={disabled}
         >
           <div
             className={cn(switchThumbVariants({ size: size as any }))}
-            data-state={props.checked ? 'checked' : 'unchecked'}
+            data-state={checked ? 'checked' : 'unchecked'}
           />
         </div>
       </div>

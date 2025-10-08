@@ -79,15 +79,16 @@ export default function AppearancePage() {
   // Apply theme changes
   useEffect(() => {
     const root = document.documentElement;
-    
     // Remove existing theme classes
     root.classList.remove('light', 'dark');
-    
-    if (settings.theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      root.classList.add(systemTheme);
-    } else {
+    // Only apply the theme from user settings, do not auto-switch to system after refresh
+    if (settings.theme === 'light' || settings.theme === 'dark') {
       root.classList.add(settings.theme);
+    } else if (settings.theme === 'system') {
+      // Optionally, you can comment out the following line to prevent auto-switching:
+      // const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      // root.classList.add(systemTheme);
+      // Instead, do nothing or keep the last user-selected theme
     }
 
     // Apply accent color

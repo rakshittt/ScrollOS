@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const emailService = EmailService.getInstance();
+    const emailService = new EmailService();
     const authUrl = provider === 'gmail'
       ? await emailService.getGmailAuthUrl()
       : await emailService.getOutlookAuthUrl();

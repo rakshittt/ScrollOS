@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, Menu, Moon, Sun, Settings, RefreshCw, Loader2, X, Mail, LogOut, User, ChevronDown } from 'lucide-react';
+import { Search, Menu, Moon, Sun, Settings, RefreshCw, Loader2, X, Mail, LogOut, User, ChevronDown, Sparkles, ShieldCheck, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/hooks/use-toast';
@@ -17,18 +17,60 @@ interface HeaderProps {
   accounts?: any[];
   selectedAccountId?: number | null;
   onAccountChange?: (id: number | null) => void;
+  onShowOnboarding?: () => void;
 }
 
-export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts = [], selectedAccountId, onAccountChange }: HeaderProps) {
+export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts = [], selectedAccountId, onAccountChange, onShowOnboarding }: HeaderProps) {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string>('');
+  const [newNewsletterCount, setNewNewsletterCount] = useState<number>(0);
   const { toast } = useToast();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
 
+  useEffect(() => {
+    // Check the <html> class or localStorage on mount
+    const html = document.documentElement;
+    let dark = html.classList.contains('dark');
+    // Fallback: check localStorage
+    if (!dark) {
+      try {
+        const settings = JSON.parse(localStorage.getItem('appearanceSettings') || '{}');
+        if (settings.theme === 'dark') dark = true;
+        if (settings.theme === 'system') {
+          const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          if (systemTheme === 'dark') dark = true;
+        }
+      } catch (e) {}
+    }
+    setIsDarkMode(dark);
+  }, []);
+
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      const html = document.documentElement;
+      html.classList.remove('light', 'dark');
+      if (next) {
+        html.classList.add('dark');
+      } else {
+        html.classList.add('light');
+      }
+      // Update localStorage.appearanceSettings
+      try {
+        const settings = JSON.parse(localStorage.getItem('appearanceSettings') || '{}');
+        settings.theme = next ? 'dark' : 'light';
+        localStorage.setItem('appearanceSettings', JSON.stringify(settings));
+      } catch (e) {}
+      // Set theme cookie for SSR hydration
+      try {
+        document.cookie = `theme=${next ? 'dark' : 'light'}; path=/; max-age=${60 * 60 * 24 * 365}`;
+      } catch (e) {}
+      return next;
+    });
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,16 +95,61 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleSyncNow = async () => {
+  // Listen for sync events from header
+  useEffect(() => {
+    const handleSyncEvent = (event: CustomEvent) => {
+      const { status, message, count } = event.detail;
+      setSyncStatus(status);
+      setSyncMessage(message || '');
+      setNewNewsletterCount(count || 0);
+      
+      if (status === 'success' && message) {
+        toast.success(message);
+      } else if (status === 'error' && message) {
+        toast.error(message);
+      }
+    };
+
+    window.addEventListener('sync-status-update', handleSyncEvent as EventListener);
+    return () => {
+      window.removeEventListener('sync-status-update', handleSyncEvent as EventListener);
+    };
+  }, [toast]);
+
+  // Listen for sync triggers from other components
+  useEffect(() => {
+    const handleTriggerSync = () => {
+      handleQuickSync();
+    };
+
+    window.addEventListener('trigger-sync', handleTriggerSync);
+    return () => {
+      window.removeEventListener('trigger-sync', handleTriggerSync);
+    };
+  }, []);
+
+  const handleQuickSync = async () => {
     try {
       setIsSyncing(true);
-      console.log('🔄 Starting manual sync...');
+      setSyncStatus('syncing');
+      console.log('🔄 Starting quick sync...');
       
-      // Trigger sync for all connected accounts
+      // Dispatch sync start event
+      window.dispatchEvent(new CustomEvent('sync-status-update', {
+        detail: { status: 'syncing', message: 'Syncing newsletters...' }
+      }));
+      
+      // Determine which account(s) to sync
+      const syncAccountId = selectedAccountId; // null means all accounts, specific ID means that account only
+      
+      // Trigger sync for selected account(s)
       const response = await fetch('/api/email/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ manualSync: true }),
+        body: JSON.stringify({ 
+          manualSync: true,
+          accountId: syncAccountId // Pass the selected account ID
+        }),
       });
 
       if (!response.ok) {
@@ -71,16 +158,86 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
       }
 
       const result = await response.json();
-      console.log('✅ Sync completed:', result);
-      toast.success(`Sync completed! ${result.syncedCount || 0} new newsletters found.`);
+      console.log('✅ Quick sync completed:', result);
+      setSyncStatus('success');
+      setLastSyncTime(new Date().toLocaleTimeString());
       
-      // Refresh the page to show new newsletters
-      window.location.reload();
+      const accountName = syncAccountId 
+        ? accounts.find(a => a.id === syncAccountId)?.email || 'selected account'
+        : 'all accounts';
+      
+      const successMessage = `Quick sync completed for ${accountName}! ${result.syncedCount || 0} new newsletters imported from whitelisted emails.`;
+      toast.success(successMessage);
+      
+      // Dispatch sync success event
+      window.dispatchEvent(new CustomEvent('sync-status-update', {
+        detail: { 
+          status: 'success', 
+          message: successMessage,
+          count: result.syncedCount || 0,
+          results: result.syncResults || [],
+          totalEmails: result.totalEmailsProcessed || 0
+        }
+      }));
+      
+      // Note: Removed automatic timeout - banner will stay visible until user manually dismisses
+      
+      // Note: Removed automatic page reload - user can refresh manually via the banner's "View New" button
     } catch (error) {
-      console.error('❌ Sync failed:', error);
-      toast.error('Failed to sync newsletters. Please try again.');
+      console.error('❌ Quick sync failed:', error);
+      setSyncStatus('error');
+      const errorMessage = 'Failed to sync newsletters. Please try again.';
+      toast.error(errorMessage);
+      
+      // Dispatch sync error event
+      window.dispatchEvent(new CustomEvent('sync-status-update', {
+        detail: { 
+          status: 'error', 
+          message: errorMessage,
+          count: 0,
+          results: [],
+          totalEmails: 0
+        }
+      }));
+      
+      // Note: Removed automatic timeout - banner will stay visible until user manually dismisses
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleDomainWhitelistSync = () => {
+    // Navigate to email settings where the domain whitelist modal is available
+    window.location.href = '/settings/whitelist';
+  };
+
+  const getSyncButtonContent = () => {
+    switch (syncStatus) {
+      case 'syncing':
+        return <RefreshCw className="h-4 w-4 animate-spin" />;
+      case 'success':
+        return <RefreshCw className="h-4 w-4 text-green-500" />;
+      case 'error':
+        return <RefreshCw className="h-4 w-4 text-red-500" />;
+      default:
+        return <RefreshCw className="h-4 w-4" />;
+    }
+  };
+
+  const getSyncButtonTitle = () => {
+    const accountName = selectedAccountId 
+      ? accounts.find(a => a.id === selectedAccountId)?.email || 'selected account'
+      : 'all accounts';
+      
+    switch (syncStatus) {
+      case 'syncing':
+        return `Syncing ${accountName}...`;
+      case 'success':
+        return 'Sync completed successfully';
+      case 'error':
+        return 'Sync failed - click to try again';
+      default:
+        return lastSyncTime ? `Last synced: ${lastSyncTime}` : `Sync ${accountName}`;
     }
   };
 
@@ -99,10 +256,14 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
           </Button>
           
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-sm">N</span>
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm">
+              <img 
+                src="/NEWS360.png" 
+                alt="News360 Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
-            <span className="font-semibold text-foreground hidden sm:block">
+            <span className="font-medium text-foreground hidden sm:block">
               News360
             </span>
           </div>
@@ -183,79 +344,141 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
               </DropdownMenu.Content>
             </DropdownMenu.Root>
           )}
-          {/* Sync Button */}
+
+          {/* Enhanced Sync Button with Dropdown */}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={handleSyncNow}
             disabled={isSyncing}
-            title="Sync newsletters"
-            className="relative"
-          >
-            {isSyncing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
+                title={getSyncButtonTitle()}
+                className={cn(
+                  "relative transition-all duration-200",
+                  syncStatus === 'success' && "text-green-600 hover:text-green-700",
+                  syncStatus === 'error' && "text-red-600 hover:text-red-700"
+                )}
+              >
+                {getSyncButtonContent()}
+                {lastSyncTime && syncStatus === 'idle' && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             )}
           </Button>
-          
-          {/* Dark Mode Toggle */}
-          <Button variant="ghost" size="sm" onClick={toggleDarkMode} title="Toggle dark mode">
-            {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-
-          {/* Avatar with Radix DropdownMenu */}
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <Button variant="ghost" size="sm" className="p-0 rounded-full w-8 h-8 overflow-hidden border border-border">
-                {session?.user?.image ? (
-                  <img
-                    src={session.user.image}
-                    alt={session.user.name || 'User'}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="w-8 h-8 flex items-center justify-center bg-muted rounded-full text-xs font-bold text-muted-foreground">
-                    {session?.user?.name?.[0]?.toUpperCase() || 'U'}
-                  </span>
-                )}
-              </Button>
             </DropdownMenu.Trigger>
-            <DropdownMenu.Content
-              align="end"
-              sideOffset={8}
-              className="z-50 min-w-[200px] rounded-lg border bg-background p-1 shadow-lg animate-in fade-in-80"
-            >
-              <div className="px-4 py-3 border-b border-border">
-                <div className="font-semibold text-sm truncate">{session?.user?.name || 'User'}</div>
-                <div className="text-xs text-muted-foreground truncate">{session?.user?.email}</div>
+            <DropdownMenu.Content align="end" className="w-56 p-2 z-50 rounded-lg border bg-background shadow-lg">
+              <div className="px-2 py-1.5">
+                <h4 className="text-sm font-medium text-foreground mb-1">Sync Options</h4>
+                <p className="text-xs text-muted-foreground">
+                  {lastSyncTime ? `Last synced: ${lastSyncTime}` : 'No recent sync'}
+                </p>
               </div>
-              <DropdownMenu.Item asChild>
-                <a
-                  href="/settings/account"
-                  className="flex items-center px-4 py-2 text-sm hover:bg-accent transition-colors rounded"
-                >
-                  <User className="h-4 w-4 mr-2" /> Account Settings
-                </a>
+              
+              <DropdownMenu.Separator className="my-2 h-px bg-border" />
+              
+              <DropdownMenu.Item
+                onSelect={handleQuickSync}
+                disabled={isSyncing}
+                className={cn(
+                  "flex items-center space-x-3 p-2 rounded-md transition-colors cursor-pointer",
+                  "hover:bg-accent hover:text-foreground",
+                  isSyncing && "opacity-50 pointer-events-none"
+                )}
+              >
+                <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
+                <div className="flex-1">
+                  <span className="text-sm font-normal">
+                    Quick Sync {selectedAccountId 
+                      ? accounts.find(a => a.id === selectedAccountId)?.email?.split('@')[0] || 'Account'
+                      : 'All Accounts'
+                    }
+                  </span>
+                  <p className="text-xs text-muted-foreground">
+                    Import new newsletters from whitelisted emails
+                  </p>
+                </div>
               </DropdownMenu.Item>
-              <DropdownMenu.Separator className="my-1 h-px bg-border" />
-              <DropdownMenu.Item asChild>
-                <button
-                  onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-                  className="flex items-center w-full px-4 py-2 text-sm text-error-600 hover:bg-error-50 transition-colors font-semibold rounded"
-                >
-                  <LogOut className="h-4 w-4 mr-2" /> Log out
-                </button>
+
+              <DropdownMenu.Item
+                onSelect={handleDomainWhitelistSync}
+                className="flex items-center space-x-3 p-2 rounded-md transition-colors cursor-pointer hover:bg-accent hover:text-foreground"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                <div className="flex-1">
+                  <span className="text-sm font-normal">Email Whitelist</span>
+                  <p className="text-xs text-muted-foreground">Manage newsletter domains</p>
+                </div>
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Separator className="my-2 h-px bg-border" />
+
+              <DropdownMenu.Item
+                onSelect={() => window.location.href = '/settings/email'}
+                className="flex items-center space-x-3 p-2 rounded-md transition-colors cursor-pointer hover:bg-accent hover:text-foreground"
+              >
+                <Settings className="h-4 w-4" />
+                <div className="flex-1">
+                  <span className="text-sm font-normal">Sync Settings</span>
+                  <p className="text-xs text-muted-foreground">Configure email accounts</p>
+                </div>
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-
-          {/* Settings Button */}
-          {/* <Link href="/settings">
-            <Button variant="ghost" size="sm" title="Settings">
-              <Settings className="h-4 w-4" />
-            </Button>
-          </Link> */}
+          
+          {/* Dark Mode Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleDarkMode}
+            title="Toggle dark mode"
+          >
+            {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+          
+          {/* User Menu */}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center space-x-2"
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:block">{session?.user?.name}</span>
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content align="end" className="w-48 p-1 z-50 rounded-lg border bg-background shadow-lg">
+              <DropdownMenu.Item
+                onSelect={() => window.location.href = '/settings/account'}
+                className="flex items-center px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-accent hover:text-foreground"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Account Settings
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                onSelect={() => window.location.href = '/settings'}
+                className="flex items-center px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-accent hover:text-foreground"
+                >
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </DropdownMenu.Item>
+              <DropdownMenu.Separator className="my-1 h-px bg-border" />
+              <DropdownMenu.Item
+                onSelect={() => signOut()}
+                className="flex items-center px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-accent hover:text-foreground text-red-600"
+                >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                onSelect={() => onShowOnboarding?.()}
+                className="flex items-center px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-accent hover:text-foreground"
+              >
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Onboarding
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </div>
       </div>
     </header>

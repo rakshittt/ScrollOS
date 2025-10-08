@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+<<<<<<< HEAD
+import { newsletters, newsletterRules, categories, userNewsletterEmailWhitelist, users } from '@/lib/schema';
+import { eq, desc, like, and, or, sql, inArray } from 'drizzle-orm';
+=======
 import { newsletters, newsletterRules, categories } from '@/lib/schema';
 import { eq, desc, like, and, or, sql } from 'drizzle-orm';
+>>>>>>> main
 import { requireAuth } from '@/lib/auth';
+import { redis } from '@/lib/redis';
 
 type RuleCondition = {
   type: 'sender' | 'subject' | 'content';
@@ -72,27 +78,52 @@ async function applyRules(newsletter: any, userId: number) {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('📥 Fetching newsletters list');
     const userId = await requireAuth();
     const { searchParams } = new URL(request.url);
     const folder = searchParams.get('folder') || 'inbox';
-    const query = searchParams.get('query');
-    const isRead = searchParams.get('isRead');
-    const isStarred = searchParams.get('isStarred');
     const categoryId = searchParams.get('categoryId');
+    const query = searchParams.get('query');
     const emailAccountId = searchParams.get('emailAccountId');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    
-    console.log(`🔍 Filtering newsletters by folder: ${folder}`);
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const search = searchParams.get('search');
+    const readStatus = searchParams.get('readStatus');
+    const starredStatus = searchParams.get('starredStatus');
+    const dateRange = searchParams.get('dateRange');
+    const categories = searchParams.get('categories');
+    const sortBy = searchParams.get('sortBy') || 'date';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const lastSeenDate = searchParams.get('lastSeenDate');
 
+<<<<<<< HEAD
+    // Redis cache key (user, folder, filters, page)
+    const cacheKey = `inbox:${userId}:${folder}:${categoryId || ''}:${query || ''}:${emailAccountId || ''}:${page}:${limit}:${search || ''}:${readStatus || ''}:${starredStatus || ''}:${dateRange || ''}:${categories || ''}:${sortBy}:${sortOrder}:${lastSeenDate || ''}`;
+    const isCacheable = !search && !readStatus && !starredStatus && !dateRange && !categories && !emailAccountId && sortBy === 'date' && sortOrder === 'desc' && !lastSeenDate && (!categoryId || folder !== 'inbox');
+    let cacheHit = false;
+    if (isCacheable) {
+      const cached = await redis.get(cacheKey);
+      if (typeof cached === 'string') {
+        cacheHit = true;
+        console.log(`[CACHE] Inbox cache hit for user ${userId}`);
+        return NextResponse.json(JSON.parse(cached));
+      }
+    }
+
+    const startTime = Date.now();
+    // Build query conditions - show all newsletters for the user
+    const conditions = [
+      eq(newsletters.userId, userId)
+    ];
+=======
     // Build query conditions
     const conditions = [eq(newsletters.userId, userId)];
+>>>>>>> main
     
     // Only allow one filter: if folder is not 'inbox', ignore categoryId
     // If folder is 'inbox', allow categoryId
     if (folder === 'inbox') {
       // No additional filters: show all newsletters (inbox + starred + archived)
+      conditions.push(eq(newsletters.isArchived, false));
       if (categoryId) {
         conditions.push(eq(newsletters.categoryId, parseInt(categoryId)));
       }
@@ -107,30 +138,183 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(newsletters.emailAccountId, parseInt(emailAccountId)));
     }
     
-    if (query) {
+    // Apply search filter (from query parameter or search parameter)
+    const searchQuery = search || query;
+    if (searchQuery) {
       conditions.push(
-        sql`(${newsletters.subject} ILIKE ${`%${query}%`} OR ${newsletters.content} ILIKE ${`%${query}%`} OR ${newsletters.sender} ILIKE ${`%${query}%`})`
+        sql`(${newsletters.subject} ILIKE ${`%${searchQuery}%`} OR ${newsletters.content} ILIKE ${`%${searchQuery}%`} OR ${newsletters.sender} ILIKE ${`%${searchQuery}%`})`
       );
     }
-    
-    if (isRead !== null) {
-      conditions.push(eq(newsletters.isRead, isRead === 'true'));
-    }
-    
-    if (isStarred !== null) {
-      conditions.push(eq(newsletters.isStarred, isStarred === 'true'));
+
+    // Apply read status filter
+    if (readStatus && readStatus !== 'all') {
+      if (readStatus === 'read') {
+        conditions.push(eq(newsletters.isRead, true));
+      } else if (readStatus === 'unread') {
+        conditions.push(eq(newsletters.isRead, false));
+      }
     }
 
-    // Execute query
-    const result = await db
-      .select()
+    // Apply starred status filter
+    if (starredStatus && starredStatus !== 'all') {
+      if (starredStatus === 'starred') {
+        conditions.push(eq(newsletters.isStarred, true));
+      } else if (starredStatus === 'unstarred') {
+        conditions.push(eq(newsletters.isStarred, false));
+      }
+    }
+
+    // Apply date range filter
+    if (dateRange && dateRange !== 'all') {
+      const now = new Date();
+      let startDate: Date;
+      
+      switch (dateRange) {
+        case 'today':
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        default:
+          startDate = new Date(0); // Beginning of time
+      }
+      
+      conditions.push(sql`${newsletters.receivedAt} >= ${startDate}`);
+    }
+
+    // Apply categories filter
+    if (categories) {
+      const categoryIds = categories.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+      if (categoryIds.length > 0) {
+        conditions.push(inArray(newsletters.categoryId, categoryIds));
+      }
+    }
+    
+    // For keyset pagination, add the keyset condition to the conditions array before building the query
+    if (lastSeenDate) {
+      conditions.push(sql`${newsletters.receivedAt} < ${new Date(lastSeenDate)}`);
+    }
+    
+    // Get total count for pagination
+    const totalCountResult = await db
+      .select({ count: sql<number>`count(*)` })
       .from(newsletters)
-      .where(and(...conditions))
-      .orderBy(desc(newsletters.priority), desc(newsletters.receivedAt))
-      .limit(limit)
-      .offset((page - 1) * limit);
+      .where(and(...conditions));
 
+<<<<<<< HEAD
+    const totalCount = totalCountResult[0]?.count || 0;
+
+    // Build order by clause
+    let orderByClause;
+    if (sortBy === 'sender') {
+      orderByClause = sortOrder === 'asc' 
+        ? [newsletters.sender, desc(newsletters.receivedAt)]
+        : [desc(newsletters.sender), desc(newsletters.receivedAt)];
+    } else if (sortBy === 'subject') {
+      orderByClause = sortOrder === 'asc'
+        ? [newsletters.subject, desc(newsletters.receivedAt)]
+        : [desc(newsletters.subject), desc(newsletters.receivedAt)];
+    } else {
+      // Default: sort by date
+      orderByClause = sortOrder === 'asc'
+        ? [newsletters.receivedAt, desc(newsletters.priority)]
+        : [desc(newsletters.receivedAt), desc(newsletters.priority)];
+    }
+
+    let newslettersQuery;
+    if (!lastSeenDate) {
+      newslettersQuery = db
+        .select({
+          id: newsletters.id,
+          userId: newsletters.userId,
+          emailAccountId: newsletters.emailAccountId,
+          messageId: newsletters.messageId,
+          title: newsletters.title,
+          sender: newsletters.sender,
+          senderEmail: newsletters.senderEmail,
+          subject: newsletters.subject,
+          content: sql<string>`LEFT(${newsletters.content}, 200)`,
+          isRead: newsletters.isRead,
+          isStarred: newsletters.isStarred,
+          isArchived: newsletters.isArchived,
+          categoryId: newsletters.categoryId,
+          priority: newsletters.priority,
+          folder: newsletters.folder,
+          receivedAt: newsletters.receivedAt,
+        })
+        .from(newsletters)
+        .where(and(...conditions))
+        .orderBy(...orderByClause)
+        .limit(limit)
+        .offset((page - 1) * limit);
+    } else {
+      newslettersQuery = db
+        .select({
+          id: newsletters.id,
+          userId: newsletters.userId,
+          emailAccountId: newsletters.emailAccountId,
+          messageId: newsletters.messageId,
+          title: newsletters.title,
+          sender: newsletters.sender,
+          senderEmail: newsletters.senderEmail,
+          subject: newsletters.subject,
+          content: sql<string>`LEFT(${newsletters.content}, 200)`,
+          isRead: newsletters.isRead,
+          isStarred: newsletters.isStarred,
+          isArchived: newsletters.isArchived,
+          categoryId: newsletters.categoryId,
+          priority: newsletters.priority,
+          folder: newsletters.folder,
+          receivedAt: newsletters.receivedAt,
+        })
+        .from(newsletters)
+        .where(and(...conditions))
+        .orderBy(...orderByClause)
+        .limit(limit);
+    }
+    const result = await newslettersQuery;
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNext = page < totalPages;
+    const hasPrevious = page > 1;
+
+    // For keyset pagination, set nextLastSeenDate
+    let nextLastSeenDate = null;
+    if (result && result.length === limit) {
+      nextLastSeenDate = result[result.length - 1].receivedAt;
+    }
+
+    const response = {
+      newsletters: result,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+        hasNext,
+        hasPrevious,
+        limit,
+        nextLastSeenDate,
+      }
+    };
+
+    // Log query execution time
+    const elapsed = Date.now() - startTime;
+    if (elapsed > 500) {
+      console.warn(`⚠️ Slow inbox query for user ${userId}: ${elapsed}ms`);
+    }
+    if (isCacheable) {
+      await redis.set(cacheKey, JSON.stringify(response), { ex: 30 });
+      console.log(`[CACHE] Inbox cache set for user ${userId}`);
+    }
+    return NextResponse.json(response);
+=======
     return NextResponse.json(result);
+>>>>>>> main
   } catch (error) {
     console.error('❌ Error fetching newsletters:', error);
     if (error instanceof Error && error.message === 'Authentication required') {
@@ -149,6 +333,24 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const userId = await requireAuth();
+    // Fetch user plan info
+    const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    const now = new Date();
+    // Check trial/plan expiry
+    if (user.planTrialEndsAt && now > user.planTrialEndsAt && !user.planExpiresAt) {
+      return NextResponse.json({ error: 'Your free trial has ended. Please upgrade to continue.' }, { status: 403 });
+    }
+    // Count newsletters
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(newsletters)
+      .where(eq(newsletters.userId, userId));
+    let maxNewsletters = 1000;
+    if (user.plan === 'pro_plus') maxNewsletters = 5000;
+    if (count >= maxNewsletters) {
+      return NextResponse.json({ error: `You have reached your plan's newsletter limit (${maxNewsletters}). Upgrade to add more.` }, { status: 403 });
+    }
     const body = await request.json();
     
     const result = await db
@@ -171,7 +373,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result[0], { status: 201 });
   } catch (error) {
-    console.error('Error creating newsletter:', error);
+    console.error('❌ Error creating newsletter:', error);
     return NextResponse.json(
       { error: 'Failed to create newsletter' },
       { status: 500 }

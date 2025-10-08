@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { categories } from '@/lib/schema';
-import { eq, and } from 'drizzle-orm';
+import { categories, newsletters } from '@/lib/schema';
+import { and, eq } from 'drizzle-orm';
+import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { redis } from '@/lib/redis';
 
 // PATCH /api/categories/[id] - Update a category
 export async function PATCH(
@@ -83,6 +84,10 @@ export async function PATCH(
       )
       .returning();
 
+    // Invalidate Redis cache for this user
+    const redisKey = `categories:${session.user.id}`;
+    await redis.del(redisKey);
+
     return NextResponse.json(updatedCategory);
   } catch (error) {
     console.error('Error updating category:', error);
@@ -135,13 +140,28 @@ export async function DELETE(
       );
     }
 
-    // Delete the category
+    // First, remove category references from all newsletters that use this category
+    await db
+      .update(newsletters)
+      .set({ categoryId: null, updatedAt: new Date() })
+      .where(
+        and(
+          eq(newsletters.categoryId, categoryId),
+          eq(newsletters.userId, session.user.id)
+        )
+      );
+
+    // Then delete the category
     await db.delete(categories).where(
       and(
         eq(categories.id, categoryId),
         eq(categories.userId, session.user.id)
       )
     );
+
+    // Invalidate Redis cache for this user
+    const redisKey = `categories:${session.user.id}`;
+    await redis.del(redisKey);
 
     return NextResponse.json({ success: true });
   } catch (error) {

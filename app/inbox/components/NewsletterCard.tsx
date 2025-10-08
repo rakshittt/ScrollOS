@@ -1,6 +1,6 @@
 'use client';
 
-import { Star, Archive, MoreVertical, Tag, Trash2, Loader2, Building2 } from 'lucide-react';
+import { Star, Archive, MoreVertical, Tag, Trash2, Loader2, Building2, Sparkles } from 'lucide-react';
 import { Newsletter } from '../../../types';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
@@ -12,7 +12,7 @@ import {
   DropdownTrigger,
   DropdownSeparator,
 } from '../../../components/ui/Dropdown';
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
@@ -32,6 +32,7 @@ interface NewsletterCardProps {
   onArchive: () => void;
   onUnarchive?: () => void;
   onCategoryChange?: (categoryId: number | null) => void;
+  categories: Category[]; // Pass categories as props instead of fetching
 }
 
 // Utility to extract sender name
@@ -59,6 +60,15 @@ function extractDomain(senderEmail: string) {
   return null;
 }
 
+// Utility to check if a newsletter is "new" (imported via sync within last 12 hours)
+function isNewsletterNew(importedAt?: Date | string): boolean {
+  if (!importedAt) return false; // If no importedAt, it wasn't imported via sync
+  const importedTime = new Date(importedAt).getTime();
+  const currentTime = new Date().getTime();
+  const twelveHoursInMs = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+  return (currentTime - importedTime) < twelveHoursInMs;
+}
+
 export function NewsletterCard({ 
   newsletter, 
   isSelected, 
@@ -66,40 +76,25 @@ export function NewsletterCard({
   onToggleStar, 
   onArchive, 
   onUnarchive,
-  onCategoryChange
+  onCategoryChange,
+  categories
 }: NewsletterCardProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUnarchiving, setIsUnarchiving] = useState(false);
   const { toast } = useToast();
   const [logoError, setLogoError] = useState(false);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories');
-      if (!response.ok) throw new Error('Failed to fetch categories');
-      const data = await response.json();
-      setCategories(data);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  const handleStarClick = (e: React.MouseEvent) => {
+  const handleStarClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onToggleStar();
-  };
+  }, [onToggleStar]);
 
-  const handleArchiveClick = (e: React.MouseEvent) => {
+  const handleArchiveClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onArchive();
-  };
+  }, [onArchive]);
 
-  const handleUnarchive = async (e: React.MouseEvent) => {
+  const handleUnarchive = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onUnarchive) {
       onUnarchive();
@@ -125,9 +120,9 @@ export function NewsletterCard({
     } finally {
       setIsUnarchiving(false);
     }
-  };
+  }, [onUnarchive, newsletter.id, toast]);
 
-  const handleCategoryChange = async (categoryId: number | null) => {
+  const handleCategoryChange = useCallback(async (categoryId: number | null) => {
     if (onCategoryChange) {
       onCategoryChange(categoryId);
       return;
@@ -150,7 +145,7 @@ export function NewsletterCard({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onCategoryChange, newsletter.id, toast]);
 
   const categoryColor = newsletter.categoryId
     ? categories.find(c => c.id === newsletter.categoryId)?.color || '#ff385c'
@@ -159,12 +154,22 @@ export function NewsletterCard({
   return (
     <div
       className={cn(
-        "group relative bg-background rounded-md shadow-sm border border-border p-4 transition-all duration-200 cursor-pointer hover:shadow-lg hover:border-primary/30",
+        "group relative bg-background shadow-sm border border-border p-4 transition-all duration-200 cursor-pointer hover:shadow-lg hover:border-primary/30",
         isSelected ? "ring-2 ring-primary/40 border-primary/60" : "",
         !newsletter.isRead ? "bg-blue-50 dark:bg-blue-900/20" : ""
       )}
       onClick={onClick}
     >
+      {/* New Badge */}
+      {isNewsletterNew(newsletter.importedAt) && (
+        <div className="absolute top-2 right-2 z-20">
+          <div className="flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-semibold rounded-full shadow-lg animate-pulse">
+            <Sparkles className="h-3 w-3" />
+            <span>NEW</span>
+          </div>
+        </div>
+      )}
+
       {/* Header Row */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center min-w-0 space-x-3">
@@ -197,7 +202,7 @@ export function NewsletterCard({
           </span>
           {/* Account Badge */}
           {newsletter.senderEmail && (
-            <span className="ml-1 px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground border border-border truncate max-w-[90px] font-medium" title={newsletter.senderEmail}>
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground border border-border truncate max-w-[90px] font-normal" title={newsletter.senderEmail}>
               {newsletter.senderEmail.length > 15 ? newsletter.senderEmail.slice(0, 12) + '...' : newsletter.senderEmail}
               </span>
           )}
@@ -215,14 +220,14 @@ export function NewsletterCard({
           {/* Subject */}
       <div className="mb-0.5">
           <h3 className={cn(
-          "text-sm leading-5 font-semibold truncate",
+          "text-sm leading-5 font-medium truncate",
           !newsletter.isRead ? "text-foreground" : "text-muted-foreground"
           )}>
           {truncateText(newsletter.subject, 40)}
           </h3>
         {/* Category Badge below subject, left-aligned */}
           {newsletter.categoryId && (
-          <span className="flex items-center mt-1 px-2 py-0.5 rounded-full border border-border text-xs font-medium w-fit"
+          <span className="flex items-center mt-1 px-2 py-0.5 rounded-full border border-border text-xs font-normal w-fit"
             style={{ background: 'none', borderColor: categoryColor }}>
             <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: categoryColor, display: 'inline-block' }} />
             <span className="category-badge-text" style={{ color: 'var(--category-badge-text-color)' }}>

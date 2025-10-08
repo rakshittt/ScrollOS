@@ -9,13 +9,13 @@ const toastVariants = cva(
       variant: {
         default: 'border-border bg-background text-foreground',
         destructive:
-          'border-error-200 bg-error-50 text-error-900 dark:border-error-800 dark:bg-error-950 dark:text-error-100',
+          'border-error/20 bg-error/10 text-error',
         success:
-          'border-success-200 bg-success-50 text-success-900 dark:border-success-800 dark:bg-success-950 dark:text-success-100',
+          'border-success/20 bg-success/10 text-success',
         warning:
-          'border-warning-200 bg-warning-50 text-warning-900 dark:border-warning-800 dark:bg-warning-950 dark:text-warning-100',
+          'border-warning/20 bg-warning/10 text-warning',
         info:
-          'border-info-200 bg-info-50 text-info-900 dark:border-info-800 dark:bg-info-950 dark:text-info-100',
+          'border-info/20 bg-info/10 text-info',
       },
     },
     defaultVariants: {
@@ -71,7 +71,7 @@ const ToastAction = forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-error-200 group-[.destructive]:hover:border-error-300 group-[.destructive]:hover:bg-error-100 group-[.destructive]:hover:text-error-900 group-[.destructive]:focus:ring-error-500 group-[.success]:border-success-200 group-[.success]:hover:border-success-300 group-[.success]:hover:bg-success-100 group-[.success]:hover:text-success-900 group-[.success]:focus:ring-success-500 group-[.warning]:border-warning-200 group-[.warning]:hover:border-warning-300 group-[.warning]:hover:bg-warning-100 group-[.warning]:hover:text-warning-900 group-[.warning]:focus:ring-warning-500 group-[.info]:border-info-200 group-[.info]:hover:border-info-300 group-[.info]:hover:bg-info-100 group-[.info]:hover:text-info-900 group-[.info]:focus:ring-info-500', className)}
+    className={cn('inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-error/20 group-[.destructive]:hover:border-error/30 group-[.destructive]:hover:bg-error/10 group-[.destructive]:hover:text-error group-[.destructive]:focus:ring-error group-[.success]:border-success/20 group-[.success]:hover:border-success/30 group-[.success]:hover:bg-success/10 group-[.success]:hover:text-success group-[.success]:focus:ring-success group-[.warning]:border-warning/20 group-[.warning]:hover:border-warning/30 group-[.warning]:hover:bg-warning/10 group-[.warning]:hover:text-warning group-[.warning]:focus:ring-warning group-[.info]:border-info/20 group-[.info]:hover:border-info/30 group-[.info]:hover:bg-info/10 group-[.info]:hover:text-info group-[.info]:focus:ring-info', className)}
     {...props}
   />
 ));
@@ -84,7 +84,7 @@ const ToastClose = forwardRef<
   <button
     ref={ref}
     className={cn(
-      'absolute right-2 top-2 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-error-300 group-[.destructive]:hover:text-error-900 group-[.destructive]:focus:ring-error-500 group-[.success]:text-success-300 group-[.success]:hover:text-success-900 group-[.success]:focus:ring-success-500 group-[.warning]:text-warning-300 group-[.warning]:hover:text-warning-900 group-[.warning]:focus:ring-warning-500 group-[.info]:text-info-300 group-[.info]:hover:text-info-900 group-[.info]:focus:ring-info-500',
+      'absolute right-2 top-2 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-error/70 group-[.destructive]:hover:text-error group-[.destructive]:focus:ring-error group-[.success]:text-success/70 group-[.success]:hover:text-success group-[.success]:focus:ring-success group-[.warning]:text-warning/70 group-[.warning]:hover:text-warning group-[.warning]:focus:ring-warning group-[.info]:text-info/70 group-[.info]:hover:text-info group-[.info]:focus:ring-info',
       className
     )}
     toast-close=""

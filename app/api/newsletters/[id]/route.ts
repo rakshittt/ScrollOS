@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { newsletters, categories } from '@/lib/schema';
-import { eq, and } from 'drizzle-orm';
-import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { categories, newsletters } from '@/lib/schema';
+import { and, eq } from 'drizzle-orm';
+import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,

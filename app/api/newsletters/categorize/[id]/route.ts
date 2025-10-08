@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { newsletterRules } from '@/lib/schema';
-import { eq, and } from 'drizzle-orm';
-import { requireAuth } from '@/lib/auth';
+import { and, eq } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function PATCH(
   request: NextRequest,
@@ -13,6 +13,9 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
     const { name, condition, action, isActive } = body;
+
+    const { id } = await params;
+    const ruleId = parseInt(id);
 
     const updateData: any = { updatedAt: new Date() };
     
@@ -25,7 +28,11 @@ export async function PATCH(
       .update(newsletterRules)
       .set(updateData)
       .where(and(
+<<<<<<< HEAD
+        eq(newsletterRules.id, ruleId),
+=======
         eq(newsletterRules.id, parseInt(id)),
+>>>>>>> main
         eq(newsletterRules.userId, userId)
       ))
       .returning();
@@ -54,11 +61,19 @@ export async function DELETE(
   try {
     const userId = await requireAuth();
     const { id } = await params;
+<<<<<<< HEAD
+    const ruleId = parseInt(id);
+=======
+>>>>>>> main
 
     const result = await db
       .delete(newsletterRules)
       .where(and(
+<<<<<<< HEAD
+        eq(newsletterRules.id, ruleId),
+=======
         eq(newsletterRules.id, parseInt(id)),
+>>>>>>> main
         eq(newsletterRules.userId, userId)
       ))
       .returning();

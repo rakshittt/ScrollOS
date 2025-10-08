@@ -1,22 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  Inbox, 
-  Star, 
-  Trash2,
-  Folder, 
-  Plus, 
-  X,
-  Hash,
-  Settings,
-  HelpCircle
-} from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { cn, formatDate, getContrastColor } from '../../lib/utils';
+import { Button } from '@/components/ui/Button';
+import { Icon } from '@iconify/react';
+import {
+    AlertTriangle,
+    HelpCircle,
+    Inbox,
+    Plus,
+    Settings,
+    Star,
+    Trash2,
+    X
+} from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { cn } from '../../lib/utils';
 
 interface Category {
   id: number;
@@ -46,6 +46,160 @@ const CATEGORY_COLORS = [
   '#ff385c', '#ffb400', '#00b894', '#0984e3', '#6c5ce7', '#fd79a8', '#00cec9', '#e17055', '#636e72', '#fab1a0', '#81ecec', '#a29bfe', '#ffeaa7', '#55efc4', '#fdcb6e', '#dfe6e9'
 ];
 
+// Category icon mapping and fallback pool
+const CATEGORY_ICON_MAP: Record<string, string> = {
+  work: 'mdi:briefcase',
+  personal: 'mdi:account',
+  news: 'mdi:newspaper',
+  reading: 'mdi:book-open-page-variant',
+  social: 'mdi:email',
+  shopping: 'mdi:cart',
+  music: 'mdi:music',
+  movies: 'mdi:movie',
+  entertainment: 'mdi:television',
+  finance: 'mdi:currency-usd',
+  important: 'mdi:star',
+  favorites: 'mdi:heart',
+  calendar: 'mdi:calendar',
+  travel: 'mdi:airplane',
+  health: 'mdi:heart-pulse',
+  food: 'mdi:silverware-fork-knife',
+  sports: 'mdi:soccer',
+  tech: 'mdi:laptop',
+  education: 'mdi:school',
+  family: 'mdi:account-group',
+  workspaces: 'mdi:office-building',
+  updates: 'mdi:bell',
+  offers: 'mdi:tag',
+  bills: 'mdi:receipt',
+  events: 'mdi:calendar-star',
+  travelog: 'mdi:map-marker',
+  inspiration: 'mdi:lightbulb',
+  alerts: 'mdi:alert',
+  misc: 'mdi:shape',
+  receipts: 'mdi:receipt-text',
+  invoices: 'mdi:file-document-outline',
+  newsletter: 'mdi:email-newsletter',
+  notifications: 'mdi:bell-ring',
+  reminders: 'mdi:alarm',
+  meetings: 'mdi:calendar-clock',
+  tickets: 'mdi:ticket',
+  transport: 'mdi:bus',
+  learning: 'mdi:book',
+  science: 'mdi:flask',
+  art: 'mdi:palette',
+  design: 'mdi:vector-square',
+  photography: 'mdi:camera',
+  code: 'mdi:code-tags',
+  dev: 'mdi:code-braces',
+  bug: 'mdi:bug',
+  security: 'mdi:shield-lock',
+  privacy: 'mdi:lock',
+  cloud: 'mdi:cloud',
+  weather: 'mdi:weather-partly-cloudy',
+  home: 'mdi:home',
+  pets: 'mdi:paw',
+  kids: 'mdi:baby-face-outline',
+  parents: 'mdi:account-child',
+  friends: 'mdi:account-multiple',
+  community: 'mdi:account-group',
+  charity: 'mdi:hand-heart',
+  donation: 'mdi:hand-coin',
+  volunteer: 'mdi:handshake',
+  jobs: 'mdi:briefcase-search',
+  career: 'mdi:briefcase-variant',
+  investments: 'mdi:chart-line',
+  stocks: 'mdi:finance',
+  crypto: 'mdi:currency-btc',
+  bank: 'mdi:bank',
+  insurance: 'mdi:shield-check',
+  medical: 'mdi:medical-bag',
+  doctor: 'mdi:stethoscope',
+  pharmacy: 'mdi:pill',
+  fitness: 'mdi:run',
+  exercise: 'mdi:dumbbell',
+  yoga: 'mdi:meditation',
+  mindfulness: 'mdi:head-cog',
+  hotel: 'mdi:hotel',
+  booking: 'mdi:calendar-check',
+  flight: 'mdi:airplane-takeoff',
+  train: 'mdi:train',
+  car: 'mdi:car',
+  bike: 'mdi:bike',
+  drink: 'mdi:glass-cocktail',
+  restaurant: 'mdi:silverware-fork-knife',
+  cafe: 'mdi:coffee',
+  groceries: 'mdi:cart',
+  gifts: 'mdi:gift',
+  birthday: 'mdi:cake-variant',
+  anniversary: 'mdi:calendar-heart',
+  wedding: 'mdi:heart',
+  baby: 'mdi:baby-bottle-outline',
+  party: 'mdi:party-popper',
+  celebration: 'mdi:party-popper',
+  holiday: 'mdi:beach',
+  vacation: 'mdi:beach',
+  adventure: 'mdi:compass',
+  outdoors: 'mdi:pine-tree',
+  garden: 'mdi:flower',
+  nature: 'mdi:leaf',
+  environment: 'mdi:earth',
+  sustainability: 'mdi:recycle',
+  investment: 'mdi:chart-bar',
+  savings: 'mdi:piggy-bank',
+  expense: 'mdi:cash-minus',
+  income: 'mdi:cash-plus',
+  rent: 'mdi:home-city',
+  mortgage: 'mdi:home-currency-usd',
+  utilities: 'mdi:flash',
+  electricity: 'mdi:flash',
+  water: 'mdi:water',
+  gas: 'mdi:gas-cylinder',
+  phone: 'mdi:phone',
+  internet: 'mdi:wifi',
+  tv: 'mdi:television',
+  subscription: 'mdi:credit-card',
+  streaming: 'mdi:play-box-multiple',
+  gaming: 'mdi:controller-classic',
+  books: 'mdi:book-open-page-variant',
+  comics: 'mdi:book-open-variant',
+  magazine: 'mdi:book-open-variant',
+  podcast: 'mdi:podcast',
+  video: 'mdi:video',
+  youtube: 'mdi:youtube',
+  facebook: 'mdi:facebook',
+  twitter: 'mdi:twitter',
+  instagram: 'mdi:instagram',
+  linkedin: 'mdi:linkedin',
+  github: 'mdi:github',
+  slack: 'mdi:slack',
+  discord: 'mdi:discord',
+  forum: 'mdi:forum',
+  blog: 'mdi:blogger',
+  math: 'mdi:math-compass',
+  language: 'mdi:alphabetical',
+};
+
+const CATEGORY_FALLBACK_ICONS = [
+  'mdi:folder',
+  'mdi:tag',
+  'mdi:star-outline',
+  'mdi:bookmark-outline',
+  'mdi:label-outline',
+  'mdi:shape-outline',
+  'mdi:cloud-outline',
+  'mdi:compass-outline',
+  'mdi:lightbulb-outline',
+  'mdi:email-outline',
+];
+
+function getCategoryIconName(name: string, id: number) {
+  const key = name.trim().toLowerCase();
+  if (CATEGORY_ICON_MAP[key]) return CATEGORY_ICON_MAP[key];
+  // Use id to pick a fallback icon for stable assignment
+  return CATEGORY_FALLBACK_ICONS[id % CATEGORY_FALLBACK_ICONS.length];
+}
+
 function getRandomCategoryColor() {
   return CATEGORY_COLORS[Math.floor(Math.random() * CATEGORY_COLORS.length)];
 }
@@ -70,6 +224,15 @@ export function Sidebar({
     inbox: 0,
     starred: 0,
     bin: 0
+  });
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    show: boolean;
+    category: Category | null;
+    newsletterCount: number;
+  }>({
+    show: false,
+    category: null,
+    newsletterCount: 0
   });
 
   useEffect(() => {
@@ -149,6 +312,39 @@ export function Sidebar({
 
   const handleDeleteCategory = async (categoryId: number) => {
     try {
+      // First, check if the category has newsletters
+      const response = await fetch(`/api/newsletters?categoryId=${categoryId}&limit=1`);
+      if (!response.ok) throw new Error('Failed to check category newsletters');
+      const data = await response.json();
+      const hasNewsletters = data.newsletters && data.newsletters.length > 0;
+      
+      if (hasNewsletters) {
+        // Get the full count for confirmation
+        const countResponse = await fetch(`/api/newsletters?categoryId=${categoryId}`);
+        if (!countResponse.ok) throw new Error('Failed to get newsletter count');
+        const countData = await countResponse.json();
+        const newsletterCount = countData.newsletters ? countData.newsletters.length : 0;
+        
+        // Show confirmation dialog
+        const category = categories.find(c => c.id === categoryId);
+        setDeleteConfirmation({
+          show: true,
+          category: category ?? null,
+          newsletterCount
+        });
+        return;
+      }
+      
+      // If no newsletters, delete directly
+      await performCategoryDeletion(categoryId);
+    } catch (error) {
+      console.error('Error checking category newsletters:', error);
+      setError('Failed to check category newsletters');
+    }
+  };
+
+  const performCategoryDeletion = async (categoryId: number) => {
+    try {
       const response = await fetch(`/api/categories/${categoryId}`, {
         method: 'DELETE',
       });
@@ -158,10 +354,21 @@ export function Sidebar({
       if (selectedCategoryId === categoryId) {
         onCategorySelect(null);
       }
+      setDeleteConfirmation({ show: false, category: null, newsletterCount: 0 });
     } catch (error) {
       console.error('Error deleting category:', error);
       setError('Failed to delete category');
     }
+  };
+
+  const confirmDeleteCategory = () => {
+    if (deleteConfirmation.category) {
+      performCategoryDeletion(deleteConfirmation.category.id);
+    }
+  };
+
+  const cancelDeleteCategory = () => {
+    setDeleteConfirmation({ show: false, category: null, newsletterCount: 0 });
   };
 
   return (
@@ -298,15 +505,10 @@ export function Sidebar({
                       onClick={() => onCategorySelect(category.id)}
                     >
                       <div className="flex items-center space-x-2">
-                        <div
-                          className="w-3 h-3 rounded-full flex items-center justify-center text-xs font-bold"
-                          style={{ 
-                            backgroundColor: category.color,
-                            color: getContrastColor(category.color)
-                          }}
-                        >
-                          {category.name.charAt(0).toUpperCase()}
-                        </div>
+                        <Icon icon={getCategoryIconName(category.name, category.id)}
+                          className="w-5 h-5"
+                          color={category.color}
+                        />
                         <span className="text-sm">{category.name}</span>
                       </div>
                       {!category.isSystem && (
@@ -344,6 +546,78 @@ export function Sidebar({
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Popup */}
+      {deleteConfirmation.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={cancelDeleteCategory}
+          />
+          
+          {/* Popup */}
+          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-md mx-4 animate-in fade-in-0 zoom-in-95 duration-200">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                  Delete Category
+                </h3>
+              </div>
+
+              {/* Content */}
+              <div className="space-y-3">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 border border-gray-100 dark:border-gray-600">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div 
+                      className="w-3 h-3 rounded-full shadow-sm"
+                      style={{ backgroundColor: deleteConfirmation.category?.color }}
+                    />
+                    <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                      {deleteConfirmation.category?.name}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Contains <span className="font-semibold text-gray-900 dark:text-gray-100">{deleteConfirmation.newsletterCount}</span> newsletter{deleteConfirmation.newsletterCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3">
+                  <div className="flex items-start space-x-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-1">
+                        What happens to the newsletters?
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                        They'll remain in your inbox but will no longer be categorized. You can reassign them to other categories later.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex space-x-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <button
+                  onClick={cancelDeleteCategory}
+                  className="flex-1 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteCategory}
+                  className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 hover:bg-red-600 active:bg-red-700 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                >
+                  Delete Category
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

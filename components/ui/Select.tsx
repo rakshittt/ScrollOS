@@ -3,12 +3,12 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const selectTriggerVariants = cva(
-  'flex h-10 w-full items-center justify-between rounded-md border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+  'flex h-10 w-full items-center justify-between rounded-md border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
   {
     variants: {
       variant: {
         default: 'border-border',
-        error: 'border-error-500 focus:ring-error-500',
+        error: 'border-error focus:ring-error',
       },
     },
     defaultVariants: {
@@ -23,7 +23,7 @@ const selectContentVariants = cva(
     variants: {
       variant: {
         default: 'border-border',
-        error: 'border-error-500',
+        error: 'border-error',
       },
     },
     defaultVariants: {
@@ -38,7 +38,7 @@ const selectItemVariants = cva(
     variants: {
       variant: {
         default: 'text-foreground',
-        error: 'text-error-500',
+        error: 'text-error',
       },
     },
     defaultVariants: {

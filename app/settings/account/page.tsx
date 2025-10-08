@@ -1,25 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  ArrowLeft,
-  Save,
-  Eye,
-  EyeOff,
-  Camera,
-  Trash2,
-  Download,
-  AlertTriangle
-} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/hooks/use-toast';
+import {
+    ArrowLeft,
+    Camera,
+    Download,
+    Eye,
+    EyeOff,
+    Lock,
+    Save,
+    Trash2,
+    User
+} from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { Progress } from '@/components/ui/Progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/Dialog';
+import { Badge } from '@/components/ui/Badge';
+import { format } from 'date-fns';
 
 interface UserProfile {
   name: string;
@@ -56,6 +58,15 @@ export default function AccountPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
+  // Storage usage state
+  const [storage, setStorage] = useState<{ usedBytes: number; limitBytes: number } | null>(null);
+  const [storageLoading, setStorageLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // Plan info
+  const plan = session?.user?.plan || 'pro';
+  const planTrialEndsAt = session?.user?.planTrialEndsAt ? new Date(session.user.planTrialEndsAt) : null;
+  const planExpired = planTrialEndsAt && new Date() > planTrialEndsAt;
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -69,6 +80,21 @@ export default function AccountPage() {
       });
     }
   }, [session]);
+
+  useEffect(() => {
+    async function fetchStorage() {
+      setStorageLoading(true);
+      try {
+        const res = await fetch('/api/user/storage');
+        if (res.ok) {
+          setStorage(await res.json());
+        }
+      } finally {
+        setStorageLoading(false);
+      }
+    }
+    fetchStorage();
+  }, []);
 
   const handleProfileUpdate = async () => {
     if (!profile.name.trim() || !profile.email.trim()) {
@@ -192,10 +218,7 @@ export default function AccountPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!confirm('Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.')) {
-      return;
-    }
-
+    setShowDeleteModal(false);
     try {
       setIsLoading(true);
       const response = await fetch('/api/user/account', {
@@ -205,8 +228,8 @@ export default function AccountPage() {
       if (!response.ok) throw new Error('Failed to delete account');
 
       toast.success('Account deleted successfully');
-      // Redirect to home page or sign out
-      window.location.href = '/';
+      // Redirect to sign in page
+      window.location.href = '/auth/signin';
     } catch (error) {
       console.error('Error deleting account:', error);
       toast.error('Failed to delete account');
@@ -255,6 +278,86 @@ export default function AccountPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Plan Info */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Your Plan</CardTitle>
+          <CardDescription>
+            <span className="font-semibold mr-2">{plan === 'pro_plus' ? 'Pro Plus' : 'Pro'}</span>
+            {planTrialEndsAt && !planExpired && (
+              <Badge className="bg-green-500 text-white ml-2">Trial ends {format(planTrialEndsAt, 'PPP')}</Badge>
+            )}
+            {planTrialEndsAt && planExpired && (
+              <Badge className="bg-red-500 text-white ml-2">Trial expired</Badge>
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {plan === 'pro' && (
+            <Button
+              className="mt-2"
+              onClick={async () => {
+                setIsUpgrading(true);
+                try {
+                  const res = await fetch('/api/user/plan', { method: 'POST' });
+                  if (res.ok) {
+                    await update();
+                    toast.success('Upgraded to Pro Plus!');
+                  } else {
+                    const data = await res.json();
+                    toast.error(data.error || 'Upgrade failed');
+                  }
+                } catch (e) {
+                  toast.error('Upgrade failed');
+                } finally {
+                  setIsUpgrading(false);
+                }
+              }}
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? 'Upgrading...' : 'Upgrade to Pro Plus'}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+      {/* Storage Usage Bar */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Storage Usage</CardTitle>
+          <CardDescription>Your storage usage across all newsletters</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {storageLoading ? (
+            <div className="text-muted-foreground text-sm">Loading storage usage...</div>
+          ) : storage ? (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">
+                  {((storage.usedBytes / storage.limitBytes) * 100).toFixed(0)}% of {formatBytes(storage.limitBytes)} used
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatBytes(storage.usedBytes)} of {formatBytes(storage.limitBytes)}
+                </span>
+              </div>
+              <Progress
+                value={Math.min((storage.usedBytes / storage.limitBytes) * 100, 100)}
+                className={
+                  (storage.usedBytes / storage.limitBytes) > 0.9
+                    ? 'bg-red-200'
+                    : (storage.usedBytes / storage.limitBytes) > 0.8
+                    ? 'bg-yellow-200'
+                    : 'bg-green-200'
+                }
+              />
+              {(storage.usedBytes / storage.limitBytes) > 0.9 && (
+                <div className="text-xs text-red-600 mt-1">You are almost out of storage!</div>
+              )}
+            </div>
+          ) : (
+            <div className="text-muted-foreground text-sm">Unable to load storage usage.</div>
+          )}
+        </CardContent>
+      </Card>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-4 mb-4">
@@ -268,7 +371,7 @@ export default function AccountPage() {
               <User className="h-6 w-6 text-indigo-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Account Settings</h1>
+              <h1 className="text-3xl font-semibold text-foreground">Account Settings</h1>
               <p className="text-muted-foreground">Manage your profile and account preferences</p>
             </div>
           </div>
@@ -497,7 +600,7 @@ export default function AccountPage() {
                 <h3 className="font-medium text-red-800">Delete Account</h3>
                 <p className="text-sm text-red-600">Permanently delete your account and all data</p>
               </div>
-              <Button variant="outline" onClick={handleDeleteAccount} disabled={isLoading} className="border-red-300 text-red-700 hover:bg-red-100">
+              <Button variant="outline" onClick={() => setShowDeleteModal(true)} disabled={isLoading} className="border-red-300 text-red-700 hover:bg-red-100">
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Account
               </Button>
@@ -535,6 +638,40 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       </div>
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Account</DialogTitle>
+            <DialogDescription>
+              <span className="text-red-600 font-semibold">Warning:</span> This action will permanently delete your account and <b>all data</b> associated with it, including newsletters, categories, rules, preferences, and email accounts. <br />
+              <span className="font-medium">This cannot be undone.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to proceed? This action is irreversible.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowDeleteModal(false)} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAccount} disabled={isLoading}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete My Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
+
+// Helper to format bytes as human readable
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 } 

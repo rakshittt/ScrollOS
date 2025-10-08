@@ -1,40 +1,27 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { 
-  BookOpen,
-  Loader2,
-  User,
-  Calendar,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Star,
-  Archive,
-  Maximize,
-  Minimize,
-  Eye,
-  EyeOff,
-  Tag,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
-  Copy,
-  HelpCircle,
-  ArrowLeft,
-  Clock,
-  Trash2,
-  Building2
-} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { formatDate, getContrastColor, estimateReadingTime } from '@/lib/utils';
-import { Newsletter } from '@/types';
-import { useSession } from 'next-auth/react';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import { SmartToolbar } from './ReadingToolbar';
-import { FullscreenReader } from './FullscreenReader';
+import { cn, estimateReadingTime, formatDate } from '@/lib/utils';
+import { Newsletter } from '@/types';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import {
+    ArrowLeft,
+    BookOpen,
+    Building2,
+    Calendar,
+    ChevronLeft,
+    ChevronRight,
+    Clock,
+    Loader2,
+    Tag,
+    Trash2,
+    X
+} from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { FullscreenReader } from './FullscreenReader';
+import { SmartToolbar } from './ReadingToolbar';
 
 interface ReadingPaneProps {
   selectedId: number | null;
@@ -51,7 +38,7 @@ interface Category {
   isSystem: boolean;
 }
 
-type ReadingMode = 'focus' | 'distraction-free' | 'normal';
+type ReadingMode = 'normal' | 'focus';
 type ReadingTheme = 'light' | 'dark' | 'sepia';
 
 export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: ReadingPaneProps) {
@@ -84,7 +71,11 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
         return;
       }
 
-      setIsLoading(true);
+      // Small delay to prevent rapid loading state changes
+      const loadingTimeout = setTimeout(() => {
+        setIsLoading(true);
+      }, 50);
+
       try {
         const response = await fetch(`/api/newsletters/${selectedId}`);
         if (!response.ok) throw new Error('Failed to fetch newsletter');
@@ -94,6 +85,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
         console.error('Error fetching newsletter:', error);
         toast.error('Failed to load newsletter');
       } finally {
+        clearTimeout(loadingTimeout);
         setIsLoading(false);
       }
     };
@@ -159,7 +151,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
   };
 
   const toggleReadingMode = () => {
-    const modes: ReadingMode[] = ['normal', 'focus', 'distraction-free'];
+    const modes: ReadingMode[] = ['normal', 'focus'];
     const currentIndex = modes.indexOf(readingMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     setReadingMode(modes[nextIndex]);
@@ -288,30 +280,128 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
 
   // Keyboard shortcuts handler
   const handleKeyPress = useCallback((event: KeyboardEvent) => {
-    if (event.key === 'j' && onNext) onNext();
-    if (event.key === 'k' && onPrevious) onPrevious();
-    if (event.key === 's') handleToggleStar();
-    if (event.key === 'e') handleArchive();
-    if (event.key === 'r') toggleReadingMode();
-    if (event.key === 'f') toggleFullscreen();
-    if (event.key === 'c') {
-      // TODO: Add category dropdown trigger
-      // For now, just show a toast
-      toast.info('Press C to manage categories (dropdown will be implemented)');
+    // Don't handle keyboard shortcuts if user is typing in an input field
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+      return;
     }
-    if (event.key === '+') setFontSize(prev => Math.min(prev + 1, 28));
-    if (event.key === '-') setFontSize(prev => Math.max(prev - 1, 14));
-    if (event.key === '0') resetZoom();
-    if (event.key === '?') setShowShortcuts(!showShortcuts);
-    if (event.key === 'Escape') {
-      if (showShortcuts) setShowShortcuts(false);
-      if (isFullscreen) toggleFullscreen();
+    
+    // Don't handle keyboard shortcuts if user is interacting with buttons
+    if (event.target instanceof HTMLButtonElement) {
+      return;
     }
-    // Show fullscreen header on any key press
-    if (isFullscreen) {
+    
+    // Handle keyboard shortcuts
+    switch (event.key) {
+      case 'j':
+      case 'ArrowRight':
+        if (onNext) {
+          event.preventDefault();
+          onNext();
+        }
+        break;
+      case 'k':
+      case 'ArrowLeft':
+        if (onPrevious) {
+          event.preventDefault();
+          onPrevious();
+        }
+        break;
+      case 's':
+        event.preventDefault();
+        handleToggleStar();
+        break;
+      case 'e':
+        event.preventDefault();
+        handleArchive();
+        break;
+      case 'm':
+        event.preventDefault();
+        toggleReadingMode();
+        break;
+      case 'f':
+        event.preventDefault();
+        toggleFullscreen();
+        break;
+      case 'Escape':
+        event.preventDefault();
+        if (showShortcuts) setShowShortcuts(false);
+        if (isFullscreen) toggleFullscreen();
+        break;
+      case '?':
+        event.preventDefault();
+        setShowShortcuts(!showShortcuts);
+        break;
+      case '+':
+      case '=':
+        event.preventDefault();
+        setFontSize(prev => Math.min(prev + 1, 28));
+        break;
+      case '-':
+        event.preventDefault();
+        setFontSize(prev => Math.max(prev - 1, 14));
+        break;
+      case '0':
+        event.preventDefault();
+        resetZoom();
+        break;
+      case 'c':
+        event.preventDefault();
+        // TODO: Add category dropdown trigger
+        toast.info('Press C to manage categories (dropdown will be implemented)');
+        break;
+      case 'h':
+      case 'Home':
+        event.preventDefault();
+        // Scroll to top
+        if (containerRef.current) {
+          containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        break;
+      case 'End':
+        event.preventDefault();
+        // Scroll to bottom
+        if (containerRef.current) {
+          containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+        }
+        break;
+      case ' ':
+      case 'PageDown':
+        event.preventDefault();
+        // Scroll down one page
+        if (containerRef.current) {
+          const scrollAmount = containerRef.current.clientHeight * 0.8;
+          containerRef.current.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+        }
+        break;
+      case 'PageUp':
+        event.preventDefault();
+        // Scroll up one page
+        if (containerRef.current) {
+          const scrollAmount = containerRef.current.clientHeight * 0.8;
+          containerRef.current.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+        }
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        // Scroll up
+        if (containerRef.current) {
+          containerRef.current.scrollBy({ top: -50, behavior: 'smooth' });
+        }
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        // Scroll down
+        if (containerRef.current) {
+          containerRef.current.scrollBy({ top: 50, behavior: 'smooth' });
+        }
+        break;
+    }
+
+    // Show fullscreen header on any key press (but not on button clicks)
+    if (isFullscreen && !(event.target instanceof HTMLButtonElement)) {
       showFullscreenHeaderTemporarily();
     }
-  }, [onNext, onPrevious, showShortcuts, isFullscreen, handleToggleStar, handleArchive, toggleReadingMode, toggleFullscreen, toast]);
+  }, [onNext, onPrevious, showShortcuts, isFullscreen, handleToggleStar, handleArchive, toggleReadingMode, toggleFullscreen, toast, resetZoom]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyPress);
@@ -331,9 +421,9 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Mouse movement detection for fullscreen header
+  // Mouse movement detection for fullscreen header (only when not in fullscreen mode)
   useEffect(() => {
-    if (!isFullscreen) return;
+    if (isFullscreen) return; // Don't handle mouse movement when FullscreenReader is active
 
     const handleMouseMove = () => {
       showFullscreenHeaderTemporarily();
@@ -341,16 +431,48 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
 
     document.addEventListener('mousemove', handleMouseMove);
     return () => document.removeEventListener('mousemove', handleMouseMove);
-  }, [isFullscreen]);
+  }, [isFullscreen, showFullscreenHeaderTemporarily]);
+
+  // Inject dark mode override styles for newsletter content
+  useEffect(() => {
+    const styleId = 'newsletter-darkmode-override';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        .dark .prose * {
+          color: #f4f4f5 !important;
+          background: transparent !important;
+          border-color: #444 !important;
+        }
+        .dark .prose a { color: #60a5fa !important; }
+        .dark .prose strong, .dark .prose b { color: #fff !important; }
+        .dark .prose em { color: #f4f4f5 !important; }
+        .dark .prose code { color: #f4f4f5 !important; background: #222 !important; }
+        .dark .prose pre { color: #f4f4f5 !important; background: #18181b !important; }
+        .dark .prose img {
+          filter: brightness(0.95) contrast(1.1) drop-shadow(0 0 2px #222);
+          background: transparent !important;
+          border-radius: 4px;
+        }
+        .dark .prose img[src*="zomato"],
+        .dark .prose img[alt*="zomato"] {
+          background: #fff !important;
+          padding: 2px;
+          border-radius: 4px;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    return () => {};
+  }, []);
 
   const getReadingModeStyles = () => {
     switch (readingMode) {
       case 'focus':
-        return 'max-w-4xl mx-auto px-8';
-      case 'distraction-free':
-        return 'max-w-5xl mx-auto px-12';
+        return 'max-w-3xl mx-auto px-6';
       default:
-        return 'max-w-6xl mx-auto px-6';
+        return 'max-w-7xl mx-auto px-8';
     }
   };
 
@@ -385,9 +507,105 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
   // Calculate reading time
   const readingTime = newsletter ? estimateReadingTime(newsletter.htmlContent || newsletter.content) : null;
 
+  // Fullscreen Layout - Always render when in fullscreen mode, even during loading
+  if (isFullscreen) {
+    // If we have a newsletter, render the fullscreen reader
+    if (newsletter) {
+      return (
+        <FullscreenReader
+          newsletter={newsletter}
+          readingMode={readingMode}
+          fontSize={fontSize}
+          lineHeight={lineHeight}
+          maxWidth={maxWidth}
+          readingProgress={readingProgress}
+          categories={categories}
+          isUnarchiving={isUnarchiving}
+          isCategoryLoading={isCategoryLoading}
+          onExitFullscreen={toggleFullscreen}
+          onPrevious={onPrevious}
+          onNext={onNext}
+          onToggleReadingMode={toggleReadingMode}
+          onFontSizeChange={setFontSize}
+          onToggleStar={handleToggleStar}
+          onArchive={handleArchive}
+          onUnarchive={handleUnarchive}
+          onCategoryChange={handleCategoryChange}
+          // onCopyContent={copyToClipboard}
+          onShowShortcuts={() => setShowShortcuts(true)}
+        />
+      );
+    }
+    
+    // If we're in fullscreen but don't have newsletter data yet, show a loading state
+    // that maintains the fullscreen layout - this prevents the inbox flash
+    // This happens during navigation between newsletters
+    return (
+      <div className="fixed inset-0 z-50 bg-surface flex flex-col">
+        {/* Fullscreen Header for loading state */}
+        <div className="bg-surface/95 backdrop-blur-md border-b border-border shadow-sm">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFullscreen();
+                }}
+                className="h-9 w-9 p-0 hover:bg-accent"
+                title="Exit Fullscreen (ESC)"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPrevious?.();
+                  }}
+                  disabled={!onPrevious}
+                  className="h-8 w-8 p-0 hover:bg-accent border-border"
+                  title="Previous (K)"
+                >
+                  <ChevronLeft className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNext?.();
+                  }}
+                  disabled={!onNext}
+                  className="h-8 w-8 p-0 hover:bg-accent border-border"
+                  title="Next (J)"
+                >
+                  <ChevronRight className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Loading content area */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+            <p className="text-muted-foreground">Loading newsletter...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Normal Layout - Only render when not in fullscreen mode
   if (!session) {
     return (
-      <div className="flex-1 bg-background flex items-center justify-center">
+      <div className="flex-1 bg-surface flex items-center justify-center">
         <p className="text-muted-foreground">Please sign in to view newsletters</p>
       </div>
     );
@@ -395,7 +613,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
 
   if (!selectedId) {
     return (
-      <div className="flex-1 bg-background flex items-center justify-center">
+      <div className="flex-1 bg-surface flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
             <BookOpen className="w-8 h-8 text-muted-foreground" />
@@ -411,7 +629,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
 
   if (isLoading) {
     return (
-      <div className="flex-1 bg-background flex items-center justify-center">
+      <div className="flex-1 bg-surface flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
           <p className="text-muted-foreground">Loading newsletter...</p>
@@ -422,9 +640,9 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
 
   if (!newsletter) {
     return (
-      <div className="flex-1 bg-background flex items-center justify-center">
+      <div className="flex-1 bg-surface flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 mx-auto bg-error/10 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto bg-error rounded-full flex items-center justify-center">
             <X className="w-8 h-8 text-error" />
           </div>
           <div>
@@ -436,51 +654,23 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
     );
   }
 
-  // Fullscreen Layout
-  if (isFullscreen) {
-    return (
-      <FullscreenReader
-        newsletter={newsletter}
-        readingMode={readingMode}
-        fontSize={fontSize}
-        lineHeight={lineHeight}
-        maxWidth={maxWidth}
-        readingProgress={readingProgress}
-        categories={categories}
-        isUnarchiving={isUnarchiving}
-        isCategoryLoading={isCategoryLoading}
-        onExitFullscreen={toggleFullscreen}
-        onPrevious={onPrevious}
-        onNext={onNext}
-        onToggleReadingMode={toggleReadingMode}
-        onFontSizeChange={setFontSize}
-        onToggleStar={handleToggleStar}
-        onArchive={handleArchive}
-        onUnarchive={handleUnarchive}
-        onCategoryChange={handleCategoryChange}
-        // onCopyContent={copyToClipboard}
-        onShowShortcuts={() => setShowShortcuts(true)}
-      />
-    );
-  }
-
   // Normal Layout
   return (
     <div 
       ref={containerRef}
       className={cn(
         "flex-1 flex flex-col relative overflow-hidden",
-        readingMode === 'distraction-free' ? 'bg-background-secondary' : ''
+        readingMode === 'focus' ? 'bg-surface-secondary' : ''
       )}
     >
-      {/* Distraction-Free Mode Indicator */}
-      {readingMode === 'distraction-free' && (
+      {/* Focus Mode Indicator */}
+      {readingMode === 'focus' && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="bg-background/90 backdrop-blur-md border border-border rounded-lg px-4 py-2 shadow-lg">
+          <div className="bg-surface/90 backdrop-blur-md border border-border rounded-lg px-4 py-2 shadow-lg">
             <div className="flex items-center space-x-2 text-sm">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span className="text-foreground font-medium">Distraction-Free Mode</span>
-              <span className="text-muted-foreground">Press R to exit</span>
+              <div className="w-2 h-2 bg-primaryBase rounded-full animate-pulse" />
+              <span className="text-foreground font-medium">Focus Mode</span>
+              <span className="text-muted-foreground">Press M to exit</span>
             </div>
           </div>
         </div>
@@ -497,7 +687,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
       </div> */}
 
       {/* Header */}
-      {readingMode !== 'distraction-free' && (
+      {readingMode !== 'focus' && (
         <div className="border-b border-border bg-gradient-to-b from-background to-background/95 backdrop-blur-sm sticky top-0 z-30">
           <div className={getReadingModeStyles()}>
             <div className="px-8 py-8">
@@ -507,8 +697,8 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex-1 min-w-0 pr-6">
                     <h1 className="text-2xl font-bold text-foreground leading-tight tracking-tight">
-                      {newsletter.subject}
-                    </h1>
+                  {newsletter.subject}
+                </h1>
                   </div>
                   
                   {/* Primary Actions - Right Side */}
@@ -566,7 +756,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                           {newsletter.senderEmail}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4 text-primary" />
                         <span className="text-xs text-muted-foreground">
                           {formatDate(newsletter.receivedAt)}
@@ -605,7 +795,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                             )}
                           </div>
                         </DropdownMenu.Trigger>
-                        <DropdownMenu.Content align="end" className="w-56 p-2 z-50 rounded-lg border bg-background shadow-lg">
+                        <DropdownMenu.Content align="end" className="w-56 p-2 z-50 rounded-lg border bg-surface shadow-lg">
                           <div className="px-2 py-1.5">
                             <h4 className="text-sm font-semibold text-foreground mb-2">
                               {newsletter.categoryId ? 'Change Category' : 'Add Category'}
@@ -634,7 +824,7 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                                     className={cn(
                                       "flex items-center space-x-3 p-2 rounded-md transition-colors cursor-pointer",
                                       "hover:bg-accent hover:text-foreground",
-                                      newsletter.categoryId === category.id && "bg-primary/10 text-primary",
+                                      newsletter.categoryId === category.id && "bg-primaryBase/10 text-primaryBase",
                                       isCategoryLoading && "opacity-50 pointer-events-none"
                                     )}
                                   >
@@ -650,8 +840,8 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                                         <span className="text-xs text-muted-foreground block">
                                           System Category
                                         </span>
-                                      )}
-                                    </div>
+                  )}
+                </div>
                                     {newsletter.categoryId === category.id && (
                                       <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
                                     )}
@@ -659,25 +849,25 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                                 ))}
                               </div>
                             )}
-                          </div>
+              </div>
                           {newsletter.categoryId && (
                             <>
                               <DropdownMenu.Separator className="my-1 h-px bg-border" />
                               <DropdownMenu.Item
                                 onSelect={() => handleCategoryChange(null)}
-                                className={cn(
+                      className={cn(
                                   "flex items-center space-x-2 p-2 text-error hover:bg-error/10 hover:text-error",
                                   "transition-colors rounded-md cursor-pointer",
                                   isCategoryLoading && "opacity-50 pointer-events-none"
-                                )}
-                              >
-                                {isCategoryLoading ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
+                      )}
+                    >
+                      {isCategoryLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                                 <span className="text-sm font-medium">
-                                  Remove Category
+                      Remove Category
                                 </span>
                               </DropdownMenu.Item>
                             </>
@@ -706,8 +896,8 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                       </span>
                     )}
                   </div>
-                </div>
-              </div>
+                          </div>
+                        </div>
             </div>
           </div>
         </div>
@@ -789,19 +979,106 @@ export function ReadingPane({ selectedId, onNext, onPrevious, onRemove }: Readin
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">J</kbd> Next</div>
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">K</kbd> Previous</div>
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">S</kbd> Star</div>
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">E</kbd> Bin</div>
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">C</kbd> Category</div>
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">R</kbd> Reading Mode</div>
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">F</kbd> Toggle Fullscreen</div>
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">ESC</kbd> Exit Fullscreen</div>
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">+/-</kbd> Zoom</div>
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">0</kbd> Reset Zoom</div>
-                <div><kbd className="px-2 py-1 bg-accent rounded text-xs">?</kbd> Help</div>
+            <div className="space-y-6">
+              {/* Navigation */}
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-3 border-b border-border pb-2">Navigation</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>Next Newsletter</span>
+                    <div className="flex items-center space-x-1">
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">J</kbd>
+                      <span className="text-muted-foreground">or</span>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">→</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Previous Newsletter</span>
+                    <div className="flex items-center space-x-1">
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">K</kbd>
+                      <span className="text-muted-foreground">or</span>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">←</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Scroll Down</span>
+                    <div className="flex items-center space-x-1">
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">↓</kbd>
+                      <span className="text-muted-foreground">or</span>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">Space</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Scroll Up</span>
+                    <div className="flex items-center space-x-1">
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">↑</kbd>
+                      <span className="text-muted-foreground">or</span>
+                      <kbd className="px-2 py-1 bg-highlight rounded text-xs">Page Up</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Scroll to Top</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">Home</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Scroll to Bottom</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">End</kbd>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-3 border-b border-border pb-2">Actions</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>Star/Unstar</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">S</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Move to Bin</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">E</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Toggle Reading Mode</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">R</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Toggle Fullscreen</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">F</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Exit Fullscreen</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">ESC</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Category Management</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">C</kbd>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reading Controls */}
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-3 border-b border-border pb-2">Reading Controls</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>Increase Font Size</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">+</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Decrease Font Size</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">-</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Reset Font Size</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">0</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Show This Help</span>
+                    <kbd className="px-2 py-1 bg-highlight rounded text-xs">?</kbd>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

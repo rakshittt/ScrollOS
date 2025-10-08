@@ -588,3 +588,27 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Made with ❤️ by the News360 Team**
+<<<<<<< HEAD
+
+## Redis Setup
+
+This app uses Upstash Redis for caching and real-time features (sync progress, onboarding state, etc).
+
+### Setup (All Environments)
+- Create a free Upstash Redis database: https://upstash.com/
+- Copy your REST URL and REST TOKEN from the Upstash console.
+- Set the following environment variables in your `.env.local` or deployment environment:
+  - `UPSTASH_REDIS_REST_URL` (your Upstash Redis REST URL)
+  - `UPSTASH_REDIS_REST_TOKEN` (your Upstash Redis REST token)
+
+### Usage
+- Upstash Redis is used for:
+  - Caching onboarding state
+  - Caching categories and stats
+  - Storing sync progress for real-time updates
+
+No manual setup is needed beyond creating an Upstash Redis database and setting the environment variables.
+
+For more details, see the [Upstash Redis documentation](https://upstash.com/docs/redis/overall/getstarted).
+=======
+>>>>>>> main

@@ -1,26 +1,21 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { 
-  Star, 
-  Archive, 
-  Tag, 
-  Maximize,
-  Minimize,
-  BookOpen,
-  ZoomIn,
-  ZoomOut,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  EyeOff,
-  Trash2
-} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Dropdown, DropdownContent, DropdownItem, DropdownTrigger, DropdownSeparator } from '@/components/ui/Dropdown';
-import { Newsletter } from '@/types';
 import { cn } from '@/lib/utils';
+import { Newsletter } from '@/types';
+import {
+    ArrowLeft,
+    ArrowRight,
+    BookOpen,
+    Eye,
+    Loader2,
+    Maximize,
+    Minimize,
+    Star,
+    Tag,
+    Trash2
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 // Toolbar Section Components
 interface ToolbarSectionProps {
@@ -52,7 +47,7 @@ export function NavigationSection({ onPrevious, onNext }: NavigationSectionProps
         className="h-9 w-9 p-0 hover:bg-accent border-border"
         title="Previous (K)"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ArrowLeft className="h-4 w-4" />
       </Button>
       <Button
         variant="outline"
@@ -62,7 +57,7 @@ export function NavigationSection({ onPrevious, onNext }: NavigationSectionProps
         className="h-9 w-9 p-0 hover:bg-accent border-border"
         title="Next (J)"
       >
-        <ChevronRight className="h-4 w-4" />
+        <ArrowRight className="h-4 w-4" />
       </Button>
     </ToolbarSection>
   );
@@ -70,7 +65,7 @@ export function NavigationSection({ onPrevious, onNext }: NavigationSectionProps
 
 // Reading Controls Section
 interface ReadingControlsSectionProps {
-  readingMode: 'focus' | 'distraction-free' | 'normal';
+  readingMode: 'focus' | 'normal';
   onToggleReadingMode: () => void;
   fontSize: number;
   onFontSizeChange: (size: number) => void;
@@ -91,9 +86,8 @@ export function ReadingControlsSection({
         className="h-9 px-3 hover:bg-accent border-border"
         title={`Reading Mode (R) - ${readingMode}`}
       >
-        {readingMode === 'focus' ? <Eye className="h-4 w-4" /> :
-         readingMode === 'distraction-free' ? <EyeOff className="h-4 w-4" /> :
-         <BookOpen className="h-4 w-4" />}
+        {readingMode === 'focus' ? <Eye className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+        <span className="ml-2 text-xs font-medium">{readingMode}</span>
       </Button>
       
       {/* <div className="flex items-center space-x-1 bg-muted/50 rounded-lg px-2 py-1">
@@ -461,7 +455,7 @@ export function FullscreenSection({ isFullscreen, onToggleFullscreen }: Fullscre
 interface SmartToolbarProps {
   newsletter: Newsletter | null;
   categories: Array<{ id: number; name: string; color: string; icon?: string; isSystem: boolean }>;
-  readingMode: 'focus' | 'distraction-free' | 'normal';
+  readingMode: 'focus' | 'normal';
   fontSize: number;
   isFullscreen: boolean;
   isUnarchiving: boolean;

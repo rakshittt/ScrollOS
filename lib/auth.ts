@@ -1,9 +1,13 @@
 import { getServerSession } from "next-auth";
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from "next-auth/providers/google";
+import GitHubProvider from "next-auth/providers/github";
+import AzureADProvider from 'next-auth/providers/azure-ad';
 import { db } from '@/lib/db';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
+import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import bcrypt from 'bcryptjs';
 
 export async function getCurrentUserId() {
@@ -20,7 +24,25 @@ export async function requireAuth() {
 }
 
 const authOptions: NextAuthOptions = {
+  adapter: DrizzleAdapter(db),
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_AUTH_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_AUTH_CLIENT_SECRET!,
+    }),
+    AzureADProvider({
+      clientId: process.env.OUTLOOK_CLIENT_ID!,
+      clientSecret: process.env.OUTLOOK_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: 'openid email profile offline_access Mail.Read User.Read'
+        }
+      }
+    }),
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -50,10 +72,13 @@ const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user.id.toString(),
+          id: user.id,
           email: user.email,
           name: user.name,
           image: user.image,
+          plan: user.plan,
+          planTrialEndsAt: user.planTrialEndsAt ? user.planTrialEndsAt.toISOString() : undefined,
+          planExpiresAt: user.planExpiresAt ? user.planExpiresAt.toISOString() : undefined,
         };
       },
     }),
@@ -62,14 +87,46 @@ const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   pages: {
-    signIn: '/login',
+    signIn: '/auth/signin',
   },
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === 'credentials') {
+        return true;
+      }
+
+      if (!user.email) {
+        return false;
+      }
+
+      // Check if user exists
+      const existingUser = await db.query.users.findFirst({
+        where: eq(users.email, user.email),
+      });
+
+      if (!existingUser) {
+        // Create new user
+        await db.insert(users).values({
+          email: user.email,
+          name: user.name || user.email.split('@')[0],
+          image: user.image,
+        });
+      }
+
+      return true;
+    },
     async session({ session, token }) {
       if (token.sub && session.user) {
         session.user.id = parseInt(token.sub);
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Allow relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allow callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl + "/inbox";
     },
   },
 };

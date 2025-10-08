@@ -1,14 +1,14 @@
-import { sql } from 'drizzle-orm';
-import { 
-  integer, 
-  pgTable, 
-  serial, 
-  text, 
-  timestamp, 
-  boolean,
-  json,
-  varchar,
-  primaryKey
+import {
+    boolean,
+    integer,
+    json,
+    pgTable,
+    primaryKey,
+    serial,
+    text,
+    timestamp,
+    varchar,
+    unique
 } from 'drizzle-orm/pg-core';
 
 export const newsletters = pgTable('newsletters', {
@@ -34,6 +34,7 @@ export const newsletters = pgTable('newsletters', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
   deletedAt: timestamp('deleted_at'),
+  importedAt: timestamp('imported_at'),
 });
 
 export const users = pgTable('users', {
@@ -46,6 +47,11 @@ export const users = pgTable('users', {
   twoFactorSecret: text('two_factor_secret'),
   twoFactorBackupCodes: json('two_factor_backup_codes').$type<string[]>(),
   twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  onboardingCompleted: boolean('onboarding_completed').default(false),
+  onboardingStep: integer('onboarding_step').default(0),
+  plan: text('plan').notNull().default('pro'),
+  planTrialEndsAt: timestamp('plan_trial_ends_at'),
+  planExpiresAt: timestamp('plan_expires_at'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -80,7 +86,9 @@ export const accounts = pgTable('accounts', {
   scope: text('scope'),
   idToken: text('id_token'),
   sessionState: text('session_state'),
-});
+}, (table) => ({
+  providerProviderAccountIdUnique: unique().on(table.provider, table.providerAccountId),
+}));
 
 export const sessions = pgTable('sessions', {
   id: serial('id').primaryKey(),
@@ -132,7 +140,9 @@ export const emailAccounts = pgTable('email_accounts', {
   syncFrequency: integer('sync_frequency').default(3600), // in seconds
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-});
+}, (table) => ({
+  uniqueUserProviderEmail: unique().on(table.userId, table.provider, table.email),
+}));
 
 export const userPreferences = pgTable('user_preferences', {
   id: serial('id').primaryKey(),
@@ -202,6 +212,24 @@ export const passwordResets = pgTable('password_resets', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const userNewsletterDomainWhitelist = pgTable('user_newsletter_domain_whitelist', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  domain: text('domain').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const userNewsletterEmailWhitelist = pgTable('user_newsletter_email_whitelist', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  email: text('email').notNull(),
+  name: text('name'),
+  domain: text('domain'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 export type Newsletter = typeof newsletters.$inferSelect;
 export type NewNewsletter = typeof newsletters.$inferInsert;
 export type Folder = typeof folders.$inferSelect;
@@ -210,3 +238,7 @@ export type EmailAccount = typeof emailAccounts.$inferSelect;
 export type NewEmailAccount = typeof emailAccounts.$inferInsert;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type NewUserPreferences = typeof userPreferences.$inferInsert;
+export type NewUserNewsletterDomainWhitelist = typeof userNewsletterDomainWhitelist.$inferInsert;
+export type UserNewsletterDomainWhitelist = typeof userNewsletterDomainWhitelist.$inferSelect;
+export type NewUserNewsletterEmailWhitelist = typeof userNewsletterEmailWhitelist.$inferInsert;
+export type UserNewsletterEmailWhitelist = typeof userNewsletterEmailWhitelist.$inferSelect;
