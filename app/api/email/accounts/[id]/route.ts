@@ -5,8 +5,13 @@ import { db } from '@/lib/db';
 import { emailAccounts, newsletters } from '@/lib/schema';
 import { and, eq } from 'drizzle-orm';
 
+<<<<<<< HEAD
 export async function GET(
   request: NextRequest,
+=======
+export async function PATCH(
+  req: NextRequest,
+>>>>>>> main
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -95,7 +100,11 @@ export async function PUT(
 }
 
 export async function DELETE(
+<<<<<<< HEAD
   request: NextRequest,
+=======
+  req: NextRequest,
+>>>>>>> main
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
@@ -133,6 +142,41 @@ export async function DELETE(
         message: 'This email account is still referenced by newsletters. Choose to delete or reassign newsletters.'
       }, { status: 409 });
     }
+<<<<<<< HEAD
+=======
+
+    const { id } = await params;
+    const accountId = parseInt(id);
+    if (isNaN(accountId)) {
+      return NextResponse.json(
+        { error: 'Invalid account ID' },
+        { status: 400 }
+      );
+    }
+
+    // Verify account ownership
+    const account = await db.query.emailAccounts.findFirst({
+      where: and(
+        eq(emailAccounts.id, accountId),
+        eq(emailAccounts.userId, session.user.id)
+      ),
+    });
+
+    if (!account) {
+      return NextResponse.json(
+        { error: 'Account not found' },
+        { status: 404 }
+      );
+    }
+
+    // Delete account
+    await db
+      .delete(emailAccounts)
+      .where(eq(emailAccounts.id, accountId));
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+>>>>>>> main
     console.error('Error deleting email account:', error);
     return NextResponse.json(
       { error: 'Failed to delete email account' },
