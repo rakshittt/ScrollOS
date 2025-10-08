@@ -1,5 +1,9 @@
 import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
+<<<<<<< HEAD
+=======
+import { authOptions } from '@/lib/auth';
+>>>>>>> main
 import { db } from '@/lib/db';
 import { emailAccounts } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
