@@ -1,14 +1,16 @@
-import { db } from '@/lib/db';
-import { users, newsletters, categories, newsletterRules } from '@/lib/schema';
-import { hash } from 'bcryptjs';
 import * as dotenv from 'dotenv';
 
-// Load environment variables
+// Load environment variables FIRST
 dotenv.config();
 
 async function seedDatabase() {
   try {
     console.log('🌱 Starting database seeding...');
+
+    // Dynamic imports after dotenv is loaded
+    const { db } = await import('@/lib/db');
+    const { users, newsletters, categories, newsletterRules } = await import('@/lib/schema');
+    const { hash } = await import('bcryptjs');
 
     // Create test user
     const hashedPassword = await hash('password123', 12);
@@ -182,12 +184,16 @@ async function seedDatabase() {
       );
 
     console.log('✅ Created sample newsletters');
-    console.log('🌱 Database seeding completed successfully!');
+    console.log('\n🎉 Database seeding completed successfully!');
+    console.log('\nTest user credentials:');
+    console.log('  Email: test@example.com');
+    console.log('  Password: password123');
 
+    process.exit(0);
   } catch (error) {
     console.error('❌ Error seeding database:', error);
     process.exit(1);
   }
 }
 
-seedDatabase(); 
+seedDatabase();
