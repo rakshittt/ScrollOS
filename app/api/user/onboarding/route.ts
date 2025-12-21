@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
-import { redis } from '@/lib/redis';
+import { redisSafe as redis } from '@/lib/redis-safe';
 
 const REDIS_TTL = 60 * 60 * 24; // 24 hours
 

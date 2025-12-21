@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { emailAccounts, newsletters } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
-import { redis } from '@/lib/redis';
+import { redisSafe as redis } from '@/lib/redis-safe';
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);

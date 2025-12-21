@@ -4,7 +4,7 @@ import { categories, newsletters } from '@/lib/schema';
 import { and, eq } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { redis } from '@/lib/redis';
+import { redisSafe as redis } from '@/lib/redis-safe';
 
 // PATCH /api/categories/[id] - Update a category
 export async function PATCH(

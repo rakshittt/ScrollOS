@@ -16,7 +16,6 @@ export default function LandingHeader() {
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
             <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
-            <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
             <Link href="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">About</Link>
             <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Testimonials</a>
             <Link href="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Contact</Link>
