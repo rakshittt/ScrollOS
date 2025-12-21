@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { newsletters } from '@/lib/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
-import { redis } from '@/lib/redis';
+import { redisSafe as redis } from '@/lib/redis-safe';
 
 export async function GET(request: NextRequest) {
   try {

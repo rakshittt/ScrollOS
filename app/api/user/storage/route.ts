@@ -4,9 +4,9 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { newsletters } from '@/lib/schema';
 import { eq, sql } from 'drizzle-orm';
-import { redis } from '@/lib/redis';
+import { redisSafe as redis } from '@/lib/redis-safe';
 
-const STORAGE_LIMIT_BYTES =  200 * 1024 * 1024; // 200 MB
+const STORAGE_LIMIT_BYTES = 200 * 1024 * 1024; // 200 MB
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);

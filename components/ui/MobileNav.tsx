@@ -32,13 +32,6 @@ export function MobileNav() {
                 Features
               </a>
               <a
-                href="#pricing"
-                className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                Pricing
-              </a>
-              <a
                 href="#testimonials"
                 className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setIsOpen(false)}
@@ -52,7 +45,7 @@ export function MobileNav() {
               >
                 Contact
               </a>
-              
+
             </nav>
           </Card>
         </div>

@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { newsletters, newsletterRules, categories, userNewsletterEmailWhitelist, users } from '@/lib/schema';
 import { eq, desc, like, and, or, sql, inArray } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
-import { redis } from '@/lib/redis';
+import { redisSafe as redis } from '@/lib/redis-safe';
 
 type RuleCondition = {
   type: 'sender' | 'subject' | 'content';
@@ -319,24 +319,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const userId = await requireAuth();
-    // Fetch user plan info
-    const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
-    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    const now = new Date();
-    // Check trial/plan expiry
-    if (user.planTrialEndsAt && now > user.planTrialEndsAt && !user.planExpiresAt) {
-      return NextResponse.json({ error: 'Your free trial has ended. Please upgrade to continue.' }, { status: 403 });
-    }
-    // Count newsletters
-    const [{ count }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(newsletters)
-      .where(eq(newsletters.userId, userId));
-    let maxNewsletters = 1000;
-    if (user.plan === 'pro_plus') maxNewsletters = 5000;
-    if (count >= maxNewsletters) {
-      return NextResponse.json({ error: `You have reached your plan's newsletter limit (${maxNewsletters}). Upgrade to add more.` }, { status: 403 });
-    }
     const body = await request.json();
 
     const result = await db
