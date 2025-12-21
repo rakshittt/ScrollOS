@@ -588,6 +588,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Made with ❤️ by the News360 Team**
+<<<<<<< HEAD
 
 ## Redis Setup
 
@@ -609,3 +610,5 @@ This app uses Upstash Redis for caching and real-time features (sync progress, o
 No manual setup is needed beyond creating an Upstash Redis database and setting the environment variables.
 
 For more details, see the [Upstash Redis documentation](https://upstash.com/docs/redis/overall/getstarted).
+=======
+>>>>>>> main

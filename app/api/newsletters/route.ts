@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+<<<<<<< HEAD
 import { newsletters, newsletterRules, categories, userNewsletterEmailWhitelist, users } from '@/lib/schema';
 import { eq, desc, like, and, or, sql, inArray } from 'drizzle-orm';
+=======
+import { newsletters, newsletterRules, categories } from '@/lib/schema';
+import { eq, desc, like, and, or, sql } from 'drizzle-orm';
+>>>>>>> main
 import { requireAuth } from '@/lib/auth';
 import { redis } from '@/lib/redis';
 
@@ -90,6 +95,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const lastSeenDate = searchParams.get('lastSeenDate');
 
+<<<<<<< HEAD
     // Redis cache key (user, folder, filters, page)
     const cacheKey = `inbox:${userId}:${folder}:${categoryId || ''}:${query || ''}:${emailAccountId || ''}:${page}:${limit}:${search || ''}:${readStatus || ''}:${starredStatus || ''}:${dateRange || ''}:${categories || ''}:${sortBy}:${sortOrder}:${lastSeenDate || ''}`;
     const isCacheable = !search && !readStatus && !starredStatus && !dateRange && !categories && !emailAccountId && sortBy === 'date' && sortOrder === 'desc' && !lastSeenDate && (!categoryId || folder !== 'inbox');
@@ -108,6 +114,10 @@ export async function GET(request: NextRequest) {
     const conditions = [
       eq(newsletters.userId, userId)
     ];
+=======
+    // Build query conditions
+    const conditions = [eq(newsletters.userId, userId)];
+>>>>>>> main
     
     // Only allow one filter: if folder is not 'inbox', ignore categoryId
     // If folder is 'inbox', allow categoryId
@@ -195,6 +205,7 @@ export async function GET(request: NextRequest) {
       .from(newsletters)
       .where(and(...conditions));
 
+<<<<<<< HEAD
     const totalCount = totalCountResult[0]?.count || 0;
 
     // Build order by clause
@@ -301,6 +312,9 @@ export async function GET(request: NextRequest) {
       console.log(`[CACHE] Inbox cache set for user ${userId}`);
     }
     return NextResponse.json(response);
+=======
+    return NextResponse.json(result);
+>>>>>>> main
   } catch (error) {
     console.error('❌ Error fetching newsletters:', error);
     if (error instanceof Error && error.message === 'Authentication required') {
