@@ -15,17 +15,17 @@ export default function DataProcessingAgreementPage() {
               Back to Legal
             </Link>
           </Button>
-          
+
           <div className="flex items-center space-x-3 mb-4">
             <Scale className="h-8 w-8 text-orange-600" />
             <h1 className="text-4xl font-bold text-foreground">Data Processing Agreement</h1>
           </div>
-          
+
           <p className="text-lg text-muted-foreground">
-            Last updated: {new Date().toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            Last updated: {new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}
           </p>
         </div>
@@ -38,12 +38,12 @@ export default function DataProcessingAgreementPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                This Data Processing Agreement ("DPA") forms part of our Terms of Service and Privacy Policy. 
-                It outlines how we process personal data in compliance with the General Data Protection 
+                This Data Processing Agreement ("DPA") forms part of our Terms of Service and Privacy Policy.
+                It outlines how we process personal data in compliance with the General Data Protection
                 Regulation (GDPR) and other applicable data protection laws.
               </p>
               <p>
-                This agreement applies to all users of News360 who are located in the European Economic Area (EEA) 
+                This agreement applies to all users of ScrollOS who are located in the European Economic Area (EEA)
                 or whose personal data is processed in the EEA.
               </p>
             </CardContent>
@@ -66,11 +66,11 @@ export default function DataProcessingAgreementPage() {
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Roles and Responsibilities</h4>
               <p>
-                <strong>You (the User):</strong> Act as the Data Controller for personal data you provide to us, 
+                <strong>You (the User):</strong> Act as the Data Controller for personal data you provide to us,
                 including email content and contact information.
               </p>
               <p>
-                <strong>News360:</strong> Acts as the Data Processor, processing your personal data to provide 
+                <strong>ScrollOS:</strong> Acts as the Data Processor, processing your personal data to provide
                 our newsletter platform services.
               </p>
             </CardContent>
@@ -87,13 +87,13 @@ export default function DataProcessingAgreementPage() {
             <CardContent className="prose prose-sm max-w-none">
               <h4 className="font-semibold text-foreground mb-2">Subject Matter</h4>
               <p>
-                The subject matter of the data processing is the provision of newsletter management and 
-                reading services through the News360 platform.
+                The subject matter of the data processing is the provision of newsletter management and
+                reading services through the ScrollOS platform.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Duration</h4>
               <p>
-                The duration of the data processing is for the period during which you use our services, 
+                The duration of the data processing is for the period during which you use our services,
                 plus any additional period required for legal compliance or legitimate business purposes.
               </p>
 
@@ -121,7 +121,7 @@ export default function DataProcessingAgreementPage() {
               <h4 className="font-semibold text-foreground mb-2 mt-4">Categories of Data Subjects</h4>
               <p>The categories of data subjects include:</p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>News360 platform users</li>
+                <li>ScrollOS platform users</li>
                 <li>Newsletter subscribers and authors</li>
                 <li>Email account holders</li>
               </ul>
@@ -139,13 +139,13 @@ export default function DataProcessingAgreementPage() {
             <CardContent className="prose prose-sm max-w-none">
               <h4 className="font-semibold text-foreground mb-2">Processing Instructions</h4>
               <p>
-                We will process personal data only on your documented instructions, including regarding 
+                We will process personal data only on your documented instructions, including regarding
                 transfers of personal data to a third country or international organization.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Confidentiality</h4>
               <p>
-                We ensure that persons authorized to process personal data have committed themselves 
+                We ensure that persons authorized to process personal data have committed themselves
                 to confidentiality or are under an appropriate statutory obligation of confidentiality.
               </p>
 
@@ -161,32 +161,32 @@ export default function DataProcessingAgreementPage() {
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Subprocessors</h4>
               <p>
-                We may engage subprocessors to assist in providing our services. We ensure that any 
-                subprocessor is bound by data protection obligations at least as protective as those 
+                We may engage subprocessors to assist in providing our services. We ensure that any
+                subprocessor is bound by data protection obligations at least as protective as those
                 in this agreement.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Data Subject Rights</h4>
               <p>
-                We will assist you in responding to data subject requests, including requests for 
+                We will assist you in responding to data subject requests, including requests for
                 access, rectification, erasure, and data portability.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Data Breach Notification</h4>
               <p>
-                We will notify you without undue delay after becoming aware of a personal data breach, 
+                We will notify you without undue delay after becoming aware of a personal data breach,
                 providing relevant information to assist you in meeting your breach notification obligations.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Deletion or Return</h4>
               <p>
-                Upon termination of our services, we will delete or return all personal data to you, 
+                Upon termination of our services, we will delete or return all personal data to you,
                 unless retention is required by law.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Audit Rights</h4>
               <p>
-                We will make available to you all information necessary to demonstrate compliance 
+                We will make available to you all information necessary to demonstrate compliance
                 with this agreement and allow for and contribute to audits and inspections.
               </p>
             </CardContent>
@@ -203,7 +203,7 @@ export default function DataProcessingAgreementPage() {
             <CardContent className="prose prose-sm max-w-none">
               <h4 className="font-semibold text-foreground mb-2">Instruction Rights</h4>
               <p>
-                You have the right to provide us with instructions regarding the processing of your 
+                You have the right to provide us with instructions regarding the processing of your
                 personal data, and we will follow those instructions.
               </p>
 
@@ -220,7 +220,7 @@ export default function DataProcessingAgreementPage() {
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Compliance Monitoring</h4>
               <p>
-                You have the right to audit our compliance with this agreement and request information 
+                You have the right to audit our compliance with this agreement and request information
                 about our data processing activities.
               </p>
             </CardContent>
@@ -233,7 +233,7 @@ export default function DataProcessingAgreementPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                We may transfer personal data to countries outside the EEA. When we do so, we ensure 
+                We may transfer personal data to countries outside the EEA. When we do so, we ensure
                 appropriate safeguards are in place, such as:
               </p>
               <ul className="list-disc pl-6 space-y-1">
@@ -243,7 +243,7 @@ export default function DataProcessingAgreementPage() {
                 <li>Other appropriate safeguards</li>
               </ul>
               <p className="mt-4">
-                We will inform you of any international transfers and the safeguards in place to 
+                We will inform you of any international transfers and the safeguards in place to
                 protect your personal data.
               </p>
             </CardContent>
@@ -256,11 +256,11 @@ export default function DataProcessingAgreementPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                Each party shall be liable to the other party for any damages caused by its breach 
+                Each party shall be liable to the other party for any damages caused by its breach
                 of this agreement. Our liability is limited as set forth in our Terms of Service.
               </p>
               <p className="mt-4">
-                In the event of a personal data breach caused by our failure to comply with this 
+                In the event of a personal data breach caused by our failure to comply with this
                 agreement, we shall be liable for any damages resulting from such breach.
               </p>
             </CardContent>
@@ -273,11 +273,11 @@ export default function DataProcessingAgreementPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                This agreement will terminate automatically upon the termination of our Terms of Service 
+                This agreement will terminate automatically upon the termination of our Terms of Service
                 or when we cease to process your personal data.
               </p>
               <p className="mt-4">
-                Upon termination, we will delete or return all personal data to you, unless retention 
+                Upon termination, we will delete or return all personal data to you, unless retention
                 is required by law or for legitimate business purposes.
               </p>
             </CardContent>
@@ -290,7 +290,7 @@ export default function DataProcessingAgreementPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                This agreement is governed by the laws of [Your Jurisdiction] and the GDPR, where applicable. 
+                This agreement is governed by the laws of [Your Jurisdiction] and the GDPR, where applicable.
                 Any disputes will be resolved in accordance with our Terms of Service.
               </p>
             </CardContent>
@@ -304,8 +304,8 @@ export default function DataProcessingAgreementPage() {
             <CardContent className="prose prose-sm max-w-none">
               <p>For questions about this Data Processing Agreement, please contact us:</p>
               <ul className="list-none space-y-2">
-                <li><strong>Email:</strong> privacy@news360.com</li>
-                <li><strong>Data Protection Officer:</strong> dpo@news360.com</li>
+                <li><strong>Email:</strong> privacy@scrollos.ai</li>
+                <li><strong>Data Protection Officer:</strong> dpo@scrollos.ai</li>
                 <li><strong>Address:</strong> [Your Company Address]</li>
                 <li><strong>Phone:</strong> [Your Phone Number]</li>
               </ul>

@@ -5,15 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/hooks/use-toast';
 import {
-    ArrowLeft,
-    Camera,
-    Download,
-    Eye,
-    EyeOff,
-    Lock,
-    Save,
-    Trash2,
-    User
+  ArrowLeft,
+  Camera,
+  Download,
+  Eye,
+  EyeOff,
+  Lock,
+  Save,
+  Trash2,
+  User
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -62,11 +62,7 @@ export default function AccountPage() {
   const [storage, setStorage] = useState<{ usedBytes: number; limitBytes: number } | null>(null);
   const [storageLoading, setStorageLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  // Plan info
-  const plan = session?.user?.plan || 'pro';
-  const planTrialEndsAt = session?.user?.planTrialEndsAt ? new Date(session.user.planTrialEndsAt) : null;
-  const planExpired = planTrialEndsAt && new Date() > planTrialEndsAt;
-  const [isUpgrading, setIsUpgrading] = useState(false);
+
 
   useEffect(() => {
     if (session?.user) {
@@ -278,48 +274,7 @@ export default function AccountPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Plan Info */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Your Plan</CardTitle>
-          <CardDescription>
-            <span className="font-semibold mr-2">{plan === 'pro_plus' ? 'Pro Plus' : 'Pro'}</span>
-            {planTrialEndsAt && !planExpired && (
-              <Badge className="bg-green-500 text-white ml-2">Trial ends {format(planTrialEndsAt, 'PPP')}</Badge>
-            )}
-            {planTrialEndsAt && planExpired && (
-              <Badge className="bg-red-500 text-white ml-2">Trial expired</Badge>
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {plan === 'pro' && (
-            <Button
-              className="mt-2"
-              onClick={async () => {
-                setIsUpgrading(true);
-                try {
-                  const res = await fetch('/api/user/plan', { method: 'POST' });
-                  if (res.ok) {
-                    await update();
-                    toast.success('Upgraded to Pro Plus!');
-                  } else {
-                    const data = await res.json();
-                    toast.error(data.error || 'Upgrade failed');
-                  }
-                } catch (e) {
-                  toast.error('Upgrade failed');
-                } finally {
-                  setIsUpgrading(false);
-                }
-              }}
-              disabled={isUpgrading}
-            >
-              {isUpgrading ? 'Upgrading...' : 'Upgrade to Pro Plus'}
-            </Button>
-          )}
-        </CardContent>
-      </Card>
+
       {/* Storage Usage Bar */}
       <Card className="mb-6">
         <CardHeader>
@@ -345,8 +300,8 @@ export default function AccountPage() {
                   (storage.usedBytes / storage.limitBytes) > 0.9
                     ? 'bg-red-200'
                     : (storage.usedBytes / storage.limitBytes) > 0.8
-                    ? 'bg-yellow-200'
-                    : 'bg-green-200'
+                      ? 'bg-yellow-200'
+                      : 'bg-green-200'
                 }
               />
               {(storage.usedBytes / storage.limitBytes) > 0.9 && (
@@ -393,9 +348,9 @@ export default function AccountPage() {
               <div className="relative">
                 <div className="w-20 h-20 rounded-full overflow-hidden bg-muted">
                   {profile.avatar ? (
-                    <img 
-                      src={profile.avatar} 
-                      alt="Profile" 
+                    <img
+                      src={profile.avatar}
+                      alt="Profile"
                       className="w-full h-full object-cover"
                     />
                   ) : (

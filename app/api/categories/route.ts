@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { categories } from '@/lib/schema';
 import { eq, and } from 'drizzle-orm';
-import { redis } from '@/lib/redis';
+import { redisSafe as redis } from '@/lib/redis-safe';
 
 // GET /api/categories - Get all categories for the user
 export async function GET(request: NextRequest) {

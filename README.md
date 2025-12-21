@@ -1,8 +1,9 @@
-# 📧 News360 - Modern Newsletter Management Platform
+# 📧 ScrollOS - Modern Newsletter Management Platform
 
-A sophisticated newsletter management application built with Next.js 15, TypeScript, and modern web technologies. News360 helps you organize, read, and manage newsletters from multiple email accounts with intelligent categorization and powerful filtering capabilities.
+A sophisticated newsletter management application built with Next.js 15, TypeScript, and modern web technologies. ScrollOS helps you organize, read, and manage newsletters from multiple email accounts with intelligent categorization and powerful filtering capabilities.
 
-![News360 Dashboard](https://img.shields.io/badge/Next.js-15.3.3-black?style=for-the-badge&logo=next.js)
+![ScrollOS Dashboard](https://img.shields.io/badge/Next.js-15.3.3-black?style=for-the-badge&logo=next.js)
+ (... rest of the content replaced with ScrollOS ...)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)
 ![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-0.44.2-orange?style=for-the-badge)
@@ -79,7 +80,7 @@ A sophisticated newsletter management application built with Next.js 15, TypeScr
 1. **Navigate to Settings**: Click the settings icon in the header or go to `/settings/email`
 2. **Add Email Account**: Click "Connect Email Account"
 3. **Choose Provider**: Select Gmail or Outlook
-4. **Authorize Access**: Follow the OAuth flow to grant News360 access to your emails
+4. **Authorize Access**: Follow the OAuth flow to grant ScrollOS access to your emails
 5. **Configure Sync**: Set sync frequency and enable/disable automatic syncing
 
 #### 3. Setting Up Categories
@@ -583,11 +584,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: [Wiki](https://github.com/yourusername/newsletter-product/wiki)
 - **Issues**: [GitHub Issues](https://github.com/yourusername/newsletter-product/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yourusername/newsletter-product/discussions)
-- **Email**: support@news360.com
+- **Email**: support@scrollos.ai
 
 ---
 
-**Made with ❤️ by the News360 Team**
+**Made with ❤️ by the ScrollOS Team**
 
 ## Redis Setup
 

@@ -55,7 +55,7 @@ interface OnboardingStep {
 const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 1,
-    title: "Welcome to News360!",
+    title: "Welcome to ScrollOS!",
     description: "Your beautiful newsletter inbox. Let's get you set up in just a few steps.",
     icon: Sparkles,
     action: "Get Started",
@@ -68,7 +68,7 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
         color: "blue"
       },
       {
-        title: "Smart Organization", 
+        title: "Smart Organization",
         description: "Categories & filters",
         icon: Filter,
         color: "purple"
@@ -144,7 +144,7 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
 
   const loadOnboardingProgress = async () => {
     if (!session?.user) return;
-    
+
     try {
       const response = await fetch('/api/user/onboarding');
       if (response.ok) {
@@ -164,19 +164,19 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
 
   const updateOnboardingProgress = async (step: number, completed: boolean) => {
     if (!session?.user) return;
-    
+
     try {
       setIsLoading(true);
       const response = await fetch('/api/user/onboarding', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          step, 
+        body: JSON.stringify({
+          step,
           completed,
           completedSteps: Array.from(completedSteps)
         }),
       });
-      
+
       if (response.ok) {
         if (completed) {
           setCompletedSteps(prev => new Set([...prev, step]));
@@ -205,10 +205,10 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
 
   const handleNext = async () => {
     const currentStepData = ONBOARDING_STEPS[currentStep];
-    
+
     // Mark current step as completed
     await updateOnboardingProgress(currentStepData.id, true);
-    
+
     if (currentStep < ONBOARDING_STEPS.length - 1) {
       setIsTransitioning(true);
       setTimeout(() => {
@@ -219,7 +219,7 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
       // Complete onboarding
       await updateOnboardingProgress(ONBOARDING_STEPS.length, true);
       onComplete();
-      toast.success('Welcome to News360! You\'re all set up.');
+      toast.success('Welcome to ScrollOS! You\'re all set up.');
     }
   };
 
@@ -271,7 +271,7 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-bold text-foreground">Welcome to News360</DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-foreground">Welcome to ScrollOS</DialogTitle>
                 <p className="text-sm text-muted-foreground">Let's get you started in just a few steps</p>
               </div>
             </div>
@@ -290,7 +290,7 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
                 </Badge>
               </div>
               <div className="w-full bg-muted rounded-full h-3 overflow-hidden shadow-inner">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-primary via-primary/90 to-primary/80 rounded-full transition-all duration-700 ease-out relative"
                   style={{ width: `${progress}%` }}
                 >
@@ -308,8 +308,8 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
                   className={cn(
                     "group relative p-4 rounded-xl cursor-pointer transition-all duration-300 border-2",
                     "hover:bg-accent/50 hover:border-primary/30 hover:shadow-md",
-                    index === safeCurrentStep 
-                      ? "bg-primary/10 border-primary/40 shadow-lg ring-2 ring-primary/20" 
+                    index === safeCurrentStep
+                      ? "bg-primary/10 border-primary/40 shadow-lg ring-2 ring-primary/20"
                       : "bg-background border-border",
                     index < safeCurrentStep && "bg-green-50 border-green-200 hover:border-green-300"
                   )}
@@ -317,11 +317,11 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
                   <div className="flex items-center space-x-3">
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm",
-                      index === safeCurrentStep 
-                        ? "bg-primary text-primary-foreground shadow-lg" 
+                      index === safeCurrentStep
+                        ? "bg-primary text-primary-foreground shadow-lg"
                         : index < safeCurrentStep
-                        ? "bg-green-500 text-white shadow-md"
-                        : "bg-muted text-muted-foreground group-hover:bg-accent"
+                          ? "bg-green-500 text-white shadow-md"
+                          : "bg-muted text-muted-foreground group-hover:bg-accent"
                     )}>
                       {index < safeCurrentStep ? (
                         <CheckCircle className="h-5 w-5" />
@@ -341,7 +341,7 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Active indicator */}
                   {index === safeCurrentStep && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -574,7 +574,7 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
                 </Button>
               )}
             </div>
-            
+
             <div className="flex items-center space-x-3">
               <Button
                 variant="ghost"
@@ -583,7 +583,7 @@ export function OnboardingGuide({ isOpen, onClose, onComplete }: OnboardingGuide
               >
                 Skip Tour
               </Button>
-              
+
               {currentStepData.actionLink ? (
                 <Button
                   onClick={handleActionClick}

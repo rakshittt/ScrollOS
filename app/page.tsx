@@ -6,18 +6,18 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { MobileNav } from '@/components/ui/MobileNav';
-import { 
-  Mail, 
-  Inbox, 
-  Filter, 
-  Zap, 
-  Shield, 
-  Smartphone, 
-  Globe, 
-  BarChart3, 
-  Users, 
-  Star, 
-  CheckCircle, 
+import {
+  Mail,
+  Inbox,
+  Filter,
+  Zap,
+  Shield,
+  Smartphone,
+  Globe,
+  BarChart3,
+  Users,
+  Star,
+  CheckCircle,
   ArrowRight,
   Play,
   Github,
@@ -41,7 +41,7 @@ import Link from 'next/link';
 
 export default function LandingPage() {
   const { data: session, status } = useSession();
-  
+
   // If user is authenticated, redirect to inbox
   if (status === 'loading') return <div>Loading...</div>;
   if (session) redirect('/inbox');
@@ -54,23 +54,21 @@ export default function LandingPage() {
           <div className="flex h-14 sm:h-16 items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl overflow-hidden shadow-lg">
-                <img 
-                  src="/NEWS360.png" 
-                  alt="News360 Logo" 
-                  className="w-full h-full object-cover"
+                <img
+                  src="/logo.png"
+                  alt="ScrollOS Logo"
                 />
               </div>
-              <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">News360</span>
+              <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">ScrollOS</span>
             </div>
-            
+
             <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
-              <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
+              <a href="mailto:support@scrollos.ai" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
               <Link href="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">About</Link>
               <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Testimonials</a>
               <Link href="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Contact</Link>
             </nav>
-            
+
             <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="hidden md:flex items-center space-x-4">
                 <Link href="/auth/signin"><Button variant="ghost" size="sm" className="font-medium">Sign In</Button></Link>
@@ -88,9 +86,9 @@ export default function LandingPage() {
           <div className="mx-auto max-w-lg text-center flex flex-col items-center">
             <div className="flex items-center justify-center space-x-3 mb-6">
               <div className="h-12 w-12 rounded-2xl overflow-hidden shadow-lg bg-white flex items-center justify-center border border-border">
-                <img src="/NEWS360.png" alt="News360 Logo" className="w-10 h-10 object-contain" />
+                <img src="/logo.png" alt="ScrollOS Logo" className="w-10 h-10 object-contain" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">News360</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">ScrollOS</span>
             </div>
             <div className="flex flex-col items-center mb-6">
               <Smartphone className="h-12 w-12 text-primary mb-2 animate-bounce" />
@@ -98,8 +96,8 @@ export default function LandingPage() {
             </div>
             <h1 className="text-2xl font-bold mb-2">Best experienced on Desktop</h1>
             <p className="text-base text-muted-foreground mb-6">
-              News360 is designed for a beautiful, productive experience on larger screens.<br />
-              Explore all features, pricing, and more below!
+              ScrollOS is designed for a beautiful, productive experience on larger screens.<br />
+              Explore all features and more below!
             </p>
             <a href="#features" className="inline-block mt-2">
               <Button size="lg" variant="outline" className="w-full flex items-center justify-center">
@@ -119,22 +117,22 @@ export default function LandingPage() {
               <Inbox className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Modern Newsletter Management
             </Badge>
-            
+
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-bold tracking-tight leading-tight">
               Take Control of Your
               <span className="block bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent">
                 Newsletters
               </span>
             </h1>
-            
+
             <p className="mt-6 sm:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto px-4">
-              News360 is the modern way to organize, read, and manage newsletters from all your email accounts. Enjoy powerful filtering, custom categories, distraction-free reading, and a beautiful, productive interface.
+              ScrollOS is the modern way to organize, read, and manage newsletters from all your email accounts. Enjoy powerful filtering, custom categories, distraction-free reading, and a beautiful, productive interface.
             </p>
-            
+
             <div className="mt-8 sm:mt-12 flex flex-col items-center justify-center gap-4 sm:gap-6 sm:flex-row px-4">
               <Link href="/auth/signup" className="w-full sm:w-auto">
                 <Button size="lg" className="group w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  Start Free Trial
+                  Get Started
                   <ArrowRight className="ml-2 sm:ml-3 h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
@@ -143,24 +141,11 @@ export default function LandingPage() {
                 Watch Demo
               </Button>
             </div>
-            
-            <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-8 text-xs sm:text-sm text-muted-foreground px-4">
-              <div className="flex items-center font-medium">
-                <CheckCircle className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                No credit card required
-              </div>
-              <div className="flex items-center font-medium">
-                <CheckCircle className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                Free 14-day trial
-              </div>
-              <div className="flex items-center font-medium">
-                <CheckCircle className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                Cancel anytime
-              </div>
-            </div>
+
+
           </div>
         </div>
-        
+
         {/* Hero Image/Preview */}
         <div className="mt-12 sm:mt-16 lg:mt-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -207,7 +192,7 @@ export default function LandingPage() {
               All the tools you need to keep your inbox organized, your reading focused, and your workflow efficient.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <Card className="group hover:shadow-2xl transition-all duration-500 border border-border/50 bg-background/50 backdrop-blur-sm hover:bg-background/80">
               <CardHeader className="pb-4 sm:pb-6">
@@ -289,13 +274,13 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center mb-12 sm:mb-16 lg:mb-20">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight leading-tight">
-              How News360 Works
+              How ScrollOS Works
             </h2>
             <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
               Get started in minutes with our simple 3-step process
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
             <div className="text-center group">
               <div className="mx-auto flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110">
@@ -306,7 +291,7 @@ export default function LandingPage() {
                 Securely connect your Gmail, Outlook, or other email accounts with just a few clicks.
               </p>
             </div>
-            
+
             <div className="text-center group">
               <div className="mx-auto flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110">
                 2
@@ -316,7 +301,7 @@ export default function LandingPage() {
                 Create categories, set up rules, and use advanced filters to keep your inbox tidy.
               </p>
             </div>
-            
+
             <div className="text-center group">
               <div className="mx-auto flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110">
                 3
@@ -330,116 +315,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-16 sm:py-24 lg:py-32 xl:py-40 bg-gradient-to-br from-muted/30 via-background to-muted/20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center mb-12 sm:mb-16 lg:mb-20">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight leading-tight">
-              Simple, transparent pricing
-            </h2>
-            <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
-              Choose the plan that works best for you. Upgrade anytime.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-3xl mx-auto">
-            {/* Pro Plan */}
-            <Card className="relative border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-              <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold shadow-lg mb-1">
-                  Most Popular
-                </Badge>
-                {/* <Badge className="bg-green-500 text-white px-2 py-1 text-xs font-semibold shadow">7 Day Free Trial</Badge> */}
-              </div>
-              <CardHeader className="pb-4 sm:pb-6">
-                <CardTitle className="text-2xl sm:text-3xl font-bold">Pro</CardTitle>
-                <div className="mt-4 sm:mt-6">
-                  <span className="text-5xl font-bold">₹299</span>
-                  <span className="text-lg sm:text-xl text-muted-foreground">/month</span>
-                </div>
-                <CardDescription className="text-base leading-relaxed mt-2">
-                  The perfect plan for most users—ample storage, multiple accounts, and fast sync.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5 sm:space-y-6 mt-2">
-                <div className="space-y-4">
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
-                    <span className="text-base">Store up to 1,000 newsletters</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
-                    <span className="text-base">Connect up to 3 Gmail accounts</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
-                    <span className="text-base">Unlimited categories</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
-                    <span className="text-base">Basic search & filters</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
-                    <span className="text-base">Priority sync</span>
-                  </div>
-                </div>
-                <div className="mb-2 text-center text-green-600 font-medium text-sm">7 Day Free Trial – Cancel anytime</div>
-                <Link href="/auth/signup">
-                  <Button className="w-full text-lg py-3 font-semibold shadow-lg">
-                    Start Pro Trial
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-            {/* Pro Plus Plan */}
-            <Card className="relative border border-border/50 bg-background/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
-              <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                <Badge className="bg-green-500 text-white px-2 py-1 text-xs font-semibold shadow">7 Day Free Trial</Badge>
-              </div>
-              <CardHeader className="pb-4 sm:pb-6">
-                <CardTitle className="text-2xl sm:text-3xl font-bold">Pro Plus</CardTitle>
-                <div className="mt-4 sm:mt-6">
-                  <span className="text-5xl font-bold">₹799</span>
-                  <span className="text-lg sm:text-xl text-muted-foreground">/month</span>
-                </div>
-                <CardDescription className="text-base leading-relaxed mt-2">
-                  For power users who need maximum storage and more account connections.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5 sm:space-y-6 mt-2">
-                <div className="space-y-4">
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
-                    <span className="text-base">Store up to 5,000 newsletters</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
-                    <span className="text-base">Connect up to 10 Gmail accounts</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
-                    <span className="text-base">Unlimited categories</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
-                    <span className="text-base">Basic search & filters</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-3 h-5 w-5 text-success" />
-                    <span className="text-base">Priority sync</span>
-                  </div>
-                </div>
-                <div className="mb-2 text-center text-green-600 font-medium text-sm">7 Day Free Trial – Cancel anytime</div>
-                <Link href="/auth/signup">
-                  <Button className="w-full text-lg py-3 font-semibold" variant="outline">
-                    Go Pro Plus
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+
 
       {/* Testimonials */}
       <section id="testimonials" className="py-16 sm:py-24 lg:py-32 xl:py-40 bg-gradient-to-br from-background via-background to-muted/10">
@@ -449,10 +325,10 @@ export default function LandingPage() {
               Loved by newsletter enthusiasts
             </h2>
             <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
-              See what our users are saying about News360
+              See what our users are saying about ScrollOS
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <Card className="border border-border/50 bg-background/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
               <CardContent className="pt-6 sm:pt-8">
@@ -464,7 +340,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  "News360 has completely transformed how I manage my newsletters. The categorization is incredibly accurate and saves me hours every week."
+                  "ScrollOS has completely transformed how I manage my newsletters. The categorization is incredibly accurate and saves me hours every week."
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
@@ -537,12 +413,12 @@ export default function LandingPage() {
               Ready to transform your newsletter experience?
             </h2>
             <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-primary-foreground/90 leading-relaxed">
-              Join thousands of users who have already simplified their newsletter management with News360.
+              Join thousands of users who have already simplified their newsletter management with ScrollOS.
             </p>
             <div className="mt-8 sm:mt-12 flex flex-col items-center justify-center gap-4 sm:gap-6 sm:flex-row px-4">
               <Link href="/auth/signup" className="w-full sm:w-auto">
                 <Button size="lg" variant="secondary" className="group w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  Start Free Trial
+                  Get Started
                   <ArrowRight className="ml-2 sm:ml-3 h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
@@ -563,13 +439,13 @@ export default function LandingPage() {
             <div className="space-y-4 sm:space-y-6">
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl overflow-hidden shadow-lg">
-                  <img 
-                    src="/NEWS360.png" 
-                    alt="News360 Logo" 
+                  <img
+                    src="/logo.png"
+                    alt="ScrollOS Logo"
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">News360</span>
+                <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">ScrollOS</span>
               </div>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                 The ultimate platform for managing and reading newsletters with modern organization tools.
@@ -586,17 +462,16 @@ export default function LandingPage() {
                 </a>
               </div>
             </div>
-            
+
             <div>
               <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6">Product</h3>
               <ul className="space-y-2 sm:space-y-3 text-sm sm:text-base text-muted-foreground">
                 <li><a href="#features" className="hover:text-foreground transition-colors duration-200">Features</a></li>
-                <li><a href="#pricing" className="hover:text-foreground transition-colors duration-200">Pricing</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors duration-200">API</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors duration-200">Integrations</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6">Company</h3>
               <ul className="space-y-2 sm:space-y-3 text-sm sm:text-base text-muted-foreground">
@@ -606,7 +481,7 @@ export default function LandingPage() {
                 <li><a href="#" className="hover:text-foreground transition-colors duration-200">Press</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6">Support</h3>
               <ul className="space-y-2 sm:space-y-3 text-sm sm:text-base text-muted-foreground">
@@ -617,11 +492,11 @@ export default function LandingPage() {
               </ul>
             </div>
           </div>
-          
+
           <div className="mt-12 sm:mt-16 border-t border-border/50 pt-6 sm:pt-8">
             <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
               <p className="text-sm sm:text-base text-muted-foreground">
-                © 2025 News360. All rights reserved.
+                © 2025 ScrollOS. All rights reserved.
               </p>
               <div className="flex items-center space-x-6 text-sm text-muted-foreground">
                 <Link href="/legal/privacy" className="hover:text-foreground transition-colors duration-200">Privacy Policy</Link>

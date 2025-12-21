@@ -15,17 +15,17 @@ export default function PrivacyPolicyPage() {
               Back to Legal
             </Link>
           </Button>
-          
+
           <div className="flex items-center space-x-3 mb-4">
             <Shield className="h-8 w-8 text-blue-600" />
             <h1 className="text-4xl font-bold text-foreground">Privacy Policy</h1>
           </div>
-          
+
           <p className="text-lg text-muted-foreground">
-            Last updated: {new Date().toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            Last updated: {new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}
           </p>
         </div>
@@ -38,12 +38,12 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                At News360 ("we," "our," or "us"), we respect your privacy and are committed to protecting your personal data. 
-                This privacy policy explains how we collect, use, disclose, and safeguard your information when you use our 
+                At ScrollOS ("we," "our," or "us"), we respect your privacy and are committed to protecting your personal data.
+                This privacy policy explains how we collect, use, disclose, and safeguard your information when you use our
                 newsletter platform and related services.
               </p>
               <p>
-                By using our service, you agree to the collection and use of information in accordance with this policy. 
+                By using our service, you agree to the collection and use of information in accordance with this policy.
                 If you do not agree with our policies and practices, please do not use our service.
               </p>
             </CardContent>
@@ -115,7 +115,7 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>We do not sell, trade, or rent your personal information to third parties. We may share your information in the following circumstances:</p>
-              
+
               <h4 className="font-semibold text-foreground mb-2 mt-4">Service Providers</h4>
               <p>We may share information with trusted third-party service providers who assist us in operating our platform, such as:</p>
               <ul className="list-disc pl-6 space-y-1">
@@ -151,7 +151,7 @@ export default function PrivacyPolicyPage() {
                 <li>Employee training on data protection</li>
               </ul>
               <p className="mt-4">
-                However, no method of transmission over the internet or electronic storage is 100% secure. 
+                However, no method of transmission over the internet or electronic storage is 100% secure.
                 While we strive to protect your information, we cannot guarantee absolute security.
               </p>
             </CardContent>
@@ -192,7 +192,7 @@ export default function PrivacyPolicyPage() {
                 <li>Ensure security and prevent fraud</li>
               </ul>
               <p className="mt-4">
-                You can control cookie settings through your browser preferences. 
+                You can control cookie settings through your browser preferences.
                 However, disabling certain cookies may affect the functionality of our platform.
               </p>
             </CardContent>
@@ -205,8 +205,8 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                Our service is not intended for children under 13 years of age. We do not knowingly collect 
-                personal information from children under 13. If you are a parent or guardian and believe 
+                Our service is not intended for children under 13 years of age. We do not knowingly collect
+                personal information from children under 13. If you are a parent or guardian and believe
                 your child has provided us with personal information, please contact us immediately.
               </p>
             </CardContent>
@@ -219,8 +219,8 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                Your information may be transferred to and processed in countries other than your own. 
-                We ensure that such transfers comply with applicable data protection laws and implement 
+                Your information may be transferred to and processed in countries other than your own.
+                We ensure that such transfers comply with applicable data protection laws and implement
                 appropriate safeguards to protect your information.
               </p>
             </CardContent>
@@ -233,8 +233,8 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                We may update this privacy policy from time to time. We will notify you of any changes 
-                by posting the new policy on this page and updating the "Last updated" date. 
+                We may update this privacy policy from time to time. We will notify you of any changes
+                by posting the new policy on this page and updating the "Last updated" date.
                 We encourage you to review this policy periodically.
               </p>
             </CardContent>
@@ -247,8 +247,9 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>If you have any questions about this privacy policy or our data practices, please contact us:</p>
+              <p>At ScrollOS, we take your privacy seriously.</p>
               <ul className="list-none space-y-2">
-                <li><strong>Email:</strong> privacy@news360.com</li>
+                <li><strong>Email:</strong> privacy@scrollos.ai</li>
                 <li><strong>Address:</strong> [Your Company Address]</li>
                 <li><strong>Phone:</strong> [Your Phone Number]</li>
               </ul>

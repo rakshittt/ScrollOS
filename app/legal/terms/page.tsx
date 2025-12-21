@@ -15,17 +15,17 @@ export default function TermsOfServicePage() {
               Back to Legal
             </Link>
           </Button>
-          
+
           <div className="flex items-center space-x-3 mb-4">
             <FileText className="h-8 w-8 text-green-600" />
             <h1 className="text-4xl font-bold text-foreground">Terms of Service</h1>
           </div>
-          
+
           <p className="text-lg text-muted-foreground">
-            Last updated: {new Date().toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            Last updated: {new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}
           </p>
         </div>
@@ -38,12 +38,12 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                These Terms of Service ("Terms") govern your use of News360, a newsletter platform 
-                operated by [Your Company Name] ("we," "our," or "us"). By accessing or using our 
+                These Terms of Service ("Terms") govern your use of ScrollOS, a newsletter platform
+                operated by [Your Company Name] ("we," "our," or "us"). By accessing or using our
                 service, you agree to be bound by these Terms.
               </p>
               <p>
-                If you disagree with any part of these terms, then you may not access the service. 
+                If you disagree with any part of these terms, then you may not access the service.
                 These Terms apply to all visitors, users, and others who access or use the service.
               </p>
             </CardContent>
@@ -56,7 +56,7 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                News360 is an all-in-one newsletter platform that allows users to:
+                ScrollOS is an all-in-one newsletter platform that allows users to:
               </p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Connect and sync multiple email accounts</li>
@@ -88,8 +88,8 @@ export default function TermsOfServicePage() {
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Account Security</h4>
               <p>
-                You are responsible for maintaining the confidentiality of your account credentials 
-                and for all activities that occur under your account. You must notify us immediately 
+                You are responsible for maintaining the confidentiality of your account credentials
+                and for all activities that occur under your account. You must notify us immediately
                 of any unauthorized use of your account.
               </p>
             </CardContent>
@@ -147,22 +147,22 @@ export default function TermsOfServicePage() {
             <CardContent className="prose prose-sm max-w-none">
               <h4 className="font-semibold text-foreground mb-2">Our Rights</h4>
               <p>
-                The service and its original content, features, and functionality are owned by us and 
-                are protected by international copyright, trademark, patent, trade secret, and other 
+                The service and its original content, features, and functionality are owned by us and
+                are protected by international copyright, trademark, patent, trade secret, and other
                 intellectual property laws.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Your Content</h4>
               <p>
-                You retain ownership of any content you upload or create using our service. By using 
-                our service, you grant us a limited license to process and store your content solely 
+                You retain ownership of any content you upload or create using our service. By using
+                our service, you grant us a limited license to process and store your content solely
                 for the purpose of providing the service to you.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Third-Party Content</h4>
               <p>
-                Our service may contain content from third parties, including newsletters and other 
-                materials. We do not claim ownership of such content and respect the intellectual 
+                Our service may contain content from third parties, including newsletters and other
+                materials. We do not claim ownership of such content and respect the intellectual
                 property rights of third parties.
               </p>
             </CardContent>
@@ -175,11 +175,11 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                Your privacy is important to us. Our collection and use of personal information is 
+                Your privacy is important to us. Our collection and use of personal information is
                 governed by our Privacy Policy, which is incorporated into these Terms by reference.
               </p>
               <p className="mt-4">
-                By using our service, you consent to the collection and use of your information as 
+                By using our service, you consent to the collection and use of your information as
                 described in our Privacy Policy.
               </p>
             </CardContent>
@@ -192,7 +192,7 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                We strive to provide reliable service but cannot guarantee uninterrupted availability. 
+                We strive to provide reliable service but cannot guarantee uninterrupted availability.
                 The service may be temporarily unavailable due to:
               </p>
               <ul className="list-disc pl-6 space-y-1">
@@ -202,7 +202,7 @@ export default function TermsOfServicePage() {
                 <li>Third-party service disruptions</li>
               </ul>
               <p className="mt-4">
-                We will make reasonable efforts to notify users of planned maintenance and minimize 
+                We will make reasonable efforts to notify users of planned maintenance and minimize
                 service disruptions.
               </p>
             </CardContent>
@@ -218,7 +218,7 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                To the maximum extent permitted by law, we shall not be liable for any indirect, 
+                To the maximum extent permitted by law, we shall not be liable for any indirect,
                 incidental, special, consequential, or punitive damages, including but not limited to:
               </p>
               <ul className="list-disc pl-6 space-y-1">
@@ -228,7 +228,7 @@ export default function TermsOfServicePage() {
                 <li>Loss of or damage to your content</li>
               </ul>
               <p className="mt-4">
-                Our total liability to you for any claims arising from these Terms or your use of 
+                Our total liability to you for any claims arising from these Terms or your use of
                 the service shall not exceed the amount you paid us in the 12 months preceding the claim.
               </p>
             </CardContent>
@@ -241,7 +241,7 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, 
+                THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND,
                 EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
               </p>
               <ul className="list-disc pl-6 space-y-1">
@@ -261,20 +261,20 @@ export default function TermsOfServicePage() {
             <CardContent className="prose prose-sm max-w-none">
               <h4 className="font-semibold text-foreground mb-2">Termination by You</h4>
               <p>
-                You may terminate your account at any time by contacting us or using the account 
+                You may terminate your account at any time by contacting us or using the account
                 deletion feature in your settings.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Termination by Us</h4>
               <p>
-                We may terminate or suspend your account immediately, without prior notice, for conduct 
+                We may terminate or suspend your account immediately, without prior notice, for conduct
                 that we believe violates these Terms or is harmful to other users, us, or third parties.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2 mt-4">Effect of Termination</h4>
               <p>
-                Upon termination, your right to use the service will cease immediately. We may delete 
-                your account and data, though we may retain certain information as required by law or 
+                Upon termination, your right to use the service will cease immediately. We may delete
+                your account and data, though we may retain certain information as required by law or
                 for legitimate business purposes.
               </p>
             </CardContent>
@@ -287,11 +287,11 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                These Terms shall be governed by and construed in accordance with the laws of 
+                These Terms shall be governed by and construed in accordance with the laws of
                 [Your Jurisdiction], without regard to its conflict of law provisions.
               </p>
               <p className="mt-4">
-                Any disputes arising from these Terms or your use of the service shall be resolved 
+                Any disputes arising from these Terms or your use of the service shall be resolved
                 in the courts of [Your Jurisdiction].
               </p>
             </CardContent>
@@ -304,7 +304,7 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                We reserve the right to modify these Terms at any time. We will notify users of 
+                We reserve the right to modify these Terms at any time. We will notify users of
                 significant changes by:
               </p>
               <ul className="list-disc pl-6 space-y-1">
@@ -313,7 +313,7 @@ export default function TermsOfServicePage() {
                 <li>Displaying in-app notifications</li>
               </ul>
               <p className="mt-4">
-                Your continued use of the service after changes become effective constitutes acceptance 
+                Your continued use of the service after changes become effective constitutes acceptance
                 of the new Terms.
               </p>
             </CardContent>
@@ -325,9 +325,9 @@ export default function TermsOfServicePage() {
               <CardTitle>Contact Information</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
-              <p>If you have any questions about these Terms of Service, please contact us:</p>
+              <p>If you have any questions about these ScrollOS Terms of Service, please contact us:</p>
               <ul className="list-none space-y-2">
-                <li><strong>Email:</strong> legal@news360.com</li>
+                <li><strong>Email:</strong> legal@scrollos.ai</li>
                 <li><strong>Address:</strong> [Your Company Address]</li>
                 <li><strong>Phone:</strong> [Your Phone Number]</li>
               </ul>

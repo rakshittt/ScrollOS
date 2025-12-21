@@ -17,15 +17,14 @@ export default function SignUp() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    plan: 'pro', // default to 'pro', can be changed by user
   });
-  
+
   // Validation state
   const [emailValidation, setEmailValidation] = useState<{ isValid: boolean; error?: string }>({ isValid: false });
   const [passwordValidation, setPasswordValidation] = useState<any>(null);
@@ -55,12 +54,12 @@ export default function SignUp() {
   }, [formData.password]);
 
   useEffect(() => {
-    const isValid = 
+    const isValid =
       formData.name.trim() !== '' &&
       emailValidation.isValid &&
       passwordValidation?.isValid &&
       formData.password.length >= 8;
-    
+
     setIsFormValid(isValid);
   }, [formData.name, emailValidation, passwordValidation, formData.password]);
 
@@ -93,15 +92,9 @@ export default function SignUp() {
         throw new Error(data.message || 'Something went wrong');
       }
 
-      // If backend returns a Dodo checkout link, redirect instantly
-      if (data.checkout_url) {
-        console.log('[DEBUG] Redirecting to Dodo:', data.checkout_url);
-        window.location.href = data.checkout_url;
-        return;
-      }
-
-      // fallback: if no checkout_url, show error
-      setError('No payment link received. Please try again.');
+      // Redirect to signin or inbox (backend handles initial plan)
+      router.push('/auth/signin?signup=success');
+      return;
     } catch (error) {
       console.error('Signup error:', error);
       if (error instanceof Error) {
@@ -116,7 +109,7 @@ export default function SignUp() {
 
   const renderEmailValidation = () => {
     if (!formData.email) return null;
-    
+
     return (
       <div className={`flex items-center gap-2 text-sm ${emailValidation.isValid ? 'text-green-600' : 'text-red-600'}`}>
         {emailValidation.isValid ? (
@@ -140,7 +133,7 @@ export default function SignUp() {
             {getPasswordStrengthText(passwordValidation.score)}
           </span>
         </div>
-        
+
         <div className="space-y-1">
           {Object.entries(passwordValidation.requirements).map(([req, met]) => (
             <div key={req} className={`flex items-center gap-2 text-xs ${met ? 'text-green-600' : 'text-red-600'}`}>
@@ -204,7 +197,7 @@ export default function SignUp() {
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -223,7 +216,7 @@ export default function SignUp() {
               </div>
               {renderEmailValidation()}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
@@ -251,29 +244,9 @@ export default function SignUp() {
               </div>
               {renderPasswordRequirements()}
             </div>
-            
-            <div className="space-y-2">
-              <Label>Choose your plan</Label>
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  className={`flex-1 border rounded-md px-4 py-2 text-center ${formData.plan === 'pro' ? 'border-primary bg-primary/10 font-semibold' : 'border-gray-300 bg-white'}`}
-                  onClick={() => setFormData(prev => ({ ...prev, plan: 'pro' }))}
-                >
-                  Pro<br />
-                  <span className="text-xs text-muted-foreground">₹399/mo</span>
-                </button>
-                <button
-                  type="button"
-                  className={`flex-1 border rounded-md px-4 py-2 text-center ${formData.plan === 'pro_plus' ? 'border-primary bg-primary/10 font-semibold' : 'border-gray-300 bg-white'}`}
-                  onClick={() => setFormData(prev => ({ ...prev, plan: 'pro_plus' }))}
-                >
-                  Pro Plus<br />
-                  <span className="text-xs text-muted-foreground">₹799/mo</span>
-                </button>
-              </div>
-            </div>
-            
+
+
+
             {error && (
               <div className="text-sm text-red-600 text-center bg-red-50 p-3 rounded-md border border-red-200">
                 {error}

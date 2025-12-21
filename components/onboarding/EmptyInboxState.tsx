@@ -36,9 +36,9 @@ export function EmptyInboxState({ onStartOnboarding, hasEmailConnected }: EmptyI
 
         {/* Description */}
         <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-          {hasEmailConnected 
+          {hasEmailConnected
             ? "You haven't imported any newsletters yet. Try syncing your email or check your email settings to get started."
-            : "Welcome to News360! Let's get you set up to manage all your newsletters in one beautiful place."
+            : "Welcome to ScrollOS! Let's get you set up to manage all your newsletters in one beautiful place."
           }
         </p>
 
@@ -75,7 +75,7 @@ export function EmptyInboxState({ onStartOnboarding, hasEmailConnected }: EmptyI
                   <p className="text-sm text-muted-foreground">Learn about all the features</p>
                 </div>
               </div>
-              <Button 
+              <Button
                 onClick={onStartOnboarding}
                 variant="outline"
                 className="w-full"
@@ -98,7 +98,7 @@ export function EmptyInboxState({ onStartOnboarding, hasEmailConnected }: EmptyI
                 </div>
               </div>
               <Link href="/help">
-                <Button 
+                <Button
                   variant="outline"
                   className="w-full"
                 >
@@ -119,7 +119,7 @@ export function EmptyInboxState({ onStartOnboarding, hasEmailConnected }: EmptyI
               <p className="text-xs text-muted-foreground">Distraction-free experience</p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-3 p-4 bg-muted/30 rounded-lg">
             <Filter className="h-5 w-5 text-purple-600" />
             <div className="text-left">
@@ -127,7 +127,7 @@ export function EmptyInboxState({ onStartOnboarding, hasEmailConnected }: EmptyI
               <p className="text-xs text-muted-foreground">Categories & filters</p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-3 p-4 bg-muted/30 rounded-lg">
             <Settings className="h-5 w-5 text-green-600" />
             <div className="text-left">
@@ -138,7 +138,7 @@ export function EmptyInboxState({ onStartOnboarding, hasEmailConnected }: EmptyI
         </div>
 
         {/* Quick Actions */}
-        
+
 
         {/* Tips */}
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -149,7 +149,7 @@ export function EmptyInboxState({ onStartOnboarding, hasEmailConnected }: EmptyI
             <div className="text-left">
               <h4 className="font-medium text-blue-900 text-sm mb-1">Pro Tip</h4>
               <p className="text-blue-700 text-sm">
-                {hasEmailConnected 
+                {hasEmailConnected
                   ? "Your email is connected! Try syncing your newsletters or check your email settings if you're not seeing any newsletters yet."
                   : "Connect your email first to automatically import all your newsletters, then organize them with categories and filters."
                 }

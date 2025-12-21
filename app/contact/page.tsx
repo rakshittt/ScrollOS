@@ -18,13 +18,13 @@ export default function ContactPage() {
               Back to Home
             </Link>
           </Button>
-          
+
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-foreground mb-4">
               Contact Us
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Reach out to the News360 team for support, feedback, or partnership opportunities.
+              Reach out to the ScrollOS team for support, feedback, or partnership opportunities.
             </p>
           </div>
         </div>
@@ -50,12 +50,12 @@ export default function ContactPage() {
                     <Input id="lastName" placeholder="Doe" required />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" placeholder="john@example.com" required />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="subject">Subject</Label>
                   <select
@@ -74,7 +74,7 @@ export default function ContactPage() {
                     <option value="other">Other</option>
                   </select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="message">Message</Label>
                   <textarea
@@ -85,7 +85,7 @@ export default function ContactPage() {
                     required
                   />
                 </div>
-                
+
                 <Button type="submit" className="w-full">
                   Send Message
                 </Button>
@@ -107,13 +107,13 @@ export default function ContactPage() {
                   <Mail className="h-5 w-5 text-highlight mt-1" />
                   <div>
                     <h4 className="font-semibold text-foreground">Email</h4>
-                    <p className="text-muted-foreground">info@news360.com</p>
+                    <p className="text-muted-foreground">info@scrollos.ai</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       For general inquiries and support
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <Phone className="h-5 w-5 text-success mt-1" />
                   <div>
@@ -124,13 +124,13 @@ export default function ContactPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <MapPin className="h-5 w-5 text-error mt-1" />
                   <div>
                     <h4 className="font-semibold text-foreground">Address</h4>
                     <p className="text-muted-foreground">
-                      News360 Inc.<br />
+                      ScrollOS Inc.<br />
                       123 Innovation Drive<br />
                       Tech City, TC 12345<br />
                       United States
