@@ -1,9 +1,6 @@
 import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
-<<<<<<< HEAD
-=======
-import { authOptions } from '@/lib/auth';
->>>>>>> main
+
 import { db } from '@/lib/db';
 import { emailAccounts } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
@@ -16,7 +13,7 @@ import { Button } from '@/components/ui/Button';
 
 export default async function EmailSettingsPage() {
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user) {
     return null;
   }
@@ -92,7 +89,7 @@ export default async function EmailSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-        <EmailAccountsList accounts={accounts} />
+            <EmailAccountsList accounts={accounts} />
           </CardContent>
         </Card>
 
@@ -111,7 +108,7 @@ export default async function EmailSettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Control which email addresses are allowed to import newsletters during sync. 
+                  Control which email addresses are allowed to import newsletters during sync.
                   The inbox will show all newsletters, but only whitelisted emails can import new ones.
                 </p>
               </div>

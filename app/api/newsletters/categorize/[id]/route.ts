@@ -11,14 +11,12 @@ export async function PATCH(
   try {
     const userId = await requireAuth();
     const { id } = await params;
+    const ruleId = parseInt(id);
     const body = await request.json();
     const { name, condition, action, isActive } = body;
 
-    const { id } = await params;
-    const ruleId = parseInt(id);
-
     const updateData: any = { updatedAt: new Date() };
-    
+
     if (name !== undefined) updateData.name = name;
     if (condition !== undefined) updateData.condition = condition;
     if (action !== undefined) updateData.action = action;
@@ -28,11 +26,7 @@ export async function PATCH(
       .update(newsletterRules)
       .set(updateData)
       .where(and(
-<<<<<<< HEAD
         eq(newsletterRules.id, ruleId),
-=======
-        eq(newsletterRules.id, parseInt(id)),
->>>>>>> main
         eq(newsletterRules.userId, userId)
       ))
       .returning();
@@ -61,19 +55,12 @@ export async function DELETE(
   try {
     const userId = await requireAuth();
     const { id } = await params;
-<<<<<<< HEAD
     const ruleId = parseInt(id);
-=======
->>>>>>> main
 
     const result = await db
       .delete(newsletterRules)
       .where(and(
-<<<<<<< HEAD
         eq(newsletterRules.id, ruleId),
-=======
-        eq(newsletterRules.id, parseInt(id)),
->>>>>>> main
         eq(newsletterRules.userId, userId)
       ))
       .returning();
@@ -93,4 +80,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-} 
+}

@@ -1,10 +1,6 @@
 "use client"
 
-<<<<<<< HEAD
 import { useState, useEffect, Suspense } from 'react';
-=======
-import { useState, Suspense } from 'react';
->>>>>>> main
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
@@ -82,7 +78,7 @@ function ResetPasswordPage() {
             {getPasswordStrengthText(passwordValidation.score)}
           </span>
         </div>
-        
+
         <div className="space-y-1">
           {Object.entries(passwordValidation.requirements).map(([req, met]) => (
             <div key={req} className={`flex items-center gap-2 text-xs ${met ? 'text-green-600' : 'text-red-600'}`}>
