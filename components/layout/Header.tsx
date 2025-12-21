@@ -44,7 +44,7 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
           const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           if (systemTheme === 'dark') dark = true;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     setIsDarkMode(dark);
   }, []);
@@ -64,11 +64,11 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
         const settings = JSON.parse(localStorage.getItem('appearanceSettings') || '{}');
         settings.theme = next ? 'dark' : 'light';
         localStorage.setItem('appearanceSettings', JSON.stringify(settings));
-      } catch (e) {}
+      } catch (e) { }
       // Set theme cookie for SSR hydration
       try {
         document.cookie = `theme=${next ? 'dark' : 'light'}; path=/; max-age=${60 * 60 * 24 * 365}`;
-      } catch (e) {}
+      } catch (e) { }
       return next;
     });
   };
@@ -102,7 +102,7 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
       setSyncStatus(status);
       setSyncMessage(message || '');
       setNewNewsletterCount(count || 0);
-      
+
       if (status === 'success' && message) {
         toast.success(message);
       } else if (status === 'error' && message) {
@@ -133,20 +133,20 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
       setIsSyncing(true);
       setSyncStatus('syncing');
       console.log('🔄 Starting quick sync...');
-      
+
       // Dispatch sync start event
       window.dispatchEvent(new CustomEvent('sync-status-update', {
         detail: { status: 'syncing', message: 'Syncing newsletters...' }
       }));
-      
+
       // Determine which account(s) to sync
       const syncAccountId = selectedAccountId; // null means all accounts, specific ID means that account only
-      
+
       // Trigger sync for selected account(s)
       const response = await fetch('/api/email/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           manualSync: true,
           accountId: syncAccountId // Pass the selected account ID
         }),
@@ -161,45 +161,45 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
       console.log('✅ Quick sync completed:', result);
       setSyncStatus('success');
       setLastSyncTime(new Date().toLocaleTimeString());
-      
-      const accountName = syncAccountId 
+
+      const accountName = syncAccountId
         ? accounts.find(a => a.id === syncAccountId)?.email || 'selected account'
         : 'all accounts';
-      
+
       const successMessage = `Quick sync completed for ${accountName}! ${result.syncedCount || 0} new newsletters imported from whitelisted emails.`;
       toast.success(successMessage);
-      
+
       // Dispatch sync success event
       window.dispatchEvent(new CustomEvent('sync-status-update', {
-        detail: { 
-          status: 'success', 
+        detail: {
+          status: 'success',
           message: successMessage,
           count: result.syncedCount || 0,
           results: result.syncResults || [],
           totalEmails: result.totalEmailsProcessed || 0
         }
       }));
-      
+
       // Note: Removed automatic timeout - banner will stay visible until user manually dismisses
-      
+
       // Note: Removed automatic page reload - user can refresh manually via the banner's "View New" button
     } catch (error) {
       console.error('❌ Quick sync failed:', error);
       setSyncStatus('error');
       const errorMessage = 'Failed to sync newsletters. Please try again.';
       toast.error(errorMessage);
-      
+
       // Dispatch sync error event
       window.dispatchEvent(new CustomEvent('sync-status-update', {
-        detail: { 
-          status: 'error', 
+        detail: {
+          status: 'error',
           message: errorMessage,
           count: 0,
           results: [],
           totalEmails: 0
         }
       }));
-      
+
       // Note: Removed automatic timeout - banner will stay visible until user manually dismisses
     } finally {
       setIsSyncing(false);
@@ -225,10 +225,10 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
   };
 
   const getSyncButtonTitle = () => {
-    const accountName = selectedAccountId 
+    const accountName = selectedAccountId
       ? accounts.find(a => a.id === selectedAccountId)?.email || 'selected account'
       : 'all accounts';
-      
+
     switch (syncStatus) {
       case 'syncing':
         return `Syncing ${accountName}...`;
@@ -254,17 +254,19 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
           >
             <Menu className="h-5 w-5" />
           </Button>
-          
+
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm">
-              <img 
-                src="/NEWS360.png" 
-                alt="News360 Logo" 
+              <img
+                src="/logo.png"
+                alt="ScrollOS Logo"
+                width={32}
+                height={32}
                 className="w-full h-full object-cover"
               />
             </div>
-            <span className="font-medium text-foreground hidden sm:block">
-              News360
+            <span className="hidden md:inline text-xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-400 bg-clip-text text-transparent">
+              ScrollOS
             </span>
           </div>
         </div>
@@ -348,10 +350,10 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
           {/* Enhanced Sync Button with Dropdown */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            disabled={isSyncing}
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isSyncing}
                 title={getSyncButtonTitle()}
                 className={cn(
                   "relative transition-all duration-200",
@@ -362,8 +364,8 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
                 {getSyncButtonContent()}
                 {lastSyncTime && syncStatus === 'idle' && (
                   <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            )}
-          </Button>
+                )}
+              </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end" className="w-56 p-2 z-50 rounded-lg border bg-background shadow-lg">
               <div className="px-2 py-1.5">
@@ -372,9 +374,9 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
                   {lastSyncTime ? `Last synced: ${lastSyncTime}` : 'No recent sync'}
                 </p>
               </div>
-              
+
               <DropdownMenu.Separator className="my-2 h-px bg-border" />
-              
+
               <DropdownMenu.Item
                 onSelect={handleQuickSync}
                 disabled={isSyncing}
@@ -387,7 +389,7 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
                 <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
                 <div className="flex-1">
                   <span className="text-sm font-normal">
-                    Quick Sync {selectedAccountId 
+                    Quick Sync {selectedAccountId
                       ? accounts.find(a => a.id === selectedAccountId)?.email?.split('@')[0] || 'Account'
                       : 'All Accounts'
                     }
@@ -423,7 +425,7 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-          
+
           {/* Dark Mode Toggle */}
           <Button
             variant="ghost"
@@ -433,7 +435,7 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
           >
             {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          
+
           {/* User Menu */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
@@ -458,7 +460,7 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
               <DropdownMenu.Item
                 onSelect={() => window.location.href = '/settings'}
                 className="flex items-center px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-accent hover:text-foreground"
-                >
+              >
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </DropdownMenu.Item>
@@ -466,7 +468,7 @@ export function Header({ onMenuClick, onSearchChange, searchQuery = '', accounts
               <DropdownMenu.Item
                 onSelect={() => signOut()}
                 className="flex items-center px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-accent hover:text-foreground text-red-600"
-                >
+              >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </DropdownMenu.Item>

@@ -37,12 +37,12 @@ export default function MobileBlocker() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-[#f8fafc] via-background/90 to-muted/90 dark:from-background dark:via-background/90 dark:to-muted/90 backdrop-blur-2xl px-4 animate-fade-in">
-      {/* News360 Header */}
-      <div className="flex items-center space-x-3 mb-8 mt-4">
+      {/* ScrollOS Header */}
+      <div className="flex items-center space-x-3 mb-6">
         <div className="h-12 w-12 rounded-2xl overflow-hidden shadow-lg bg-white flex items-center justify-center border border-border">
-          <img src="/NEWS360.png" alt="News360 Logo" className="w-10 h-10 object-contain" />
+          <img src="/logo.png" alt="ScrollOS Logo" className="w-10 h-10 object-contain" />
         </div>
-        <span className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">News360</span>
+        <span className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">ScrollOS</span>
       </div>
       <Card className="w-full max-w-md shadow-2xl border border-border animate-fade-in-up bg-background/95 rounded-3xl">
         <CardHeader className="items-center pb-2">
@@ -52,7 +52,7 @@ export default function MobileBlocker() {
           </Badge>
           <CardTitle className="text-center text-3xl sm:text-4xl font-extrabold mb-2 tracking-tight">Switch to Desktop or Tablet</CardTitle>
           <CardDescription className="text-center text-base sm:text-lg mt-2">
-            <span className="text-primary font-semibold">News360</span> is designed for a beautiful, productive experience on larger screens.<br />
+            <span className="text-primary font-semibold">ScrollOS</span> is designed for a beautiful, productive experience on larger screens.<br />
             Please use a Desktop or Tablet for the best experience.
           </CardDescription>
         </CardHeader>
@@ -81,7 +81,7 @@ export default function MobileBlocker() {
         </CardFooter>
       </Card>
       <footer className="mt-8 text-xs text-muted-foreground text-center opacity-80">
-        &copy; {new Date().getFullYear()} News360. All rights reserved.
+        &copy; {new Date().getFullYear()} ScrollOS. All rights reserved.
       </footer>
       <style>{`
         body { overflow: hidden !important; }

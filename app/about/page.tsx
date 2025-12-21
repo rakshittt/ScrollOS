@@ -13,10 +13,10 @@ export default function AboutPage() {
         {/* About Content */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-4">
-            About News360
+            About ScrollOS
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            We're on a mission to transform how people consume and manage newsletters, 
+            We're on a mission to transform how people consume and manage newsletters,
             making information discovery more efficient and enjoyable.
           </p>
         </div>
@@ -32,14 +32,14 @@ export default function AboutPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                In today's information-rich world, newsletters have become a primary source of 
-                knowledge and insights. However, managing multiple newsletters across different 
+                In today's information-rich world, newsletters have become a primary source of
+                knowledge and insights. However, managing multiple newsletters across different
                 email accounts can be overwhelming and inefficient.
               </p>
               <p>
-                News360 was born from the frustration of having valuable content scattered across 
-                multiple inboxes. We believe that knowledge should be easily accessible, well-organized, 
-                and enjoyable to consume. Our platform brings all your newsletters together in one 
+                ScrollOS was born from the frustration of having valuable content scattered across
+                multiple inboxes. We believe that knowledge should be easily accessible, well-organized,
+                and enjoyable to consume. Our platform brings all your newsletters together in one
                 beautiful, intelligent interface.
               </p>
             </CardContent>
@@ -61,7 +61,7 @@ export default function AboutPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <Heart className="h-6 w-6 text-error mt-1" />
                   <div>
@@ -71,7 +71,7 @@ export default function AboutPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <Shield className="h-6 w-6 text-success mt-1" />
                   <div>
@@ -81,7 +81,7 @@ export default function AboutPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <Globe className="h-6 w-6 text-info mt-1" />
                   <div>
@@ -105,10 +105,10 @@ export default function AboutPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-6">
-                News360 is built by a small, passionate team of developers, designers, and product 
+                ScrollOS is built by a small, passionate team of developers, designers, and product
                 enthusiasts who understand the challenges of information overload.
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="text-center">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primaryBase/20 to-primaryBase/10 flex items-center justify-center">
@@ -117,7 +117,7 @@ export default function AboutPage() {
                   <h4 className="font-semibold text-foreground">John Doe</h4>
                   <p className="text-sm text-muted-foreground">Founder & CEO</p>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primaryBase/20 to-primaryBase/10 flex items-center justify-center">
                     <span className="text-2xl font-bold text-primary">JS</span>
@@ -125,7 +125,7 @@ export default function AboutPage() {
                   <h4 className="font-semibold text-foreground">Jane Smith</h4>
                   <p className="text-sm text-muted-foreground">Head of Product</p>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primaryBase/20 to-primaryBase/10 flex items-center justify-center">
                     <span className="text-2xl font-bold text-primary">MJ</span>
@@ -171,10 +171,10 @@ export default function AboutPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-6">
-                News360 is built with modern, scalable technologies to ensure reliability, 
+                ScrollOS is built with modern, scalable technologies to ensure reliability,
                 performance, and security.
               </p>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Badge variant="secondary" className="justify-center">Next.js</Badge>
                 <Badge variant="secondary" className="justify-center">TypeScript</Badge>

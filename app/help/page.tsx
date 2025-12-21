@@ -8,7 +8,7 @@ export default function HelpPage() {
   const helpCategories = [
     {
       title: 'Getting Started',
-      description: 'Learn the basics of using News360',
+      description: 'Learn the basics of using ScrollOS',
       icon: BookOpen,
       color: 'text-blue-600',
       articles: [
@@ -102,13 +102,13 @@ export default function HelpPage() {
               Back to Home
             </Link>
           </Button>
-          
+
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-foreground mb-4">
               Help Center
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Find answers to common questions and learn how to get the most out of News360.
+              Find answers to common questions and learn how to get the most out of ScrollOS.
             </p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function HelpPage() {
         {/* Help Categories */}
         <div className="space-y-8">
           <h2 className="text-2xl font-bold text-foreground">Browse by Category</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {helpCategories.map((category) => (
               <Card key={category.title} className="hover:shadow-lg transition-shadow">
@@ -222,7 +222,7 @@ export default function HelpPage() {
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <a href="mailto:support@news360.com">
+                <a href="mailto:support@scrollos.ai">
                   <Mail className="h-4 w-4 mr-2" />
                   Email Support
                 </a>
