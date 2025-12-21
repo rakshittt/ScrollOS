@@ -5,6 +5,9 @@ import { redis } from './redis';
  */
 export const redisSafe = {
     async get(key: string): Promise<any> {
+        // @ts-ignore - access internal URL for debugging
+        const url = (redis as any).url || (redis as any).client?.url;
+        console.log(`[REDIS-SAFE] GET key: ${key} using URL: ${url}`);
         try {
             return await redis.get(key);
         } catch (error) {
@@ -14,6 +17,9 @@ export const redisSafe = {
     },
 
     async set(key: string, value: any, options?: { ex?: number }): Promise<void> {
+        // @ts-ignore - access internal URL for debugging
+        const url = (redis as any).url || (redis as any).client?.url;
+        console.log(`[REDIS-SAFE] SET key: ${key} using URL: ${url}`);
         try {
             await redis.set(key, value, options as any);
         } catch (error) {
