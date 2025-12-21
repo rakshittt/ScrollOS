@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-<<<<<<< HEAD
 import { newsletters, newsletterRules, categories, userNewsletterEmailWhitelist, users } from '@/lib/schema';
 import { eq, desc, like, and, or, sql, inArray } from 'drizzle-orm';
-=======
-import { newsletters, newsletterRules, categories } from '@/lib/schema';
-import { eq, desc, like, and, or, sql } from 'drizzle-orm';
->>>>>>> main
 import { requireAuth } from '@/lib/auth';
 import { redis } from '@/lib/redis';
 
@@ -95,7 +90,6 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const lastSeenDate = searchParams.get('lastSeenDate');
 
-<<<<<<< HEAD
     // Redis cache key (user, folder, filters, page)
     const cacheKey = `inbox:${userId}:${folder}:${categoryId || ''}:${query || ''}:${emailAccountId || ''}:${page}:${limit}:${search || ''}:${readStatus || ''}:${starredStatus || ''}:${dateRange || ''}:${categories || ''}:${sortBy}:${sortOrder}:${lastSeenDate || ''}`;
     const isCacheable = !search && !readStatus && !starredStatus && !dateRange && !categories && !emailAccountId && sortBy === 'date' && sortOrder === 'desc' && !lastSeenDate && (!categoryId || folder !== 'inbox');
@@ -114,11 +108,7 @@ export async function GET(request: NextRequest) {
     const conditions = [
       eq(newsletters.userId, userId)
     ];
-=======
-    // Build query conditions
-    const conditions = [eq(newsletters.userId, userId)];
->>>>>>> main
-    
+
     // Only allow one filter: if folder is not 'inbox', ignore categoryId
     // If folder is 'inbox', allow categoryId
     if (folder === 'inbox') {
@@ -137,7 +127,7 @@ export async function GET(request: NextRequest) {
     if (emailAccountId) {
       conditions.push(eq(newsletters.emailAccountId, parseInt(emailAccountId)));
     }
-    
+
     // Apply search filter (from query parameter or search parameter)
     const searchQuery = search || query;
     if (searchQuery) {
@@ -168,7 +158,7 @@ export async function GET(request: NextRequest) {
     if (dateRange && dateRange !== 'all') {
       const now = new Date();
       let startDate: Date;
-      
+
       switch (dateRange) {
         case 'today':
           startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -182,7 +172,7 @@ export async function GET(request: NextRequest) {
         default:
           startDate = new Date(0); // Beginning of time
       }
-      
+
       conditions.push(sql`${newsletters.receivedAt} >= ${startDate}`);
     }
 
@@ -193,25 +183,24 @@ export async function GET(request: NextRequest) {
         conditions.push(inArray(newsletters.categoryId, categoryIds));
       }
     }
-    
+
     // For keyset pagination, add the keyset condition to the conditions array before building the query
     if (lastSeenDate) {
       conditions.push(sql`${newsletters.receivedAt} < ${new Date(lastSeenDate)}`);
     }
-    
+
     // Get total count for pagination
     const totalCountResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(newsletters)
       .where(and(...conditions));
 
-<<<<<<< HEAD
     const totalCount = totalCountResult[0]?.count || 0;
 
     // Build order by clause
     let orderByClause;
     if (sortBy === 'sender') {
-      orderByClause = sortOrder === 'asc' 
+      orderByClause = sortOrder === 'asc'
         ? [newsletters.sender, desc(newsletters.receivedAt)]
         : [desc(newsletters.sender), desc(newsletters.receivedAt)];
     } else if (sortBy === 'subject') {
@@ -312,9 +301,6 @@ export async function GET(request: NextRequest) {
       console.log(`[CACHE] Inbox cache set for user ${userId}`);
     }
     return NextResponse.json(response);
-=======
-    return NextResponse.json(result);
->>>>>>> main
   } catch (error) {
     console.error('❌ Error fetching newsletters:', error);
     if (error instanceof Error && error.message === 'Authentication required') {
@@ -352,7 +338,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `You have reached your plan's newsletter limit (${maxNewsletters}). Upgrade to add more.` }, { status: 403 });
     }
     const body = await request.json();
-    
+
     const result = await db
       .insert(newsletters)
       .values({
@@ -386,7 +372,7 @@ export async function PUT(request: NextRequest) {
     const userId = await requireAuth();
     const body = await request.json();
     const { id, ...updates } = body;
-    
+
     let updateData = { ...updates, updatedAt: new Date() };
     if (typeof updates.isArchived === 'boolean') {
       if (updates.isArchived) {
