@@ -24,11 +24,11 @@ export default function SignedInHeader() {
         const settings = JSON.parse(localStorage.getItem("appearanceSettings") || "{}") || {};
         settings.theme = next ? "dark" : "light";
         localStorage.setItem("appearanceSettings", JSON.stringify(settings));
-      } catch {}
+      } catch { }
       // Set theme cookie for SSR hydration
       try {
         document.cookie = `theme=${next ? 'dark' : 'light'}; path=/; max-age=${60 * 60 * 24 * 365}`;
-      } catch {}
+      } catch { }
       return next;
     });
   };
@@ -38,10 +38,10 @@ export default function SignedInHeader() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-14 sm:h-16 items-center justify-between">
         {/* Logo & Brand (left) */}
         <Link href="/inbox" className="flex items-center space-x-2 sm:space-x-3 group">
-          <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl overflow-hidden shadow-lg">
-            <img src="/NEWS360.png" alt="News360 Logo" className="w-full h-full object-cover" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-primary/10 flex items-center justify-center p-1.5 sm:p-2">
+            <img src="/logo.png" alt="ScrollOS Logo" className="w-full h-full object-cover" />
           </div>
-          <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent group-hover:opacity-80 transition">News360</span>
+          <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent group-hover:opacity-80 transition">ScrollOS</span>
         </Link>
         {/* Spacer */}
         <div className="flex-1" />

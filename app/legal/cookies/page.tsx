@@ -15,17 +15,17 @@ export default function CookiePolicyPage() {
               Back to Legal
             </Link>
           </Button>
-          
+
           <div className="flex items-center space-x-3 mb-4">
             <Cookie className="h-8 w-8 text-purple-600" />
             <h1 className="text-4xl font-bold text-foreground">Cookie Policy</h1>
           </div>
-          
+
           <p className="text-lg text-muted-foreground">
-            Last updated: {new Date().toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            Last updated: {new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}
           </p>
         </div>
@@ -38,12 +38,12 @@ export default function CookiePolicyPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                Cookies are small text files that are stored on your device when you visit a website. 
-                They help websites remember information about your visit, such as your preferred 
+                Cookies are small text files that are stored on your device when you visit a website.
+                They help websites remember information about your visit, such as your preferred
                 language and other settings, which can make your next visit easier and more useful.
               </p>
               <p>
-                At News360, we use cookies and similar technologies to enhance your experience, 
+                At ScrollOS, we use cookies and similar technologies to enhance your experience,
                 analyze how you use our platform, and provide personalized content.
               </p>
             </CardContent>
@@ -57,7 +57,7 @@ export default function CookiePolicyPage() {
             <CardContent className="prose prose-sm max-w-none">
               <h4 className="font-semibold text-foreground mb-2">Essential Cookies</h4>
               <p>
-                These cookies are necessary for the website to function properly. They enable basic 
+                These cookies are necessary for the website to function properly. They enable basic
                 functions like page navigation, access to secure areas, and user authentication.
               </p>
               <ul className="list-disc pl-6 space-y-1 mb-4">
@@ -68,7 +68,7 @@ export default function CookiePolicyPage() {
 
               <h4 className="font-semibold text-foreground mb-2">Functional Cookies</h4>
               <p>
-                These cookies enable enhanced functionality and personalization, such as remembering 
+                These cookies enable enhanced functionality and personalization, such as remembering
                 your preferences and settings.
               </p>
               <ul className="list-disc pl-6 space-y-1 mb-4">
@@ -80,7 +80,7 @@ export default function CookiePolicyPage() {
 
               <h4 className="font-semibold text-foreground mb-2">Analytics Cookies</h4>
               <p>
-                These cookies help us understand how visitors interact with our website by collecting 
+                These cookies help us understand how visitors interact with our website by collecting
                 and reporting information anonymously.
               </p>
               <ul className="list-disc pl-6 space-y-1 mb-4">
@@ -92,7 +92,7 @@ export default function CookiePolicyPage() {
 
               <h4 className="font-semibold text-foreground mb-2">Marketing Cookies</h4>
               <p>
-                These cookies are used to track visitors across websites to display relevant and 
+                These cookies are used to track visitors across websites to display relevant and
                 engaging advertisements.
               </p>
               <ul className="list-disc pl-6 space-y-1">
@@ -173,13 +173,13 @@ export default function CookiePolicyPage() {
 
               <h4 className="font-semibold text-foreground mb-2">Google Analytics</h4>
               <p>
-                We use Google Analytics to understand how users interact with our website. Google Analytics 
+                We use Google Analytics to understand how users interact with our website. Google Analytics
                 uses cookies to collect information about your use of our website, including your IP address.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2">Other Third-Party Services</h4>
               <p>
-                We may also use cookies from other third-party services for specific functionality, 
+                We may also use cookies from other third-party services for specific functionality,
                 such as payment processing, customer support, or social media integration.
               </p>
             </CardContent>
@@ -196,7 +196,7 @@ export default function CookiePolicyPage() {
             <CardContent className="prose prose-sm max-w-none">
               <h4 className="font-semibold text-foreground mb-2">Browser Settings</h4>
               <p>
-                Most web browsers allow you to control cookies through their settings preferences. 
+                Most web browsers allow you to control cookies through their settings preferences.
                 You can typically:
               </p>
               <ul className="list-disc pl-6 space-y-1 mb-4">
@@ -208,14 +208,14 @@ export default function CookiePolicyPage() {
 
               <h4 className="font-semibold text-foreground mb-2">Cookie Consent</h4>
               <p>
-                When you first visit our website, you'll see a cookie consent banner that allows you 
-                to accept or decline non-essential cookies. You can change your preferences at any time 
+                When you first visit our website, you'll see a cookie consent banner that allows you
+                to accept or decline non-essential cookies. You can change your preferences at any time
                 through our cookie settings.
               </p>
 
               <h4 className="font-semibold text-foreground mb-2">Impact of Disabling Cookies</h4>
               <p>
-                Please note that disabling certain cookies may affect the functionality of our website. 
+                Please note that disabling certain cookies may affect the functionality of our website.
                 Essential cookies cannot be disabled as they are necessary for the website to function properly.
               </p>
             </CardContent>
@@ -228,12 +228,12 @@ export default function CookiePolicyPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                Some browsers include a "Do Not Track" (DNT) feature that sends a signal to websites 
-                indicating that you do not want to be tracked. Currently, there is no standard for how 
+                Some browsers include a "Do Not Track" (DNT) feature that sends a signal to websites
+                indicating that you do not want to be tracked. Currently, there is no standard for how
                 websites should respond to DNT signals.
               </p>
               <p className="mt-4">
-                We respect your privacy choices and will continue to monitor developments around DNT 
+                We respect your privacy choices and will continue to monitor developments around DNT
                 standards. You can also manage your tracking preferences through our cookie settings.
               </p>
             </CardContent>
@@ -246,8 +246,8 @@ export default function CookiePolicyPage() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                We may update this Cookie Policy from time to time to reflect changes in our practices 
-                or for other operational, legal, or regulatory reasons. We will notify you of any 
+                We may update this Cookie Policy from time to time to reflect changes in our practices
+                or for other operational, legal, or regulatory reasons. We will notify you of any
                 material changes by:
               </p>
               <ul className="list-disc pl-6 space-y-1">
@@ -269,7 +269,7 @@ export default function CookiePolicyPage() {
             <CardContent className="prose prose-sm max-w-none">
               <p>If you have any questions about our use of cookies, please contact us:</p>
               <ul className="list-none space-y-2">
-                <li><strong>Email:</strong> privacy@news360.com</li>
+                <li><strong>Email:</strong> privacy@scrollos.ai</li>
                 <li><strong>Address:</strong> [Your Company Address]</li>
                 <li><strong>Phone:</strong> [Your Phone Number]</li>
               </ul>

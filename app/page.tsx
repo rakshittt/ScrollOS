@@ -55,16 +55,15 @@ export default function LandingPage() {
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl overflow-hidden shadow-lg">
                 <img
-                  src="/NEWS360.png"
-                  alt="News360 Logo"
-                  className="w-full h-full object-cover"
+                  src="/logo.png"
+                  alt="ScrollOS Logo"
                 />
               </div>
-              <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">News360</span>
+              <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">ScrollOS</span>
             </div>
 
             <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
+              <a href="mailto:support@scrollos.ai" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
               <Link href="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">About</Link>
               <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Testimonials</a>
               <Link href="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">Contact</Link>
@@ -87,9 +86,9 @@ export default function LandingPage() {
           <div className="mx-auto max-w-lg text-center flex flex-col items-center">
             <div className="flex items-center justify-center space-x-3 mb-6">
               <div className="h-12 w-12 rounded-2xl overflow-hidden shadow-lg bg-white flex items-center justify-center border border-border">
-                <img src="/NEWS360.png" alt="News360 Logo" className="w-10 h-10 object-contain" />
+                <img src="/logo.png" alt="ScrollOS Logo" className="w-10 h-10 object-contain" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">News360</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">ScrollOS</span>
             </div>
             <div className="flex flex-col items-center mb-6">
               <Smartphone className="h-12 w-12 text-primary mb-2 animate-bounce" />
@@ -97,7 +96,7 @@ export default function LandingPage() {
             </div>
             <h1 className="text-2xl font-bold mb-2">Best experienced on Desktop</h1>
             <p className="text-base text-muted-foreground mb-6">
-              News360 is designed for a beautiful, productive experience on larger screens.<br />
+              ScrollOS is designed for a beautiful, productive experience on larger screens.<br />
               Explore all features and more below!
             </p>
             <a href="#features" className="inline-block mt-2">
@@ -127,7 +126,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="mt-6 sm:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto px-4">
-              News360 is the modern way to organize, read, and manage newsletters from all your email accounts. Enjoy powerful filtering, custom categories, distraction-free reading, and a beautiful, productive interface.
+              ScrollOS is the modern way to organize, read, and manage newsletters from all your email accounts. Enjoy powerful filtering, custom categories, distraction-free reading, and a beautiful, productive interface.
             </p>
 
             <div className="mt-8 sm:mt-12 flex flex-col items-center justify-center gap-4 sm:gap-6 sm:flex-row px-4">
@@ -275,7 +274,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center mb-12 sm:mb-16 lg:mb-20">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight leading-tight">
-              How News360 Works
+              How ScrollOS Works
             </h2>
             <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
               Get started in minutes with our simple 3-step process
@@ -326,7 +325,7 @@ export default function LandingPage() {
               Loved by newsletter enthusiasts
             </h2>
             <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
-              See what our users are saying about News360
+              See what our users are saying about ScrollOS
             </p>
           </div>
 
@@ -341,7 +340,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  "News360 has completely transformed how I manage my newsletters. The categorization is incredibly accurate and saves me hours every week."
+                  "ScrollOS has completely transformed how I manage my newsletters. The categorization is incredibly accurate and saves me hours every week."
                 </p>
                 <div className="flex items-center">
                   <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
@@ -414,7 +413,7 @@ export default function LandingPage() {
               Ready to transform your newsletter experience?
             </h2>
             <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-primary-foreground/90 leading-relaxed">
-              Join thousands of users who have already simplified their newsletter management with News360.
+              Join thousands of users who have already simplified their newsletter management with ScrollOS.
             </p>
             <div className="mt-8 sm:mt-12 flex flex-col items-center justify-center gap-4 sm:gap-6 sm:flex-row px-4">
               <Link href="/auth/signup" className="w-full sm:w-auto">
@@ -441,12 +440,12 @@ export default function LandingPage() {
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl overflow-hidden shadow-lg">
                   <img
-                    src="/NEWS360.png"
-                    alt="News360 Logo"
+                    src="/logo.png"
+                    alt="ScrollOS Logo"
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">News360</span>
+                <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">ScrollOS</span>
               </div>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                 The ultimate platform for managing and reading newsletters with modern organization tools.
@@ -497,7 +496,7 @@ export default function LandingPage() {
           <div className="mt-12 sm:mt-16 border-t border-border/50 pt-6 sm:pt-8">
             <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
               <p className="text-sm sm:text-base text-muted-foreground">
-                © 2025 News360. All rights reserved.
+                © 2025 ScrollOS. All rights reserved.
               </p>
               <div className="flex items-center space-x-6 text-sm text-muted-foreground">
                 <Link href="/legal/privacy" className="hover:text-foreground transition-colors duration-200">Privacy Policy</Link>

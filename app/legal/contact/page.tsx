@@ -15,12 +15,12 @@ export default function LegalContactPage() {
               Back to Legal
             </Link>
           </Button>
-          
+
           <div className="flex items-center space-x-3 mb-4">
             <Mail className="h-8 w-8 text-red-600" />
             <h1 className="text-4xl font-bold text-foreground">Contact Information</h1>
           </div>
-          
+
           <p className="text-lg text-muted-foreground">
             Get in touch with us for legal inquiries, privacy concerns, or general questions about our policies.
           </p>
@@ -37,13 +37,13 @@ export default function LegalContactPage() {
                 <Mail className="h-5 w-5 text-blue-600 mt-1" />
                 <div>
                   <h4 className="font-semibold text-foreground">Email</h4>
-                  <p className="text-muted-foreground">info@news360.com</p>
+                  <p className="text-muted-foreground">info@scrollos.ai</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     For general inquiries and support
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <Phone className="h-5 w-5 text-green-600 mt-1" />
                 <div>
@@ -54,13 +54,13 @@ export default function LegalContactPage() {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-red-600 mt-1" />
                 <div>
                   <h4 className="font-semibold text-foreground">Address</h4>
                   <p className="text-muted-foreground">
-                    News360 Inc.<br />
+                    ScrollOS Inc.<br />
                     123 Innovation Drive<br />
                     Tech City, TC 12345<br />
                     United States
@@ -80,29 +80,29 @@ export default function LegalContactPage() {
                 <Mail className="h-5 w-5 text-purple-600 mt-1" />
                 <div>
                   <h4 className="font-semibold text-foreground">Legal Inquiries</h4>
-                  <p className="text-muted-foreground">legal@news360.com</p>
+                  <p className="text-muted-foreground">legal@scrollos.ai</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     For questions about Terms of Service, contracts, and legal matters
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <Mail className="h-5 w-5 text-orange-600 mt-1" />
                 <div>
                   <h4 className="font-semibold text-foreground">Privacy & Data Protection</h4>
-                  <p className="text-muted-foreground">privacy@news360.com</p>
+                  <p className="text-muted-foreground">privacy@scrollos.ai</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     For privacy policy questions, data requests, and GDPR inquiries
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <Mail className="h-5 w-5 text-indigo-600 mt-1" />
                 <div>
                   <h4 className="font-semibold text-foreground">Data Protection Officer</h4>
-                  <p className="text-muted-foreground">dpo@news360.com</p>
+                  <p className="text-muted-foreground">dpo@scrollos.ai</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     For GDPR compliance and data protection matters
                   </p>
@@ -155,7 +155,7 @@ export default function LegalContactPage() {
                   </div>
                   <span className="text-sm font-medium text-foreground">24-48 hours</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
                   <div>
                     <h4 className="font-semibold text-foreground">Legal Inquiries</h4>
@@ -163,7 +163,7 @@ export default function LegalContactPage() {
                   </div>
                   <span className="text-sm font-medium text-foreground">2-3 business days</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
                   <div>
                     <h4 className="font-semibold text-foreground">Privacy Requests</h4>
@@ -171,7 +171,7 @@ export default function LegalContactPage() {
                   </div>
                   <span className="text-sm font-medium text-foreground">30 days</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
                   <div>
                     <h4 className="font-semibold text-foreground">Urgent Matters</h4>
@@ -233,7 +233,7 @@ export default function LegalContactPage() {
 
               <h4 className="font-semibold text-foreground mb-2">Confidentiality</h4>
               <p>
-                All communications with our legal team are treated as confidential. We take your privacy 
+                All communications with our legal team are treated as confidential. We take your privacy
                 seriously and will protect any sensitive information you share with us.
               </p>
             </CardContent>
